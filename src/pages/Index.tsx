@@ -56,7 +56,7 @@ const Index = () => {
       {/* Features Section */}
       <section className="py-20 bg-muted/30">
         <div className="container mx-auto px-4">
-          <h2 className="text-3xl md:text-4xl font-bold text-center mb-12">Why Choose TasteHome?</h2>
+          <h2 className="text-3xl md:text-4xl font-bold text-center mb-12">Why Choose TastyHome?</h2>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             {features.map((feature, index) => (
               <Card key={index} className="text-center shadow-soft hover:shadow-warm transition-shadow">
@@ -110,9 +110,9 @@ const Index = () => {
       {/* Footer */}
       <footer className="border-t py-8 bg-card">
         <div className="container mx-auto px-4 text-center text-sm text-muted-foreground">
-          <p>© 2025 TasteHome. All rights reserved.</p>
+          <p>© 2025 TastyHome. All rights reserved.</p>
           <p className="mt-2">
-            TasteHome is a platform connecting home chefs and customers. Each chef is independently responsible for
+            TastyHome is a platform connecting home chefs and customers. Each chef is independently responsible for
             food safety and compliance.
           </p>
         </div>

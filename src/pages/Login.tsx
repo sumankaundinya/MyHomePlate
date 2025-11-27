@@ -56,7 +56,7 @@ const Login = () => {
       <Card className="w-full max-w-md shadow-warm">
         <CardHeader className="space-y-1 text-center">
           <CardTitle className="text-3xl font-bold bg-gradient-hero bg-clip-text text-transparent">
-            Welcome to TasteHome
+            Welcome to TastyHome
           </CardTitle>
           <CardDescription>Sign in to your account</CardDescription>
         </CardHeader>
@@ -67,7 +67,7 @@ const Login = () => {
               <Input
                 id="email"
                 type="email"
-                placeholder="chef@tastehome.com"
+                placeholder="chef@tastyhome.com"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 disabled={loading}
