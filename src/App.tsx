@@ -11,6 +11,11 @@ import MealDetail from "./pages/MealDetail";
 import ChefDashboard from "./pages/ChefDashboard";
 import Orders from "./pages/Orders";
 import NotFound from "./pages/NotFound";
+import Chefs from "./pages/Chefs";
+import ChefProfile from "./pages/ChefProfile";
+import Partner from "./pages/Partner";
+import Admin from "./pages/Admin";
+import Subscriptions from "./pages/Subscriptions";
 
 const queryClient = new QueryClient();
 
@@ -26,8 +31,13 @@ const App = () => (
           <Route path="/signup" element={<Signup />} />
           <Route path="/meals" element={<Meals />} />
           <Route path="/meals/:id" element={<MealDetail />} />
+          <Route path="/chefs" element={<Chefs />} />
+          <Route path="/chefs/:id" element={<ChefProfile />} />
           <Route path="/chef/dashboard" element={<ChefDashboard />} />
+          <Route path="/partner" element={<Partner />} />
+          <Route path="/admin" element={<Admin />} />
           <Route path="/orders" element={<Orders />} />
+          <Route path="/subscriptions" element={<Subscriptions />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>
