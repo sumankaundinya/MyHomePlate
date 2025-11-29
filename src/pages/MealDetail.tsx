@@ -7,6 +7,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { ArrowLeft, ChefHat, Loader2, ShoppingCart, UtensilsCrossed } from "lucide-react";
 import { toast } from "sonner";
 import type { User } from "@supabase/supabase-js";
@@ -21,6 +22,8 @@ interface Meal {
   available: boolean;
   chef_id: string;
   chef_name: string;
+  spice_levels: string[] | null;
+  oil_options: string[] | null;
 }
 
 const MealDetail = () => {
@@ -30,6 +33,8 @@ const MealDetail = () => {
   const [loading, setLoading] = useState(true);
   const [ordering, setOrdering] = useState(false);
   const [quantity, setQuantity] = useState(1);
+  const [spiceLevel, setSpiceLevel] = useState<string>("");
+  const [oilPreference, setOilPreference] = useState<string>("");
   const [user, setUser] = useState<User | null>(null);
 
   useEffect(() => {
@@ -64,10 +69,20 @@ const MealDetail = () => {
         .eq("id", data.chef_id)
         .single();
 
-      setMeal({
+      const mealData = {
         ...data,
         chef_name: profile?.name || "Unknown Chef",
-      });
+      };
+      
+      setMeal(mealData);
+      
+      // Set default preferences
+      if (mealData.spice_levels && mealData.spice_levels.length > 0) {
+        setSpiceLevel(mealData.spice_levels[0]);
+      }
+      if (mealData.oil_options && mealData.oil_options.length > 0) {
+        setOilPreference(mealData.oil_options[0]);
+      }
     } catch (error) {
       console.error("Error fetching meal:", error);
       toast.error("Failed to load meal details");
@@ -106,6 +121,21 @@ const MealDetail = () => {
         .single();
 
       if (orderError) throw orderError;
+
+      // Create order item with customizations
+      const { error: itemError } = await supabase
+        .from("order_items")
+        .insert({
+          order_id: order.id,
+          meal_id: meal.id,
+          quantity,
+          price_per_unit: meal.price,
+          subtotal: totalPrice,
+          spice_level: spiceLevel || null,
+          oil_preference: oilPreference || null,
+        });
+
+      if (itemError) throw itemError;
 
       toast.success("Order placed! Redirecting to payment...");
       
@@ -211,6 +241,39 @@ const MealDetail = () => {
                       onChange={(e) => setQuantity(Math.max(1, parseInt(e.target.value) || 1))}
                     />
                   </div>
+
+                  {meal.spice_levels && meal.spice_levels.length > 0 && (
+                    <div className="space-y-2">
+                      <Label>Spice Level</Label>
+                      <RadioGroup value={spiceLevel} onValueChange={setSpiceLevel}>
+                        {meal.spice_levels.map((level) => (
+                          <div key={level} className="flex items-center space-x-2">
+                            <RadioGroupItem value={level} id={`spice-${level}`} />
+                            <Label htmlFor={`spice-${level}`} className="capitalize cursor-pointer">
+                              {level}
+                            </Label>
+                          </div>
+                        ))}
+                      </RadioGroup>
+                    </div>
+                  )}
+
+                  {meal.oil_options && meal.oil_options.length > 0 && (
+                    <div className="space-y-2">
+                      <Label>Oil Preference</Label>
+                      <RadioGroup value={oilPreference} onValueChange={setOilPreference}>
+                        {meal.oil_options.map((option) => (
+                          <div key={option} className="flex items-center space-x-2">
+                            <RadioGroupItem value={option} id={`oil-${option}`} />
+                            <Label htmlFor={`oil-${option}`} className="capitalize cursor-pointer">
+                              {option}
+                            </Label>
+                          </div>
+                        ))}
+                      </RadioGroup>
+                    </div>
+                  )}
+
                   <div className="flex items-center justify-between pt-2">
                     <span className="text-lg font-semibold">Total:</span>
                     <span className="text-2xl font-bold text-primary">
