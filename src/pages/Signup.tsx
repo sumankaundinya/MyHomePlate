@@ -55,7 +55,7 @@ const Signup = () => {
       }
 
       if (data.user) {
-        toast.success("Account created! Welcome to TastyHome!");
+        toast.success("Account created! Welcome to MyHomePlate!");
         navigate("/");
       }
     } catch (error) {
@@ -71,7 +71,7 @@ const Signup = () => {
       <Card className="w-full max-w-md shadow-warm">
         <CardHeader className="space-y-1 text-center">
           <CardTitle className="text-3xl font-bold bg-gradient-hero bg-clip-text text-transparent">
-            Join TastyHome
+            Join MyHomePlate
           </CardTitle>
           <CardDescription>Create your account to get started</CardDescription>
         </CardHeader>
