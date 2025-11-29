@@ -11,7 +11,7 @@ const Index = () => {
     {
       icon: <ChefHat className="h-10 w-10 text-primary" />,
       title: "Local Home Chefs",
-      description: "Connect with talented home chefs in Denmark cooking authentic Indian dishes",
+      description: "Connect with talented home chefs in your neighborhood cooking authentic Indian dishes",
     },
     {
       icon: <Heart className="h-10 w-10 text-primary" />,
@@ -38,7 +38,7 @@ const Index = () => {
               Authentic Indian Home Cooking
             </h1>
             <p className="text-xl md:text-2xl text-muted-foreground mb-8">
-              Discover delicious homemade Indian dishes from local chefs in Denmark
+              Discover delicious homemade Indian dishes from local chefs in your area
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Button size="lg" onClick={() => navigate("/meals")} className="text-lg shadow-warm">
@@ -56,7 +56,7 @@ const Index = () => {
       {/* Features Section */}
       <section className="py-20 bg-muted/30">
         <div className="container mx-auto px-4">
-          <h2 className="text-3xl md:text-4xl font-bold text-center mb-12">Why Choose TastyHome?</h2>
+          <h2 className="text-3xl md:text-4xl font-bold text-center mb-12">Why Choose MyHomePlate?</h2>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             {features.map((feature, index) => (
               <Card key={index} className="text-center shadow-soft hover:shadow-warm transition-shadow">
@@ -110,9 +110,9 @@ const Index = () => {
       {/* Footer */}
       <footer className="border-t py-8 bg-card">
         <div className="container mx-auto px-4 text-center text-sm text-muted-foreground">
-          <p>© 2025 TastyHome. All rights reserved.</p>
+          <p>© 2025 MyHomePlate. All rights reserved.</p>
           <p className="mt-2">
-            TastyHome is a platform connecting home chefs and customers. Each chef is independently responsible for
+            MyHomePlate is a platform connecting home chefs and customers. Each chef is independently responsible for
             food safety and compliance.
           </p>
         </div>
