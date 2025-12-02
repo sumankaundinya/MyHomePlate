@@ -11,7 +11,13 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { ChefHat, LogOut, ShoppingBag, User, UtensilsCrossed } from "lucide-react";
+import {
+  ChefHat,
+  LogOut,
+  ShoppingBag,
+  User,
+  UtensilsCrossed,
+} from "lucide-react";
 import { toast } from "sonner";
 import type { User as SupabaseUser } from "@supabase/supabase-js";
 
@@ -66,7 +72,11 @@ const Navbar = () => {
         <div className="flex h-16 items-center justify-between">
           {/* Logo */}
           <Link to="/" className="flex items-center space-x-2">
-            <UtensilsCrossed className="h-6 w-6 text-primary" />
+            <img
+              src="/favicon.ico"
+              alt="MyHomePlate Logo"
+              className="h-16 w-12 rounded-full"
+            />
             <span className="text-xl font-bold bg-gradient-hero bg-clip-text text-transparent">
               MyHomePlate
             </span>
@@ -74,16 +84,25 @@ const Navbar = () => {
 
           {/* Navigation Links */}
           <div className="hidden md:flex items-center space-x-6">
-            <Link to="/meals" className="text-sm font-medium hover:text-primary transition-colors">
+            <Link
+              to="/meals"
+              className="text-sm font-medium hover:text-primary transition-colors"
+            >
               Browse Meals
             </Link>
             {user && userRole === "chef" && (
-              <Link to="/chef/dashboard" className="text-sm font-medium hover:text-primary transition-colors">
+              <Link
+                to="/Partner"
+                className="text-sm font-medium hover:text-primary transition-colors"
+              >
                 My Kitchen
               </Link>
             )}
             {user && userRole === "customer" && (
-              <Link to="/orders" className="text-sm font-medium hover:text-primary transition-colors">
+              <Link
+                to="/orders"
+                className="text-sm font-medium hover:text-primary transition-colors"
+              >
                 My Orders
               </Link>
             )}
@@ -94,7 +113,10 @@ const Navbar = () => {
             {user ? (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" className="relative h-10 w-10 rounded-full">
+                  <Button
+                    variant="ghost"
+                    className="relative h-10 w-10 rounded-full"
+                  >
                     <Avatar>
                       <AvatarFallback className="bg-gradient-hero text-white">
                         {getUserInitials()}
@@ -120,7 +142,7 @@ const Navbar = () => {
                   </DropdownMenuLabel>
                   <DropdownMenuSeparator />
                   {userRole === "chef" && (
-                    <DropdownMenuItem onClick={() => navigate("/chef/dashboard")}>
+                    <DropdownMenuItem onClick={() => navigate("/Partner")}>
                       <ChefHat className="mr-2 h-4 w-4" />
                       <span>My Kitchen</span>
                     </DropdownMenuItem>
@@ -147,9 +169,7 @@ const Navbar = () => {
                 <Button variant="ghost" onClick={() => navigate("/login")}>
                   Sign In
                 </Button>
-                <Button onClick={() => navigate("/signup")}>
-                  Get Started
-                </Button>
+                <Button onClick={() => navigate("/signup")}>Get Started</Button>
               </>
             )}
           </div>

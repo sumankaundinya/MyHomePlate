@@ -3,10 +3,16 @@ import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import Navbar from "@/components/Navbar";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+} from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
-import { Calendar, ChefHat, DollarSign } from "lucide-react";
+import { Calendar, ChefHat, IndianRupee } from "lucide-react";
 
 const Subscriptions = () => {
   const navigate = useNavigate();
@@ -19,8 +25,10 @@ const Subscriptions = () => {
 
   const checkAuthAndFetch = async () => {
     try {
-      const { data: { user } } = await supabase.auth.getUser();
-      
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+
       if (!user) {
         navigate("/login");
         return;
@@ -76,7 +84,7 @@ const Subscriptions = () => {
   return (
     <div className="min-h-screen bg-background">
       <Navbar />
-      
+
       <main className="container mx-auto px-4 py-8">
         <div className="mb-8">
           <h1 className="text-3xl font-bold bg-gradient-hero bg-clip-text text-transparent mb-2">
@@ -131,25 +139,27 @@ const Subscriptions = () => {
         {/* Active Subscriptions */}
         <section>
           <h2 className="text-2xl font-bold mb-4">Your Subscriptions</h2>
-          
+
           {loading ? (
             <Card>
               <CardContent className="py-8 text-center">
                 <ChefHat className="h-12 w-12 text-primary animate-pulse mx-auto mb-2" />
-                <p className="text-muted-foreground">Loading subscriptions...</p>
+                <p className="text-muted-foreground">
+                  Loading subscriptions...
+                </p>
               </CardContent>
             </Card>
           ) : subscriptions.length === 0 ? (
             <Card>
               <CardContent className="py-12 text-center">
                 <Calendar className="h-16 w-16 text-muted-foreground mx-auto mb-4" />
-                <h3 className="text-xl font-semibold mb-2">No active subscriptions</h3>
+                <h3 className="text-xl font-semibold mb-2">
+                  No active subscriptions
+                </h3>
                 <p className="text-muted-foreground mb-4">
                   Start a subscription to enjoy regular homemade meals
                 </p>
-                <Button onClick={() => navigate("/chefs")}>
-                  Browse Chefs
-                </Button>
+                <Button onClick={() => navigate("/chefs")}>Browse Chefs</Button>
               </CardContent>
             </Card>
           ) : (
@@ -159,12 +169,18 @@ const Subscriptions = () => {
                   <CardContent className="pt-6">
                     <div className="flex items-start justify-between mb-4">
                       <div>
-                        <h3 className="font-semibold text-lg">{sub.chef_name}</h3>
+                        <h3 className="font-semibold text-lg">
+                          {sub.chef_name}
+                        </h3>
                         <p className="text-sm text-muted-foreground capitalize">
                           {sub.plan_type} Plan
                         </p>
                       </div>
-                      <Badge variant={sub.status === "active" ? "default" : "secondary"}>
+                      <Badge
+                        variant={
+                          sub.status === "active" ? "default" : "secondary"
+                        }
+                      >
                         {sub.status}
                       </Badge>
                     </div>
@@ -172,7 +188,9 @@ const Subscriptions = () => {
                     <div className="grid grid-cols-3 gap-4 text-sm">
                       <div>
                         <p className="text-muted-foreground">Meals Remaining</p>
-                        <p className="font-semibold">{sub.meals_remaining} / {sub.meals_count}</p>
+                        <p className="font-semibold">
+                          {sub.meals_remaining} / {sub.meals_count}
+                        </p>
                       </div>
                       <div>
                         <p className="text-muted-foreground">Price per Meal</p>

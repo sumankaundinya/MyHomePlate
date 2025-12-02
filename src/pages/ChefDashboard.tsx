@@ -3,14 +3,34 @@ import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import Navbar from "@/components/Navbar";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Edit, Trash2, UtensilsCrossed, DollarSign, ShoppingBag } from "lucide-react";
+import {
+  Plus,
+  Edit,
+  Trash2,
+  UtensilsCrossed,
+  IndianRupee,
+  ShoppingBag,
+} from "lucide-react";
 import { toast } from "sonner";
 import type { User } from "@supabase/supabase-js";
 
@@ -58,8 +78,10 @@ const ChefDashboard = () => {
   }, []);
 
   const checkAuth = async () => {
-    const { data: { session } } = await supabase.auth.getSession();
-    
+    const {
+      data: { session },
+    } = await supabase.auth.getSession();
+
     if (!session) {
       toast.error("Please sign in to access chef dashboard");
       navigate("/login");
@@ -67,7 +89,7 @@ const ChefDashboard = () => {
     }
 
     setUser(session.user);
-    
+
     // Check if user is a chef
     const { data: roles } = await supabase
       .from("user_roles")
@@ -119,7 +141,7 @@ const ChefDashboard = () => {
           .select("name")
           .eq("id", order.customer_id)
           .single();
-        
+
         return {
           ...order,
           profiles: { name: profile?.name || "Unknown" },
@@ -130,12 +152,13 @@ const ChefDashboard = () => {
     setOrders(ordersWithCustomer);
 
     // Calculate stats
-    const earnings = data?.reduce((sum, order) => {
-      if (order.status === "paid" || order.status === "delivered") {
-        return sum + (Number(order.total_price) * 0.85); // 85% goes to chef
-      }
-      return sum;
-    }, 0) || 0;
+    const earnings =
+      data?.reduce((sum, order) => {
+        if (order.status === "paid" || order.status === "delivered") {
+          return sum + Number(order.total_price) * 0.85; // 85% goes to chef
+        }
+        return sum;
+      }, 0) || 0;
 
     setStats({
       totalEarnings: earnings,
@@ -164,9 +187,7 @@ const ChefDashboard = () => {
         if (error) throw error;
         toast.success("Meal updated successfully");
       } else {
-        const { error } = await supabase
-          .from("meals")
-          .insert(mealData);
+        const { error } = await supabase.from("meals").insert(mealData);
 
         if (error) throw error;
         toast.success("Meal created successfully");
@@ -197,10 +218,7 @@ const ChefDashboard = () => {
   const handleDelete = async (id: string) => {
     if (!confirm("Are you sure you want to delete this meal?")) return;
 
-    const { error } = await supabase
-      .from("meals")
-      .delete()
-      .eq("id", id);
+    const { error } = await supabase.from("meals").delete().eq("id", id);
 
     if (error) {
       toast.error("Failed to delete meal");
@@ -230,7 +248,9 @@ const ChefDashboard = () => {
         <div className="flex items-center justify-between mb-8">
           <div>
             <h1 className="text-4xl font-bold mb-2">My Kitchen</h1>
-            <p className="text-muted-foreground">Manage your meals and orders</p>
+            <p className="text-muted-foreground">
+              Manage your meals and orders
+            </p>
           </div>
           <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
             <DialogTrigger asChild>
@@ -241,7 +261,9 @@ const ChefDashboard = () => {
             </DialogTrigger>
             <DialogContent className="max-w-2xl">
               <DialogHeader>
-                <DialogTitle>{editingMeal ? "Edit Meal" : "Add New Meal"}</DialogTitle>
+                <DialogTitle>
+                  {editingMeal ? "Edit Meal" : "Add New Meal"}
+                </DialogTitle>
                 <DialogDescription>
                   Fill in the details of your homemade dish
                 </DialogDescription>
@@ -252,7 +274,9 @@ const ChefDashboard = () => {
                   <Input
                     id="title"
                     value={formData.title}
-                    onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                    onChange={(e) =>
+                      setFormData({ ...formData, title: e.target.value })
+                    }
                     required
                   />
                 </div>
@@ -261,20 +285,24 @@ const ChefDashboard = () => {
                   <Textarea
                     id="description"
                     value={formData.description}
-                    onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                    onChange={(e) =>
+                      setFormData({ ...formData, description: e.target.value })
+                    }
                     rows={4}
                     required
                   />
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <Label htmlFor="price">Price (DKK)</Label>
+                    <Label htmlFor="price">Price (INR)</Label>
                     <Input
                       id="price"
                       type="number"
                       step="0.01"
                       value={formData.price}
-                      onChange={(e) => setFormData({ ...formData, price: e.target.value })}
+                      onChange={(e) =>
+                        setFormData({ ...formData, price: e.target.value })
+                      }
                       required
                     />
                   </div>
@@ -283,7 +311,9 @@ const ChefDashboard = () => {
                     <Input
                       id="category"
                       value={formData.category}
-                      onChange={(e) => setFormData({ ...formData, category: e.target.value })}
+                      onChange={(e) =>
+                        setFormData({ ...formData, category: e.target.value })
+                      }
                       placeholder="e.g., Curry, Biryani, Snacks"
                       required
                     />
@@ -294,7 +324,9 @@ const ChefDashboard = () => {
                   <Input
                     id="image_url"
                     value={formData.image_url}
-                    onChange={(e) => setFormData({ ...formData, image_url: e.target.value })}
+                    onChange={(e) =>
+                      setFormData({ ...formData, image_url: e.target.value })
+                    }
                     placeholder="https://..."
                   />
                 </div>
@@ -302,12 +334,18 @@ const ChefDashboard = () => {
                   <Switch
                     id="available"
                     checked={formData.available}
-                    onCheckedChange={(checked) => setFormData({ ...formData, available: checked })}
+                    onCheckedChange={(checked) =>
+                      setFormData({ ...formData, available: checked })
+                    }
                   />
                   <Label htmlFor="available">Available for orders</Label>
                 </div>
                 <div className="flex justify-end space-x-2 pt-4">
-                  <Button type="button" variant="outline" onClick={() => setDialogOpen(false)}>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => setDialogOpen(false)}
+                  >
                     Cancel
                   </Button>
                   <Button type="submit">
@@ -323,16 +361,22 @@ const ChefDashboard = () => {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
           <Card className="shadow-soft">
             <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-sm font-medium">Total Earnings (85%)</CardTitle>
-              <DollarSign className="h-4 w-4 text-primary" />
+              <CardTitle className="text-sm font-medium">
+                Total Earnings (85%)
+              </CardTitle>
+              <IndianRupee className="h-4 w-4 text-primary" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-primary">kr {stats.totalEarnings.toFixed(2)}</div>
+              <div className="text-2xl font-bold text-primary">
+                INR {stats.totalEarnings.toFixed(2)}
+              </div>
             </CardContent>
           </Card>
           <Card className="shadow-soft">
             <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-sm font-medium">Total Orders</CardTitle>
+              <CardTitle className="text-sm font-medium">
+                Total Orders
+              </CardTitle>
               <ShoppingBag className="h-4 w-4 text-primary" />
             </CardHeader>
             <CardContent>
@@ -341,11 +385,15 @@ const ChefDashboard = () => {
           </Card>
           <Card className="shadow-soft">
             <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-sm font-medium">Active Meals</CardTitle>
+              <CardTitle className="text-sm font-medium">
+                Active Meals
+              </CardTitle>
               <UtensilsCrossed className="h-4 w-4 text-primary" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{meals.filter(m => m.available).length}</div>
+              <div className="text-2xl font-bold">
+                {meals.filter((m) => m.available).length}
+              </div>
             </CardContent>
           </Card>
         </div>
@@ -372,30 +420,48 @@ const ChefDashboard = () => {
                     <div className="flex items-center space-x-4 flex-1">
                       <div className="w-16 h-16 rounded-lg bg-muted flex items-center justify-center overflow-hidden">
                         {meal.image_url ? (
-                          <img src={meal.image_url} alt={meal.title} className="w-full h-full object-cover" />
+                          <img
+                            src={meal.image_url}
+                            alt={meal.title}
+                            className="w-full h-full object-cover"
+                          />
                         ) : (
                           <UtensilsCrossed className="h-6 w-6 text-muted-foreground" />
                         )}
                       </div>
                       <div className="flex-1">
                         <h3 className="font-semibold">{meal.title}</h3>
-                        <p className="text-sm text-muted-foreground line-clamp-1">{meal.description}</p>
+                        <p className="text-sm text-muted-foreground line-clamp-1">
+                          {meal.description}
+                        </p>
                         <div className="flex items-center gap-2 mt-1">
                           <Badge variant="secondary">{meal.category}</Badge>
-                          <Badge variant={meal.available ? "default" : "outline"}>
+                          <Badge
+                            variant={meal.available ? "default" : "outline"}
+                          >
                             {meal.available ? "Available" : "Unavailable"}
                           </Badge>
                         </div>
                       </div>
                       <div className="text-right">
-                        <p className="text-xl font-bold text-primary">kr {meal.price}</p>
+                        <p className="text-xl font-bold text-primary">
+                          INR {meal.price}
+                        </p>
                       </div>
                     </div>
                     <div className="flex items-center space-x-2 ml-4">
-                      <Button variant="ghost" size="icon" onClick={() => handleEdit(meal)}>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => handleEdit(meal)}
+                      >
                         <Edit className="h-4 w-4" />
                       </Button>
-                      <Button variant="ghost" size="icon" onClick={() => handleDelete(meal.id)}>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => handleDelete(meal.id)}
+                      >
                         <Trash2 className="h-4 w-4" />
                       </Button>
                     </div>
@@ -421,7 +487,10 @@ const ChefDashboard = () => {
             ) : (
               <div className="space-y-4">
                 {orders.map((order) => (
-                  <div key={order.id} className="flex items-center justify-between p-4 border rounded-lg">
+                  <div
+                    key={order.id}
+                    className="flex items-center justify-between p-4 border rounded-lg"
+                  >
                     <div>
                       <h3 className="font-semibold">{order.meals.title}</h3>
                       <p className="text-sm text-muted-foreground">
@@ -432,10 +501,13 @@ const ChefDashboard = () => {
                       </p>
                     </div>
                     <div className="text-right">
-                      <p className="font-bold text-primary">kr {order.total_price}</p>
+                      <p className="font-bold text-primary">
+                        INR {order.total_price}
+                      </p>
                       <Badge
                         variant={
-                          order.status === "paid" || order.status === "delivered"
+                          order.status === "paid" ||
+                          order.status === "delivered"
                             ? "default"
                             : "secondary"
                         }

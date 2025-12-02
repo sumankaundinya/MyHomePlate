@@ -3,7 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { toast } from "sonner";
 import { format } from "date-fns";
-import { DollarSign, TrendingUp, Calendar } from "lucide-react";
+import { IndianRupee, TrendingUp, Calendar } from "lucide-react";
 
 interface EarningData {
   date: string;
@@ -87,7 +87,7 @@ export const PartnerEarnings = () => {
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Total Earnings</CardTitle>
-            <DollarSign className="h-4 w-4 text-green-600" />
+            <IndianRupee className="h-4 w-4 text-green-600" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">₹{totalEarnings.toFixed(2)}</div>
@@ -111,7 +111,7 @@ export const PartnerEarnings = () => {
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Avg. per Order</CardTitle>
-            <DollarSign className="h-4 w-4 text-primary" />
+            <IndianRupee className="h-4 w-4 text-primary" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">

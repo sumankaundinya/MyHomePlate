@@ -5,7 +5,7 @@ import Navbar from "@/components/Navbar";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { toast } from "sonner";
-import { Shield, Users, Package, DollarSign } from "lucide-react";
+import { Shield, Users, Package, IndianRupee } from "lucide-react";
 import { AdminChefs } from "@/components/admin/AdminChefs";
 import { AdminOrders } from "@/components/admin/AdminOrders";
 
@@ -17,7 +17,7 @@ const Admin = () => {
     totalChefs: 0,
     pendingChefs: 0,
     totalOrders: 0,
-    pendingOrders: 0
+    pendingOrders: 0,
   });
 
   useEffect(() => {
@@ -27,8 +27,10 @@ const Admin = () => {
   const checkAdminAccess = async () => {
     try {
       setLoading(true);
-      const { data: { user } } = await supabase.auth.getUser();
-      
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+
       if (!user) {
         navigate("/login");
         return;
@@ -50,7 +52,6 @@ const Admin = () => {
 
       setIsAdmin(true);
       await fetchStats();
-
     } catch (error) {
       console.error("Error checking admin access:", error);
       toast.error("Failed to load admin dashboard");
@@ -88,7 +89,7 @@ const Admin = () => {
         totalChefs: totalChefs || 0,
         pendingChefs: pendingChefs || 0,
         totalOrders: totalOrders || 0,
-        pendingOrders: pendingOrders || 0
+        pendingOrders: pendingOrders || 0,
       });
     } catch (error) {
       console.error("Error fetching stats:", error);
@@ -113,7 +114,7 @@ const Admin = () => {
   return (
     <div className="min-h-screen bg-background">
       <Navbar />
-      
+
       <main className="container mx-auto px-4 py-8">
         <div className="mb-8">
           <h1 className="text-3xl font-bold bg-gradient-hero bg-clip-text text-transparent mb-2">
@@ -138,7 +139,9 @@ const Admin = () => {
 
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Pending Approval</CardTitle>
+              <CardTitle className="text-sm font-medium">
+                Pending Approval
+              </CardTitle>
               <Shield className="h-4 w-4 text-orange-600" />
             </CardHeader>
             <CardContent>
@@ -148,7 +151,9 @@ const Admin = () => {
 
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Total Orders</CardTitle>
+              <CardTitle className="text-sm font-medium">
+                Total Orders
+              </CardTitle>
               <Package className="h-4 w-4 text-blue-600" />
             </CardHeader>
             <CardContent>
@@ -158,8 +163,10 @@ const Admin = () => {
 
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Pending Orders</CardTitle>
-              <DollarSign className="h-4 w-4 text-green-600" />
+              <CardTitle className="text-sm font-medium">
+                Pending Orders
+              </CardTitle>
+              <IndianRupee className="h-4 w-4 text-green-600" />
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">{stats.pendingOrders}</div>

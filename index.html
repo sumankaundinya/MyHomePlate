@@ -1,28 +1,62 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>MyHomePlate - Authentic Indian Home Cooking</title>
-    <meta name="description" content="Discover delicious homemade Indian dishes from local chefs. Order authentic home-cooked meals or become a home chef on MyHomePlate." />
+    <title>MyHomePlate - Fresh from Home Kitchens</title>
+    <meta
+      name="description"
+      content="Discover delicious homemade Indian dishes from local chefs. Order authentic home-cooked meals or become a home chef on MyHomePlate."
+    />
     <meta name="author" content="MyHomePlate" />
 
-    <meta property="og:title" content="MyHomePlate - Authentic Indian Home Cooking" />
-    <meta property="og:description" content="Connect with local home chefs cooking authentic Indian dishes" />
+    <meta
+      property="og:title"
+      content="MyHomePlate - Fresh from Home Kitchens"
+    />
+    <meta
+      property="og:description"
+      content="Connect with local home chefs cooking authentic Indian dishes"
+    />
     <meta property="og:type" content="website" />
-    <meta property="og:image" content="https://lovable.dev/opengraph-image-p98pqg.png" />
+    <meta property="og:image" content="/images/background.jpg" />
 
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:site" content="@MyHomePlate" />
-    <meta name="twitter:image" content="https://lovable.dev/opengraph-image-p98pqg.png" />
-    
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <meta name="twitter:image" content="/images/background.jpg" />
+
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap"
+      rel="stylesheet"
+    />
+
+    <!-- Preload the background image for faster rendering -->
+    <link rel="preload" as="image" href="/images/background.jpg" />
   </head>
 
   <body>
+    <!-- Background layer BEFORE React root -->
+    <div
+      id="bg-layer"
+      style="
+        position: fixed;
+        inset: 0;
+        background-image: url('/images/background.jpg');
+        background-size: 50% auto;
+        background-position: center;
+        background-repeat: no-repeat;
+        background-attachment: fixed;
+        opacity: 0.12; /* adjust for watermark effect */
+        z-index: -9999;
+        pointer-events: none;
+      "
+    ></div>
+
+    <!-- React root -->
     <div id="root"></div>
+
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>

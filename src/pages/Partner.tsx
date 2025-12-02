@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
-import { ChefHat, DollarSign, Package, User } from "lucide-react";
+import { ChefHat, IndianRupee, Package, User } from "lucide-react";
 import { PartnerDishes } from "@/components/partner/PartnerDishes";
 import { PartnerOrders } from "@/components/partner/PartnerOrders";
 import { PartnerProfile } from "@/components/partner/PartnerProfile";
@@ -189,7 +189,7 @@ const Partner = () => {
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">Earnings</CardTitle>
-              <DollarSign className="h-4 w-4 text-green-600" />
+              <IndianRupee className="h-4 w-4 text-green-600" />
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">₹{stats.totalEarnings.toFixed(0)}</div>

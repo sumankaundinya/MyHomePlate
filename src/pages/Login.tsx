@@ -4,7 +4,13 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { toast } from "sonner";
 import { Loader2 } from "lucide-react";
 
@@ -16,7 +22,7 @@ const Login = () => {
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!email || !password) {
       toast.error("Please fill in all fields");
       return;
@@ -67,7 +73,7 @@ const Login = () => {
               <Input
                 id="email"
                 type="email"
-                placeholder="chef@myhomeplate.com"
+                placeholder="chef@myhomeplate.in"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 disabled={loading}
@@ -99,7 +105,10 @@ const Login = () => {
           </form>
           <div className="mt-4 text-center text-sm">
             Don't have an account?{" "}
-            <Link to="/signup" className="text-primary hover:underline font-medium">
+            <Link
+              to="/signup"
+              className="text-primary hover:underline font-medium"
+            >
               Sign up
             </Link>
           </div>

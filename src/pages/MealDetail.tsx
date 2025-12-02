@@ -3,12 +3,24 @@ import { useParams, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import Navbar from "@/components/Navbar";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { ArrowLeft, ChefHat, Loader2, ShoppingCart, UtensilsCrossed } from "lucide-react";
+import {
+  ArrowLeft,
+  ChefHat,
+  Loader2,
+  ShoppingCart,
+  UtensilsCrossed,
+} from "lucide-react";
 import { toast } from "sonner";
 import type { User } from "@supabase/supabase-js";
 
@@ -43,7 +55,9 @@ const MealDetail = () => {
       setUser(session?.user ?? null);
     });
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, session) => {
       setUser(session?.user ?? null);
     });
 
@@ -73,9 +87,9 @@ const MealDetail = () => {
         ...data,
         chef_name: profile?.name || "Unknown Chef",
       };
-      
+
       setMeal(mealData);
-      
+
       // Set default preferences
       if (mealData.spice_levels && mealData.spice_levels.length > 0) {
         setSpiceLevel(mealData.spice_levels[0]);
@@ -123,22 +137,20 @@ const MealDetail = () => {
       if (orderError) throw orderError;
 
       // Create order item with customizations
-      const { error: itemError } = await supabase
-        .from("order_items")
-        .insert({
-          order_id: order.id,
-          meal_id: meal.id,
-          quantity,
-          price_per_unit: meal.price,
-          subtotal: totalPrice,
-          spice_level: spiceLevel || null,
-          oil_preference: oilPreference || null,
-        });
+      const { error: itemError } = await supabase.from("order_items").insert({
+        order_id: order.id,
+        meal_id: meal.id,
+        quantity,
+        price_per_unit: meal.price,
+        subtotal: totalPrice,
+        spice_level: spiceLevel || null,
+        oil_preference: oilPreference || null,
+      });
 
       if (itemError) throw itemError;
 
       toast.success("Order placed! Redirecting to payment...");
-      
+
       // TODO: Integrate with Stripe checkout here
       setTimeout(() => {
         navigate("/orders");
@@ -215,12 +227,16 @@ const MealDetail = () => {
                 <ChefHat className="h-4 w-4 mr-2" />
                 <span>by {meal.chef_name}</span>
               </div>
-              <p className="text-3xl font-bold text-primary mb-6">kr {meal.price}</p>
+              <p className="text-3xl font-bold text-primary mb-6">
+                INR {meal.price}
+              </p>
             </div>
 
             <div>
               <h2 className="text-xl font-semibold mb-2">Description</h2>
-              <p className="text-muted-foreground leading-relaxed">{meal.description}</p>
+              <p className="text-muted-foreground leading-relaxed">
+                {meal.description}
+              </p>
             </div>
 
             {meal.available ? (
@@ -238,18 +254,32 @@ const MealDetail = () => {
                       min="1"
                       max="10"
                       value={quantity}
-                      onChange={(e) => setQuantity(Math.max(1, parseInt(e.target.value) || 1))}
+                      onChange={(e) =>
+                        setQuantity(Math.max(1, parseInt(e.target.value) || 1))
+                      }
                     />
                   </div>
 
                   {meal.spice_levels && meal.spice_levels.length > 0 && (
                     <div className="space-y-2">
                       <Label>Spice Level</Label>
-                      <RadioGroup value={spiceLevel} onValueChange={setSpiceLevel}>
+                      <RadioGroup
+                        value={spiceLevel}
+                        onValueChange={setSpiceLevel}
+                      >
                         {meal.spice_levels.map((level) => (
-                          <div key={level} className="flex items-center space-x-2">
-                            <RadioGroupItem value={level} id={`spice-${level}`} />
-                            <Label htmlFor={`spice-${level}`} className="capitalize cursor-pointer">
+                          <div
+                            key={level}
+                            className="flex items-center space-x-2"
+                          >
+                            <RadioGroupItem
+                              value={level}
+                              id={`spice-${level}`}
+                            />
+                            <Label
+                              htmlFor={`spice-${level}`}
+                              className="capitalize cursor-pointer"
+                            >
                               {level}
                             </Label>
                           </div>
@@ -261,11 +291,23 @@ const MealDetail = () => {
                   {meal.oil_options && meal.oil_options.length > 0 && (
                     <div className="space-y-2">
                       <Label>Oil Preference</Label>
-                      <RadioGroup value={oilPreference} onValueChange={setOilPreference}>
+                      <RadioGroup
+                        value={oilPreference}
+                        onValueChange={setOilPreference}
+                      >
                         {meal.oil_options.map((option) => (
-                          <div key={option} className="flex items-center space-x-2">
-                            <RadioGroupItem value={option} id={`oil-${option}`} />
-                            <Label htmlFor={`oil-${option}`} className="capitalize cursor-pointer">
+                          <div
+                            key={option}
+                            className="flex items-center space-x-2"
+                          >
+                            <RadioGroupItem
+                              value={option}
+                              id={`oil-${option}`}
+                            />
+                            <Label
+                              htmlFor={`oil-${option}`}
+                              className="capitalize cursor-pointer"
+                            >
                               {option}
                             </Label>
                           </div>
@@ -277,7 +319,7 @@ const MealDetail = () => {
                   <div className="flex items-center justify-between pt-2">
                     <span className="text-lg font-semibold">Total:</span>
                     <span className="text-2xl font-bold text-primary">
-                      kr {(meal.price * quantity).toFixed(2)}
+                      INR {(meal.price * quantity).toFixed(2)}
                     </span>
                   </div>
                   <Button

@@ -1,73 +1,104 @@
-# Welcome to your Lovable project
+MyHomePlate – Project README
+Project Info
 
-## Project info
+URL: https://myhomeplate.in
+(once deployed with your hosting / Render / Vercel)
 
-**URL**: https://lovable.dev/projects/266ca53d-c7be-414b-b320-bccf97aff595
+This repository contains the full source code for the MyHomePlate web application — a home-cooked meal marketplace built with modern frontend tools and connected to a custom Supabase backend.
 
-## How can I edit this code?
+How can I edit this code?
 
-There are several ways of editing your application.
+You can develop and maintain this project entirely using your own VS Code environment.
+All changes you make locally can be pushed to GitHub for version control and deployment.
 
-**Use Lovable**
+1. Use VS Code (recommended)
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/266ca53d-c7be-414b-b320-bccf97aff595) and start prompting.
+If you want to work locally using your own IDE, follow these steps:
 
-Changes made via Lovable will be committed automatically to this repo.
+# Step 1: Clone the repository using your Git URL.
 
-**Use your preferred IDE**
-
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
-
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
-
-Follow these steps:
-
-```sh
-# Step 1: Clone the repository using the project's Git URL.
 git clone <YOUR_GIT_URL>
 
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
+# Step 2: Navigate into the project folder.
 
-# Step 3: Install the necessary dependencies.
+cd myhomeplate
+
+# Step 3: Install dependencies.
+
 npm i
 
-# Step 4: Start the development server with auto-reloading and an instant preview.
+# Step 4: Run the development server.
+
 npm run dev
-```
 
-**Edit a file directly in GitHub**
+The app will start on the port defined in vite.config.js (default: http://localhost:8080).
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+2. Edit directly on GitHub
 
-**Use GitHub Codespaces**
+Open the repository on GitHub
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+Navigate to any file
 
-## What technologies are used for this project?
+Click the Edit button
 
-This project is built with:
+Commit changes
 
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
+3. Use GitHub Codespaces (optional)
 
-## How can I deploy this project?
+Go to your repository
 
-Simply open [Lovable](https://lovable.dev/projects/266ca53d-c7be-414b-b320-bccf97aff595) and click on Share -> Publish.
+Click the green Code button
 
-## Can I connect a custom domain to my Lovable project?
+Open the Codespaces tab
 
-Yes, you can!
+Click New codespace
 
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
+You’ll get a full cloud-based VS Code environment.
 
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/features/custom-domain#custom-domain)
+Technology Stack
+
+This project is built using:
+
+Vite
+
+React
+
+JavaScript (or TypeScript if you enable later)
+
+Tailwind CSS
+
+shadcn/ui
+
+Supabase (Auth + Database)
+
+Deployment
+
+You can deploy the project using:
+
+Vercel
+
+Netlify
+
+Render
+
+Any static hosting platform
+
+Once deployed, you can point your domain myhomeplate.in to it.
+
+Custom Domain Setup
+
+To connect your domain:
+
+Deploy your frontend (Vercel / Netlify / Render)
+
+Go to your domain provider (Hostinger / GoDaddy)
+
+Add DNS records:
+
+A Record → Hosting IP
+
+OR CNAME → Your hosting target domain
+
+Wait for DNS propagation (few minutes to a few hours)
+
+Once done, your project will be live on https://myhomeplate.in

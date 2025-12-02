@@ -2,10 +2,23 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import Navbar from "@/components/Navbar";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { ShoppingBag, Star } from "lucide-react";
@@ -43,8 +56,10 @@ const Orders = () => {
   }, []);
 
   const checkAuth = async () => {
-    const { data: { session } } = await supabase.auth.getSession();
-    
+    const {
+      data: { session },
+    } = await supabase.auth.getSession();
+
     if (!session) {
       toast.error("Please sign in to view your orders");
       navigate("/login");
@@ -73,7 +88,7 @@ const Orders = () => {
             .select("name")
             .eq("id", order.chef_id)
             .single();
-          
+
           return {
             ...order,
             profiles: { name: profile?.name || "Unknown Chef" },
@@ -111,18 +126,18 @@ const Orders = () => {
     }
 
     try {
-      const { data: { user } } = await supabase.auth.getUser();
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
       if (!user) return;
 
-      const { error } = await supabase
-        .from("reviews")
-        .insert({
-          order_id: selectedOrder.id,
-          customer_id: user.id,
-          chef_id: selectedOrder.chef_id,
-          rating,
-          comment: comment || null,
-        });
+      const { error } = await supabase.from("reviews").insert({
+        order_id: selectedOrder.id,
+        customer_id: user.id,
+        chef_id: selectedOrder.chef_id,
+        rating,
+        comment: comment || null,
+      });
 
       if (error) throw error;
 
@@ -180,11 +195,16 @@ const Orders = () => {
         ) : (
           <div className="space-y-4">
             {orders.map((order) => (
-              <Card key={order.id} className="shadow-soft hover:shadow-warm transition-shadow">
+              <Card
+                key={order.id}
+                className="shadow-soft hover:shadow-warm transition-shadow"
+              >
                 <CardHeader>
                   <div className="flex items-start justify-between">
                     <div className="flex-1">
-                      <CardTitle className="text-xl mb-1">{order.meals.title}</CardTitle>
+                      <CardTitle className="text-xl mb-1">
+                        {order.meals.title}
+                      </CardTitle>
                       <CardDescription>
                         Chef: {order.profiles.name} • Quantity: {order.quantity}
                       </CardDescription>
@@ -198,16 +218,24 @@ const Orders = () => {
                   <div className="flex items-center justify-between mb-4">
                     <div className="space-y-1">
                       <p className="text-sm text-muted-foreground">
-                        Order Date: {new Date(order.created_at).toLocaleDateString("en-DK", {
-                          year: "numeric",
-                          month: "long",
-                          day: "numeric",
-                        })}
+                        Order Date:{" "}
+                        {new Date(order.created_at).toLocaleDateString(
+                          "en-DK",
+                          {
+                            year: "numeric",
+                            month: "long",
+                            day: "numeric",
+                          }
+                        )}
                       </p>
-                      <p className="text-sm text-muted-foreground">Order ID: {order.id.slice(0, 8)}</p>
+                      <p className="text-sm text-muted-foreground">
+                        Order ID: {order.id.slice(0, 8)}
+                      </p>
                     </div>
                     <div className="text-right">
-                      <p className="text-2xl font-bold text-primary">kr {order.total_price}</p>
+                      <p className="text-2xl font-bold text-primary">
+                        INR {order.total_price}
+                      </p>
                     </div>
                   </div>
                   {order.status === "delivered" && (
@@ -260,7 +288,10 @@ const Orders = () => {
                               rows={4}
                             />
                           </div>
-                          <Button onClick={handleReviewSubmit} className="w-full">
+                          <Button
+                            onClick={handleReviewSubmit}
+                            className="w-full"
+                          >
                             Submit Review
                           </Button>
                         </div>

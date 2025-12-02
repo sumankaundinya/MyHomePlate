@@ -1,7 +1,14 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import Navbar from "@/components/Navbar";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -48,7 +55,7 @@ const Meals = () => {
             .select("name")
             .eq("id", meal.chef_id)
             .single();
-          
+
           return {
             ...meal,
             chef_name: profile?.name || "Unknown Chef",
@@ -79,7 +86,9 @@ const Meals = () => {
         {/* Header */}
         <div className="mb-8">
           <h1 className="text-4xl font-bold mb-2">Discover Homemade Dishes</h1>
-          <p className="text-muted-foreground">Authentic Indian cuisine from local home chefs</p>
+          <p className="text-muted-foreground">
+            Authentic Indian cuisine from local home chefs
+          </p>
         </div>
 
         {/* Search */}
@@ -100,7 +109,9 @@ const Meals = () => {
           <div className="flex items-center justify-center min-h-[400px]">
             <div className="text-center">
               <UtensilsCrossed className="h-12 w-12 animate-pulse text-primary mx-auto mb-4" />
-              <p className="text-muted-foreground">Loading delicious meals...</p>
+              <p className="text-muted-foreground">
+                Loading delicious meals...
+              </p>
             </div>
           </div>
         ) : filteredMeals.length === 0 ? (
@@ -108,7 +119,9 @@ const Meals = () => {
             <UtensilsCrossed className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
             <h3 className="text-xl font-semibold mb-2">No meals found</h3>
             <p className="text-muted-foreground">
-              {searchQuery ? "Try a different search" : "Check back soon for new dishes!"}
+              {searchQuery
+                ? "Try a different search"
+                : "Check back soon for new dishes!"}
             </p>
           </div>
         ) : (
@@ -139,13 +152,19 @@ const Meals = () => {
                     </CardTitle>
                     <Badge variant="secondary">{meal.category}</Badge>
                   </div>
-                  <CardDescription className="line-clamp-2">{meal.description}</CardDescription>
+                  <CardDescription className="line-clamp-2">
+                    {meal.description}
+                  </CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <p className="text-sm text-muted-foreground">by {meal.chef_name}</p>
+                  <p className="text-sm text-muted-foreground">
+                    by {meal.chef_name}
+                  </p>
                 </CardContent>
                 <CardFooter className="flex items-center justify-between">
-                  <p className="text-2xl font-bold text-primary">kr {meal.price}</p>
+                  <p className="text-2xl font-bold text-primary">
+                    INR {meal.price}
+                  </p>
                   <Button variant="default">Order Now</Button>
                 </CardFooter>
               </Card>

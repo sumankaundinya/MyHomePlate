@@ -82,7 +82,7 @@ const Signup = () => {
               <Input
                 id="name"
                 type="text"
-                placeholder="Priya Sharma"
+                placeholder="Veda Shanaya"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 disabled={loading}
@@ -94,7 +94,7 @@ const Signup = () => {
               <Input
                 id="email"
                 type="email"
-                placeholder="priya@example.com"
+                placeholder="veda@example.com"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 disabled={loading}

@@ -61,7 +61,21 @@
     @apply border-border;
   }
 
+  /* Ensure nothing covers the background */
+  html,
+  body,
+  #root {
+    background: transparent !important;
+    min-height: 100vh;
+  }
+
   body {
-    @apply bg-background text-foreground;
+    @apply text-foreground;
+    position: relative;
+  }
+
+  /* Optional: force all top-level wrappers transparent */
+  #root > * {
+    background: transparent !important;
   }
 }
