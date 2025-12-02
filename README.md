@@ -17,7 +17,7 @@ If you want to work locally using your own IDE, follow these steps:
 
 # Step 1: Clone the repository using your Git URL.
 
-git clone <YOUR_GIT_URL>
+git clone https://github.com/sumankaundinya/MyHomePlate.git
 
 # Step 2: Navigate into the project folder.
 
