@@ -141,7 +141,7 @@ const Index = () => {
           <p className="mt-2">
             Designed and owned by{" "}
             <span className="font-medium text-foreground">
-              Suman Kumar Kaundinya Jujjuru
+              Suman Kumar Kaundinya Jujjuru (sumanj241118@gmail.com)
             </span>
           </p>
           <p className="mt-2">
