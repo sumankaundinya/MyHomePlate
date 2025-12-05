@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import Navbar from "@/components/Navbar";
+import SEOHead from "@/components/SEOHead";
 import { ChefCard } from "@/components/ChefCard";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -33,7 +34,10 @@ const Chefs = () => {
   const [chefs, setChefs] = useState<Chef[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
-  const [userAddress, setUserAddress] = useState<{ latitude: number; longitude: number } | null>(null);
+  const [userAddress, setUserAddress] = useState<{
+    latitude: number;
+    longitude: number;
+  } | null>(null);
   const [addressInput, setAddressInput] = useState("");
 
   useEffect(() => {
@@ -43,7 +47,7 @@ const Chefs = () => {
   const fetchChefs = async () => {
     try {
       setLoading(true);
-      
+
       const { data, error } = await supabase
         .from("chefs")
         .select("*, chef_specialties (specialty)")
@@ -61,10 +65,10 @@ const Chefs = () => {
             .select("name")
             .eq("id", chef.user_id)
             .single();
-          
+
           return {
             ...chef,
-            profiles: profileData || { name: "Chef" }
+            profiles: profileData || { name: "Chef" },
           };
         })
       );
@@ -91,13 +95,15 @@ const Chefs = () => {
   };
 
   const filteredChefs = chefs
-    .filter(chef => {
+    .filter((chef) => {
       const name = chef.profiles?.name?.toLowerCase() || "";
-      const specialties = chef.chef_specialties.map(s => s.specialty.toLowerCase()).join(" ");
+      const specialties = chef.chef_specialties
+        .map((s) => s.specialty.toLowerCase())
+        .join(" ");
       const search = searchTerm.toLowerCase();
       return name.includes(search) || specialties.includes(search);
     })
-    .map(chef => {
+    .map((chef) => {
       // Calculate distance if user location is set (demo calculation)
       if (userAddress) {
         // In production, calculate actual distance using chef's location
@@ -106,7 +112,7 @@ const Chefs = () => {
       }
       return chef;
     })
-    .filter(chef => {
+    .filter((chef) => {
       // Filter by 2km radius if location is set
       if (userAddress && chef.distance !== undefined) {
         return chef.distance <= 2;
@@ -123,8 +129,12 @@ const Chefs = () => {
 
   return (
     <div className="min-h-screen bg-background">
+      <SEOHead
+        title="Our Home Chefs - MyHomePlate"
+        description="Meet verified home chefs in your area cooking authentic Indian dishes. Browse profiles, ratings, and specialties. Order fresh homemade meals today."
+      />
       <Navbar />
-      
+
       <main className="container mx-auto px-4 py-8">
         <div className="mb-8">
           <h1 className="text-3xl md:text-4xl font-bold bg-gradient-hero bg-clip-text text-transparent mb-2">
@@ -187,7 +197,7 @@ const Chefs = () => {
               <ChefHat className="h-16 w-16 text-muted-foreground mx-auto mb-4" />
               <h3 className="text-xl font-semibold mb-2">No chefs found</h3>
               <p className="text-muted-foreground mb-4">
-                {userAddress 
+                {userAddress
                   ? "Try expanding your search area or adjust filters"
                   : "Set your location to find nearby chefs"}
               </p>
@@ -201,7 +211,7 @@ const Chefs = () => {
                 id={chef.id}
                 name={chef.profiles?.name || "Chef"}
                 bio={chef.bio || undefined}
-                specialties={chef.chef_specialties.map(s => s.specialty)}
+                specialties={chef.chef_specialties.map((s) => s.specialty)}
                 rating={chef.avg_rating}
                 totalReviews={chef.total_reviews}
                 totalOrders={chef.total_orders}

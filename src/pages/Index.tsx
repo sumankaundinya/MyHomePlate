@@ -8,34 +8,22 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import Navbar from "@/components/Navbar";
-import { ChefHat, Heart, ShieldCheck, UtensilsCrossed } from "lucide-react";
+import SEOHead from "@/components/SEOHead";
+import PopularMeals from "@/components/home/PopularMeals";
+import MeetChefs from "@/components/home/MeetChefs";
+import HowItWorks from "@/components/home/HowItWorks";
+import WhyMyHomePlate from "@/components/home/WhyMyHomePlate";
+import { ChefHat, UtensilsCrossed } from "lucide-react";
 
 const Index = () => {
   const navigate = useNavigate();
 
-  const features = [
-    {
-      icon: <ChefHat className="h-10 w-10 text-primary" />,
-      title: "Local Home Chefs",
-      description:
-        "Connect with talented home chefs in your neighborhood cooking authentic Indian dishes",
-    },
-    {
-      icon: <Heart className="h-10 w-10 text-primary" />,
-      title: "Homemade with Love",
-      description:
-        "Every dish is prepared with care, using traditional recipes and fresh ingredients",
-    },
-    {
-      icon: <ShieldCheck className="h-10 w-10 text-primary" />,
-      title: "Safe & Secure",
-      description:
-        "Secure payments and transparent platform connecting you directly with chefs",
-    },
-  ];
-
   return (
     <div className="min-h-screen bg-background">
+      <SEOHead
+        title="MyHomePlate - Authentic Indian Home Cooking"
+        description="Discover delicious homemade Indian dishes from local chefs in your area. Order authentic home-cooked meals or become a home chef on MyHomePlate."
+      />
       <Navbar />
 
       {/* Hero Section */}
@@ -44,11 +32,11 @@ const Index = () => {
         <div className="container mx-auto px-4 relative">
           <div className="max-w-3xl mx-auto text-center">
             <h1 className="text-5xl md:text-6xl font-bold mb-6 bg-gradient-hero bg-clip-text text-transparent">
-              Authentic Home Cooking
+              Authentic Indian Home Cooking
             </h1>
             <p className="text-xl md:text-2xl text-muted-foreground mb-8">
-              Skip restaurants. Enjoy real home cooked meals made by neighbors
-              who love to cook.
+              Discover delicious homemade Indian dishes from local chefs in your
+              area
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Button
@@ -65,49 +53,35 @@ const Index = () => {
                 onClick={() => navigate("/signup")}
                 className="text-lg"
               >
-                Become a Chef
+                <ChefHat className="mr-2 h-5 w-5" />
+                Become a Home Chef
               </Button>
             </div>
           </div>
         </div>
       </section>
 
-      {/* Features Section */}
-      <section className="py-20 bg-muted/30">
-        <div className="container mx-auto px-4">
-          <h2 className="text-3xl md:text-4xl font-bold text-center mb-12">
-            Why Choose MyHomePlate?
-          </h2>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            {features.map((feature, index) => (
-              <Card
-                key={index}
-                className="text-center shadow-soft hover:shadow-warm transition-shadow"
-              >
-                <CardHeader>
-                  <div className="flex justify-center mb-4">{feature.icon}</div>
-                  <CardTitle className="text-xl">{feature.title}</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <CardDescription className="text-base">
-                    {feature.description}
-                  </CardDescription>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        </div>
-      </section>
+      {/* Popular Meals Section */}
+      <PopularMeals />
+
+      {/* Meet Our Chefs Section */}
+      <MeetChefs />
+
+      {/* How It Works Section */}
+      <HowItWorks />
+
+      {/* Why MyHomePlate Section */}
+      <WhyMyHomePlate />
 
       {/* CTA Section */}
-      <section className="py-20">
+      <section className="py-20 bg-muted/30">
         <div className="container mx-auto px-4">
-          <Card className="bg-gradient-hero text-white shadow-warm max-w-4xl mx-auto">
+          <Card className="bg-gradient-hero text-primary-foreground shadow-warm max-w-4xl mx-auto border-none">
             <CardHeader className="text-center pb-4">
               <CardTitle className="text-3xl md:text-4xl font-bold mb-4">
                 Start Your Culinary Journey Today
               </CardTitle>
-              <CardDescription className="text-white/90 text-lg">
+              <CardDescription className="text-primary-foreground/90 text-lg">
                 Whether you're looking to enjoy authentic homemade food or share
                 your cooking passion
               </CardDescription>
@@ -119,14 +93,16 @@ const Index = () => {
                 onClick={() => navigate("/meals")}
                 className="text-lg"
               >
+                <UtensilsCrossed className="mr-2 h-5 w-5" />
                 Order Now
               </Button>
               <Button
                 size="lg"
                 variant="outline"
                 onClick={() => navigate("/signup")}
-                className="text-lg bg-white/10 hover:bg-white/20 text-white border-white/30"
+                className="text-lg bg-primary-foreground/10 hover:bg-primary-foreground/20 text-primary-foreground border-primary-foreground/30"
               >
+                <ChefHat className="mr-2 h-5 w-5" />
                 Become a Chef
               </Button>
             </CardContent>

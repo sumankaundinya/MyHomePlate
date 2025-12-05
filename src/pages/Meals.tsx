@@ -1,6 +1,8 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import Navbar from "@/components/Navbar";
+import SEOHead from "@/components/SEOHead";
+import AuthModal from "@/components/AuthModal";
 import {
   Card,
   CardContent,
@@ -15,6 +17,7 @@ import { Badge } from "@/components/ui/badge";
 import { Search, UtensilsCrossed } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
+import type { User } from "@supabase/supabase-js";
 
 interface Meal {
   id: string;
@@ -32,9 +35,23 @@ const Meals = () => {
   const [meals, setMeals] = useState<Meal[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [loading, setLoading] = useState(true);
+  const [showAuthModal, setShowAuthModal] = useState(false);
+  const [user, setUser] = useState<User | null>(null);
 
   useEffect(() => {
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setUser(session?.user ?? null);
+    });
+
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, session) => {
+      setUser(session?.user ?? null);
+    });
+
     fetchMeals();
+
+    return () => subscription.unsubscribe();
   }, []);
 
   const fetchMeals = async () => {
@@ -47,7 +64,6 @@ const Meals = () => {
 
       if (error) throw error;
 
-      // Fetch chef names
       const mealsWithChefName = await Promise.all(
         (data || []).map(async (meal: any) => {
           const { data: profile } = await supabase
@@ -79,8 +95,21 @@ const Meals = () => {
       meal.category.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
+  const handleOrderClick = (e: React.MouseEvent, mealId: string) => {
+    e.stopPropagation();
+    if (!user) {
+      setShowAuthModal(true);
+    } else {
+      navigate(`/meals/${mealId}`);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-background">
+      <SEOHead
+        title="Browse Homemade Meals - MyHomePlate"
+        description="Explore authentic Indian home-cooked dishes from verified local chefs. Order fresh, delicious homemade meals delivered to your doorstep."
+      />
       <Navbar />
       <div className="container mx-auto px-4 py-8">
         {/* Header */}
@@ -163,15 +192,22 @@ const Meals = () => {
                 </CardContent>
                 <CardFooter className="flex items-center justify-between">
                   <p className="text-2xl font-bold text-primary">
-                    INR {meal.price}
+                    ₹{meal.price}
                   </p>
-                  <Button variant="default">Order Now</Button>
+                  <Button
+                    variant="default"
+                    onClick={(e) => handleOrderClick(e, meal.id)}
+                  >
+                    Order Now
+                  </Button>
                 </CardFooter>
               </Card>
             ))}
           </div>
         )}
       </div>
+
+      <AuthModal open={showAuthModal} onOpenChange={setShowAuthModal} />
     </div>
   );
 };
