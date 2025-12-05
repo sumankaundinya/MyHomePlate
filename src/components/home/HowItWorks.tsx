@@ -48,8 +48,8 @@ const HowItWorks = () => {
   text-primary-foreground shadow-warm 
   group-hover:scale-110 transition-transform
   
-  translate-x-40        /* mobile */
-  md:translate-x-40   /* tablet */
+  translate-x-36        /* mobile */
+  md:translate-x-32   /* tablet */
   lg:translate-x-24    /* laptop/desktop */
 "
                 >
