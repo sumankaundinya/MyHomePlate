@@ -40,7 +40,19 @@ const HowItWorks = () => {
             <div key={index} className="relative text-center group">
               {/* Step number */}
               <div className="relative mx-auto mb-6">
-                <div className="w-20 h-20 rounded-full bg-gradient-to-br from-primary to-accent flex items-center justify-center text-primary-foreground shadow-warm group-hover:scale-110 transition-transform translate-x-24">
+                <div
+                  className="
+  w-20 h-20 rounded-full 
+  bg-gradient-to-br from-primary to-accent 
+  flex items-center justify-center 
+  text-primary-foreground shadow-warm 
+  group-hover:scale-110 transition-transform
+  
+  translate-x-6        /* mobile */
+  md:translate-x-16    /* tablet */
+  lg:translate-x-24    /* laptop/desktop */
+"
+                >
                   {step.icon}
                 </div>
               </div>
