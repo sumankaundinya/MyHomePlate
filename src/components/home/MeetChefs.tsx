@@ -7,7 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
-import { Star, ChefHat, CheckCircle2 } from "lucide-react";
+import { Star, ChefHat, CheckCircle2, UtensilsCrossed } from "lucide-react";
 
 interface Chef {
   id: string;
@@ -159,7 +159,7 @@ const MeetChefs = () => {
         </ScrollArea>
 
         <div className="text-center mt-10">
-          <Button size="lg" variant="outline" onClick={() => navigate("/chefs")}>
+          <Button size="lg" variant="outline" onClick={() => navigate("/chefs")} className="border-2 border-primary text-foreground hover:bg-primary hover:text-white font-semibold transition-all">
             View All Chefs
           </Button>
         </div>
