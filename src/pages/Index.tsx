@@ -95,8 +95,8 @@ const Index = () => {
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
               transition={{ delay: 0.3, duration: 0.8 }}
-              className="hidden md:flex items-center justify-center"
-              style={{ minHeight: '400px', maxHeight: '70vh' }}
+              className="flex items-center justify-center"
+              style={{ minHeight: '300px', maxHeight: '70vh' }}
             >
               <div className="w-full h-full rounded-2xl overflow-hidden shadow-2xl">
                 <HeroImageCarousel />

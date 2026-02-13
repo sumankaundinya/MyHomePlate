@@ -3,22 +3,22 @@ import { motion, AnimatePresence } from "framer-motion";
 
 const foodImages = [
   {
-    url: "https://images.unsplash.com/photo-1585937421612-70a008356fbe?w=800&q=80",
+    url: "https://images.unsplash.com/photo-1603894584373-5ac82b2ae398?w=800&q=80",
     alt: "Butter Chicken",
     dish: "Butter Chicken"
   },
   {
-    url: "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=800&q=80",
+    url: "https://images.unsplash.com/photo-1563379091339-03b21ab4a4f8?w=800&q=80",
     alt: "Biryani",
     dish: "Biryani"
   },
   {
-    url: "https://images.unsplash.com/photo-1565557623262-b51c2513a641?w=800&q=80",
+    url: "/images/Masaladosa.webp",
     alt: "Masala Dosa",
     dish: "Masala Dosa"
   },
   {
-    url: "https://images.unsplash.com/photo-1567188040759-fb8a883dc6d8?w=800&q=80",
+    url: "/images/completethali.jpg",
     alt: "Thali",
     dish: "Complete Thali"
   }
