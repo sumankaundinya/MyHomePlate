@@ -8,7 +8,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
 import { toast } from "sonner";
-import { Plus, X } from "lucide-react";
+import { Plus, X, MapPin, Navigation } from "lucide-react";
 
 interface PartnerProfileProps {
   chefId: string;
@@ -24,10 +24,21 @@ export const PartnerProfile = ({ chefId }: PartnerProfileProps) => {
   });
   const [specialties, setSpecialties] = useState<string[]>([]);
   const [newSpecialty, setNewSpecialty] = useState("");
+  const [address, setAddress] = useState({
+    id: "",
+    address_line: "",
+    area: "",
+    pincode: "",
+    latitude: "",
+    longitude: "",
+  });
+  const [addressLoading, setAddressLoading] = useState(false);
+  const [gpsLoading, setGpsLoading] = useState(false);
 
   useEffect(() => {
     fetchProfile();
     fetchSpecialties();
+    fetchAddress();
   }, [chefId]);
 
   const fetchProfile = async () => {
@@ -63,6 +74,100 @@ export const PartnerProfile = ({ chefId }: PartnerProfileProps) => {
       setSpecialties(data?.map(s => s.specialty) || []);
     } catch (error) {
       console.error("Error fetching specialties:", error);
+    }
+  };
+
+  const fetchAddress = async () => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+      const { data } = await supabase
+        .from("addresses")
+        .select("*")
+        .eq("user_id", user.id)
+        .eq("is_primary", true)
+        .maybeSingle();
+      if (data) {
+        setAddress({
+          id: data.id,
+          address_line: data.address_line || "",
+          area: data.area || "",
+          pincode: data.pincode || "",
+          latitude: data.latitude?.toString() || "",
+          longitude: data.longitude?.toString() || "",
+        });
+      }
+    } catch (error) {
+      console.error("Error fetching address:", error);
+    }
+  };
+
+  const handleDetectGPS = () => {
+    if (!navigator.geolocation) {
+      toast.error("Geolocation not supported by your browser");
+      return;
+    }
+    setGpsLoading(true);
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        setAddress((prev) => ({
+          ...prev,
+          latitude: pos.coords.latitude.toFixed(6),
+          longitude: pos.coords.longitude.toFixed(6),
+        }));
+        setGpsLoading(false);
+        toast.success("GPS coordinates detected!");
+      },
+      () => {
+        setGpsLoading(false);
+        toast.error("Could not detect location. Enter coordinates manually.");
+      },
+      { timeout: 8000 }
+    );
+  };
+
+  const handleSaveAddress = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!address.address_line.trim() || !address.area.trim() || !address.pincode.trim()) {
+      toast.error("Please fill in address, area, and pincode");
+      return;
+    }
+    setAddressLoading(true);
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error("Not authenticated");
+
+      const payload = {
+        user_id: user.id,
+        address_line: address.address_line.trim(),
+        area: address.area.trim(),
+        pincode: address.pincode.trim(),
+        latitude: address.latitude ? parseFloat(address.latitude) : null,
+        longitude: address.longitude ? parseFloat(address.longitude) : null,
+        is_primary: true,
+      };
+
+      if (address.id) {
+        const { error } = await supabase
+          .from("addresses")
+          .update(payload)
+          .eq("id", address.id);
+        if (error) throw error;
+      } else {
+        const { data, error } = await supabase
+          .from("addresses")
+          .insert(payload)
+          .select("id")
+          .single();
+        if (error) throw error;
+        setAddress((prev) => ({ ...prev, id: data.id }));
+      }
+      toast.success("Kitchen address saved! You'll now appear on the map.");
+    } catch (error: any) {
+      console.error("Error saving address:", error);
+      toast.error(error.message || "Failed to save address");
+    } finally {
+      setAddressLoading(false);
     }
   };
 
@@ -181,6 +286,87 @@ export const PartnerProfile = ({ chefId }: PartnerProfileProps) => {
 
             <Button type="submit" disabled={loading} className="w-full">
               {loading ? "Saving..." : "Save Profile"}
+            </Button>
+          </form>
+        </CardContent>
+      </Card>
+
+      {/* Kitchen Address */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <MapPin className="h-5 w-5 text-primary" />
+            Kitchen Address
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <form onSubmit={handleSaveAddress} className="space-y-4">
+            <div>
+              <Label htmlFor="address_line">Street / Flat / Building</Label>
+              <Input
+                id="address_line"
+                placeholder="e.g. Plot 12, Sai Nagar Colony"
+                value={address.address_line}
+                onChange={(e) => setAddress({ ...address, address_line: e.target.value })}
+              />
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <Label htmlFor="area">Area / Locality</Label>
+                <Input
+                  id="area"
+                  placeholder="e.g. Nizampet"
+                  value={address.area}
+                  onChange={(e) => setAddress({ ...address, area: e.target.value })}
+                />
+              </div>
+              <div>
+                <Label htmlFor="pincode">Pincode</Label>
+                <Input
+                  id="pincode"
+                  placeholder="e.g. 500090"
+                  value={address.pincode}
+                  onChange={(e) => setAddress({ ...address, pincode: e.target.value })}
+                />
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label>GPS Coordinates (for map visibility)</Label>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <Input
+                    placeholder="Latitude e.g. 17.5081"
+                    value={address.latitude}
+                    onChange={(e) => setAddress({ ...address, latitude: e.target.value })}
+                  />
+                </div>
+                <div>
+                  <Input
+                    placeholder="Longitude e.g. 78.3887"
+                    value={address.longitude}
+                    onChange={(e) => setAddress({ ...address, longitude: e.target.value })}
+                  />
+                </div>
+              </div>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={handleDetectGPS}
+                disabled={gpsLoading}
+                className="w-full"
+              >
+                <Navigation className="h-4 w-4 mr-2" />
+                {gpsLoading ? "Detecting…" : "Auto-detect my GPS coordinates"}
+              </Button>
+              <p className="text-xs text-muted-foreground">
+                Coordinates let customers find you on the map. Use "Auto-detect" or enter manually.
+              </p>
+            </div>
+
+            <Button type="submit" disabled={addressLoading} className="w-full">
+              {addressLoading ? "Saving…" : "Save Kitchen Address"}
             </Button>
           </form>
         </CardContent>
