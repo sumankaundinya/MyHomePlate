@@ -13,7 +13,7 @@ export const FloatingActionBubble = () => {
   ];
 
   return (
-    <div className="fixed bottom-24 right-6 z-50 md:bottom-8">
+    <div className="fixed bottom-24 left-6 z-50 md:bottom-8">
       <AnimatePresence>
         {isOpen && (
           <motion.div

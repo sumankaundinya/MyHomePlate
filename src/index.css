@@ -83,25 +83,18 @@
     @apply border-border;
   }
 
-  /* Ensure nothing covers the background */
   html,
   body,
   #root {
-    background: transparent !important;
     min-height: 100vh;
   }
 
   body {
-    @apply text-foreground;
+    @apply bg-background text-foreground;
     position: relative;
     font-feature-settings: 'rlig' 1, 'calt' 1;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
-  }
-
-  /* Optional: force all top-level wrappers transparent */
-  #root > * {
-    background: transparent !important;
   }
   
   /* Typography scale */

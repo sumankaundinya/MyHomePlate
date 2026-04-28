@@ -103,14 +103,18 @@ const Navbar = () => {
 
     return (
       <>
-        <Link to="/meals" className={linkClass} onClick={handleClick}>
-          {mobile && <UtensilsCrossed className="h-5 w-5" />}
-          <span>Browse Meals</span>
-        </Link>
-        <Link to="/chefs" className={linkClass} onClick={handleClick}>
-          {mobile && <Users className="h-5 w-5" />}
-          <span>Our Chefs</span>
-        </Link>
+        {user && (
+          <Link to="/meals" className={linkClass} onClick={handleClick}>
+            {mobile && <UtensilsCrossed className="h-5 w-5" />}
+            <span>Browse Meals</span>
+          </Link>
+        )}
+        {user && (
+          <Link to="/chefs" className={linkClass} onClick={handleClick}>
+            {mobile && <Users className="h-5 w-5" />}
+            <span>Our Chefs</span>
+          </Link>
+        )}
         {user && (
           <Link to="/subscriptions" className={linkClass} onClick={handleClick}>
             {mobile && <CalendarCheck className="h-5 w-5" />}
