@@ -21,8 +21,9 @@ import {
 } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
-import { ShoppingBag, Star } from "lucide-react";
+import { ShoppingBag, Star, Clock, ChefHat, CheckCircle2 } from "lucide-react";
 import { toast } from "sonner";
+import { OrderProgressTracker } from "@/components/OrderProgressTracker";
 import type { User } from "@supabase/supabase-js";
 
 interface Order {
@@ -68,6 +69,18 @@ const Orders = () => {
 
     setUser(session.user);
     fetchOrders(session.user.id);
+
+    // Real-time subscription — refresh when any of this user's orders change
+    const channel = supabase
+      .channel("customer-orders")
+      .on(
+        "postgres_changes",
+        { event: "UPDATE", schema: "public", table: "orders", filter: `customer_id=eq.${session.user.id}` },
+        () => fetchOrders(session.user.id)
+      )
+      .subscribe();
+
+    return () => { supabase.removeChannel(channel); };
   };
 
   const fetchOrders = async (userId: string) => {
@@ -108,15 +121,37 @@ const Orders = () => {
   const getStatusColor = (status: string) => {
     switch (status) {
       case "paid":
-      case "delivered":
-        return "default";
-      case "pending":
-        return "secondary";
-      case "cancelled":
-        return "destructive";
-      default:
-        return "outline";
+      case "accepted":         return "outline";
+      case "preparing":        return "secondary";
+      case "ready":
+      case "out_for_delivery": return "default";
+      case "delivered":        return "default";
+      case "pending":          return "secondary";
+      case "cancelled":        return "destructive";
+      default:                 return "outline";
     }
+  };
+
+  const getStatusStep = (status: string): number => {
+    const steps: Record<string, number> = {
+      pending: 1, accepted: 1, preparing: 2,
+      ready: 3, out_for_delivery: 4, delivered: 4,
+    };
+    return steps[status] ?? 1;
+  };
+
+  const getStatusLabel = (status: string) => {
+    const labels: Record<string, string> = {
+      pending:          "⏳ Pending",
+      accepted:         "✅ Accepted",
+      preparing:        "👨‍🍳 Preparing",
+      ready:            "📦 Ready for Pickup",
+      out_for_delivery: "🛵 Out for Delivery",
+      delivered:        "🎉 Delivered",
+      cancelled:        "❌ Cancelled",
+      paid:             "✅ Paid",
+    };
+    return labels[status] ?? status;
   };
 
   const handleReviewSubmit = async () => {
@@ -210,7 +245,7 @@ const Orders = () => {
                       </CardDescription>
                     </div>
                     <Badge variant={getStatusColor(order.status) as any}>
-                      {order.status}
+                      {getStatusLabel(order.status)}
                     </Badge>
                   </div>
                 </CardHeader>
@@ -220,12 +255,8 @@ const Orders = () => {
                       <p className="text-sm text-muted-foreground">
                         Order Date:{" "}
                         {new Date(order.created_at).toLocaleDateString(
-                          "en-DK",
-                          {
-                            year: "numeric",
-                            month: "long",
-                            day: "numeric",
-                          }
+                          "en-IN",
+                          { year: "numeric", month: "long", day: "numeric" }
                         )}
                       </p>
                       <p className="text-sm text-muted-foreground">
@@ -234,10 +265,18 @@ const Orders = () => {
                     </div>
                     <div className="text-right">
                       <p className="text-2xl font-bold text-primary">
-                        INR {order.total_price}
+                        ₹{order.total_price}
                       </p>
                     </div>
                   </div>
+
+                  {/* Order progress tracker for active orders */}
+                  {!["delivered", "cancelled"].includes(order.status) && (
+                    <div className="mb-4 p-3 bg-orange-50 rounded-xl">
+                      <p className="text-xs font-semibold text-orange-700 mb-3">Order Progress</p>
+                      <OrderProgressTracker currentStep={getStatusStep(order.status)} />
+                    </div>
+                  )}
                   {order.status === "delivered" && (
                     <Dialog>
                       <DialogTrigger asChild>

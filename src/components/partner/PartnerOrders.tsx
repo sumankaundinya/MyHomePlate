@@ -23,10 +23,11 @@ interface Order {
 }
 
 interface PartnerOrdersProps {
+  chefId: string;
   onStatsUpdate: () => void;
 }
 
-export const PartnerOrders = ({ onStatsUpdate }: PartnerOrdersProps) => {
+export const PartnerOrders = ({ chefId, onStatsUpdate }: PartnerOrdersProps) => {
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(false);
   const [filterStatus, setFilterStatus] = useState<string>("all");
@@ -37,13 +38,10 @@ export const PartnerOrders = ({ onStatsUpdate }: PartnerOrdersProps) => {
 
   const fetchOrders = async () => {
     try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
-
       const { data, error } = await supabase
         .from("orders")
         .select("*")
-        .eq("chef_id", user.id)
+        .eq("chef_id", chefId)
         .order("created_at", { ascending: false });
 
       if (error) throw error;
@@ -110,19 +108,29 @@ export const PartnerOrders = ({ onStatsUpdate }: PartnerOrdersProps) => {
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case "pending":
-        return "default";
-      case "accepted":
-      case "preparing":
-        return "secondary";
-      case "delivered":
-        return "default";
+      case "pending":    return "secondary";
+      case "accepted":   return "outline";
+      case "preparing":  return "outline";
+      case "ready":      return "default";
+      case "delivered":  return "default";
       case "rejected":
-      case "cancelled":
-        return "destructive";
-      default:
-        return "outline";
+      case "cancelled":  return "destructive";
+      default:           return "outline";
     }
+  };
+
+  const getStatusLabel = (status: string) => {
+    const labels: Record<string, string> = {
+      pending:          "⏳ Pending",
+      accepted:         "✅ Accepted",
+      preparing:        "👨‍🍳 Preparing",
+      ready:            "📦 Ready",
+      out_for_delivery: "🛵 Out for Delivery",
+      delivered:        "🎉 Delivered",
+      rejected:         "❌ Rejected",
+      cancelled:        "❌ Cancelled",
+    };
+    return labels[status] ?? status;
   };
 
   const filteredOrders = filterStatus === "all" 
@@ -171,8 +179,7 @@ export const PartnerOrders = ({ onStatsUpdate }: PartnerOrdersProps) => {
                     </p>
                   </div>
                   <Badge variant={getStatusColor(order.status) as any}>
-                    {getStatusIcon(order.status)}
-                    <span className="ml-1 capitalize">{order.status.replace("_", " ")}</span>
+                    {getStatusLabel(order.status)}
                   </Badge>
                 </div>
               </CardHeader>
@@ -207,12 +214,32 @@ export const PartnerOrders = ({ onStatsUpdate }: PartnerOrdersProps) => {
                 )}
 
                 {order.status === "accepted" && (
-                  <Button 
-                    className="w-full"
+                  <Button
+                    className="w-full bg-blue-600 hover:bg-blue-700"
                     onClick={() => handleStatusUpdate(order.id, "preparing")}
                     disabled={loading}
                   >
-                    Mark as Preparing
+                    👨‍🍳 Start Preparing
+                  </Button>
+                )}
+
+                {order.status === "preparing" && (
+                  <Button
+                    className="w-full bg-amber-500 hover:bg-amber-600"
+                    onClick={() => handleStatusUpdate(order.id, "ready")}
+                    disabled={loading}
+                  >
+                    📦 Mark as Ready
+                  </Button>
+                )}
+
+                {order.status === "ready" && (
+                  <Button
+                    className="w-full bg-green-600 hover:bg-green-700"
+                    onClick={() => handleStatusUpdate(order.id, "delivered")}
+                    disabled={loading}
+                  >
+                    🎉 Mark as Delivered
                   </Button>
                 )}
               </CardContent>

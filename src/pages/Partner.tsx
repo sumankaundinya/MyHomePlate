@@ -93,31 +93,41 @@ const Partner = () => {
 
   const fetchStats = async (userId: string) => {
     try {
+      // Get the chef profile id for this user
+      const { data: chefData } = await supabase
+        .from("chefs")
+        .select("id")
+        .eq("user_id", userId)
+        .maybeSingle();
+
+      const profileChefId = chefData?.id;
+      if (!profileChefId) return;
+
       // Get total orders
       const { count: totalOrders } = await supabase
         .from("orders")
         .select("*", { count: "exact", head: true })
-        .eq("chef_id", userId);
+        .eq("chef_id", profileChefId);
 
       // Get pending orders
       const { count: pendingOrders } = await supabase
         .from("orders")
         .select("*", { count: "exact", head: true })
-        .eq("chef_id", userId)
+        .eq("chef_id", profileChefId)
         .eq("status", "pending");
 
       // Get active dishes
       const { count: activeDishes } = await supabase
         .from("meals")
         .select("*", { count: "exact", head: true })
-        .eq("chef_id", userId)
+        .eq("chef_id", profileChefId)
         .eq("available", true);
 
       // Calculate total earnings (85% of completed orders)
       const { data: completedOrders } = await supabase
         .from("orders")
         .select("total_price")
-        .eq("chef_id", userId)
+        .eq("chef_id", profileChefId)
         .in("status", ["delivered"]);
 
       const totalEarnings = completedOrders?.reduce((sum, order) => {
@@ -217,7 +227,7 @@ const Partner = () => {
           </TabsList>
 
           <TabsContent value="orders">
-            <PartnerOrders onStatsUpdate={() => checkChefAccess()} />
+            <PartnerOrders chefId={chefId} onStatsUpdate={() => checkChefAccess()} />
           </TabsContent>
 
           <TabsContent value="dishes">

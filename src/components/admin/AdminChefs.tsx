@@ -174,9 +174,9 @@ export const AdminChefs = ({ onUpdate }: AdminChefsProps) => {
                     <div className="flex items-center gap-4 text-sm text-muted-foreground mb-3">
                       <span className="flex items-center gap-1">
                         <Star className="h-3 w-3 fill-amber-400 text-amber-400" />
-                        {chef.avg_rating.toFixed(1)} ({chef.total_reviews} reviews)
+                        {(chef.avg_rating ?? 0).toFixed(1)} ({chef.total_reviews ?? 0} reviews)
                       </span>
-                      <span>{chef.total_orders} orders</span>
+                      <span>{chef.total_orders ?? 0} orders</span>
                     </div>
 
                     <div className="flex items-center gap-3">
