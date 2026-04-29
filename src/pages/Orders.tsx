@@ -185,10 +185,11 @@ const Orders = () => {
       });
 
       if (error) {
+        console.error("Review insert error:", JSON.stringify(error));
         if (error.code === "23505") {
           toast.error("You have already reviewed this order");
         } else {
-          throw error;
+          toast.error(error.message || error.details || error.hint || "Insert failed");
         }
         return;
       }
