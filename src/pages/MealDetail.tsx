@@ -20,11 +20,19 @@ import {
   ArrowLeft,
   ChefHat,
   Loader2,
+  MapPin,
+  Plus,
   ShoppingCart,
   UtensilsCrossed,
 } from "lucide-react";
 import { toast } from "sonner";
 import type { User } from "@supabase/supabase-js";
+
+declare global {
+  interface Window {
+    Razorpay: any;
+  }
+}
 
 interface Meal {
   id: string;
@@ -52,9 +60,18 @@ const MealDetail = () => {
   const [user, setUser] = useState<User | null>(null);
   const [showAuthModal, setShowAuthModal] = useState(false);
 
+  // Address state
+  interface SavedAddress { id: string; address_line: string; area: string; pincode: string; }
+  const [savedAddresses, setSavedAddresses] = useState<SavedAddress[]>([]);
+  const [selectedAddressId, setSelectedAddressId] = useState<string>("");
+  const [showNewAddress, setShowNewAddress] = useState(false);
+  const [newAddress, setNewAddress] = useState({ address_line: "", area: "", pincode: "" });
+  const [savingAddress, setSavingAddress] = useState(false);
+
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
       setUser(session?.user ?? null);
+      if (session?.user) fetchSavedAddresses(session.user.id);
     });
 
     const {
@@ -106,19 +123,80 @@ const MealDetail = () => {
     }
   };
 
+  const fetchSavedAddresses = async (userId: string) => {
+    const { data } = await supabase
+      .from("addresses")
+      .select("id, address_line, area, pincode")
+      .eq("user_id", userId)
+      .order("is_primary", { ascending: false });
+    if (data && data.length > 0) {
+      setSavedAddresses(data);
+      setSelectedAddressId(data[0].id);
+    } else {
+      setShowNewAddress(true);
+    }
+  };
+
+  const handleSaveNewAddress = async (): Promise<string | null> => {
+    if (!newAddress.address_line.trim() || !newAddress.area.trim() || !newAddress.pincode.trim()) {
+      toast.error("Please fill in all address fields");
+      return null;
+    }
+    setSavingAddress(true);
+    try {
+      const { data: { user: u } } = await supabase.auth.getUser();
+      if (!u) return null;
+      const { data, error } = await supabase
+        .from("addresses")
+        .insert({
+          user_id: u.id,
+          address_line: newAddress.address_line.trim(),
+          area: newAddress.area.trim(),
+          pincode: newAddress.pincode.trim(),
+          is_primary: savedAddresses.length === 0,
+        })
+        .select("id, address_line, area, pincode")
+        .single();
+      if (error) throw error;
+      setSavedAddresses((prev) => [...prev, data]);
+      setSelectedAddressId(data.id);
+      setShowNewAddress(false);
+      setNewAddress({ address_line: "", area: "", pincode: "" });
+      return data.id;
+    } catch (err: any) {
+      toast.error(err.message || "Failed to save address");
+      return null;
+    } finally {
+      setSavingAddress(false);
+    }
+  };
+
   const handleOrder = async () => {
     if (!user) {
       setShowAuthModal(true);
       return;
     }
-
     if (!meal) return;
+
+    // Resolve delivery address
+    let addrId = selectedAddressId;
+    if (showNewAddress || !addrId) {
+      const saved = await handleSaveNewAddress();
+      if (!saved) return;
+      addrId = saved;
+    }
+
+    const deliveryAddr = savedAddresses.find((a) => a.id === addrId);
+    const deliveryText = deliveryAddr
+      ? `${deliveryAddr.address_line}, ${deliveryAddr.area} - ${deliveryAddr.pincode}`
+      : "";
 
     setOrdering(true);
 
     try {
       const totalPrice = meal.price * quantity;
 
+      // 1. Create order (status pending, payment_status pending)
       const { data: order, error: orderError } = await supabase
         .from("orders")
         .insert({
@@ -128,13 +206,14 @@ const MealDetail = () => {
           quantity,
           total_price: totalPrice,
           status: "pending",
+          delivery_address: deliveryText,
         })
         .select()
         .single();
 
       if (orderError) throw orderError;
 
-      const { error: itemError } = await supabase.from("order_items").insert({
+      await supabase.from("order_items").insert({
         order_id: order.id,
         meal_id: meal.id,
         quantity,
@@ -144,17 +223,66 @@ const MealDetail = () => {
         oil_preference: oilPreference || null,
       });
 
-      if (itemError) throw itemError;
-
-      toast.success("Order placed! Redirecting to payment...");
-
-      setTimeout(() => {
+      // 2. Open Razorpay checkout
+      const razorpayKey = import.meta.env.VITE_RAZORPAY_KEY_ID;
+      if (!razorpayKey || !window.Razorpay) {
+        // No Razorpay key — skip payment, mark as pending
+        toast.success("Order placed! Awaiting payment setup.");
         navigate("/orders");
-      }, 1500);
-    } catch (error) {
+        return;
+      }
+
+      const options = {
+        key: razorpayKey,
+        amount: Math.round(totalPrice * 100), // paise
+        currency: "INR",
+        name: "MyHomePlate",
+        description: `${meal.title} x${quantity}`,
+        order_id: undefined as string | undefined, // server-side order id (optional for test)
+        prefill: {
+          email: user.email,
+        },
+        theme: { color: "#0f766e" },
+        handler: async (response: { razorpay_payment_id: string }) => {
+          // 3. On payment success — update order with payment_id
+          await supabase
+            .from("orders")
+            .update({
+              payment_id: response.razorpay_payment_id,
+              payment_status: "paid",
+              status: "pending", // chef still needs to accept
+            })
+            .eq("id", order.id);
+
+          toast.success("Payment successful! Order placed 🎉");
+          navigate("/orders");
+        },
+        modal: {
+          ondismiss: async () => {
+            // User closed without paying — mark payment failed
+            await supabase
+              .from("orders")
+              .update({ payment_status: "failed" })
+              .eq("id", order.id);
+            toast.error("Payment cancelled. Order was not confirmed.");
+            setOrdering(false);
+          },
+        },
+      };
+
+      const rzp = new window.Razorpay(options);
+      rzp.on("payment.failed", async () => {
+        await supabase
+          .from("orders")
+          .update({ payment_status: "failed" })
+          .eq("id", order.id);
+        toast.error("Payment failed. Please try again.");
+        setOrdering(false);
+      });
+      rzp.open();
+    } catch (error: any) {
       console.error("Error placing order:", error);
-      toast.error("Failed to place order. Please try again.");
-    } finally {
+      toast.error(error.message || "Failed to place order. Please try again.");
       setOrdering(false);
     }
   };
@@ -318,6 +446,68 @@ const MealDetail = () => {
                       </RadioGroup>
                     </div>
                   )}
+
+                  {/* Delivery Address */}
+                  <div className="space-y-2">
+                    <Label className="flex items-center gap-2">
+                      <MapPin className="h-4 w-4 text-primary" />
+                      Delivery Address
+                    </Label>
+
+                    {savedAddresses.length > 0 && !showNewAddress && (
+                      <RadioGroup
+                        value={selectedAddressId}
+                        onValueChange={setSelectedAddressId}
+                        className="space-y-2"
+                      >
+                        {savedAddresses.map((addr) => (
+                          <div key={addr.id} className="flex items-start space-x-2 border rounded-md p-3">
+                            <RadioGroupItem value={addr.id} id={`addr-${addr.id}`} className="mt-0.5" />
+                            <Label htmlFor={`addr-${addr.id}`} className="cursor-pointer leading-snug">
+                              {addr.address_line}, {addr.area} — {addr.pincode}
+                            </Label>
+                          </div>
+                        ))}
+                      </RadioGroup>
+                    )}
+
+                    {showNewAddress ? (
+                      <div className="border rounded-md p-3 space-y-2">
+                        <Input
+                          placeholder="Street / Flat / Building"
+                          value={newAddress.address_line}
+                          onChange={(e) => setNewAddress({ ...newAddress, address_line: e.target.value })}
+                        />
+                        <div className="grid grid-cols-2 gap-2">
+                          <Input
+                            placeholder="Area / Locality"
+                            value={newAddress.area}
+                            onChange={(e) => setNewAddress({ ...newAddress, area: e.target.value })}
+                          />
+                          <Input
+                            placeholder="Pincode"
+                            value={newAddress.pincode}
+                            onChange={(e) => setNewAddress({ ...newAddress, pincode: e.target.value })}
+                          />
+                        </div>
+                        {savedAddresses.length > 0 && (
+                          <Button type="button" variant="ghost" size="sm" onClick={() => setShowNewAddress(false)}>
+                            ← Use saved address
+                          </Button>
+                        )}
+                      </div>
+                    ) : (
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        className="w-full"
+                        onClick={() => setShowNewAddress(true)}
+                      >
+                        <Plus className="h-4 w-4 mr-1" /> Add new address
+                      </Button>
+                    )}
+                  </div>
 
                   <div className="flex items-center justify-between pt-2">
                     <span className="text-lg font-semibold">Total:</span>
