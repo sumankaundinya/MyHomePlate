@@ -33,6 +33,7 @@ interface Order {
   status: string;
   created_at: string;
   chef_id: string;
+  chef_profile_id: string | null;
   meals: {
     title: string;
     image_url: string | null;
@@ -93,18 +94,17 @@ const Orders = () => {
 
       if (error) throw error;
 
-      // Fetch chef names
+      // Fetch chef names and chef profile IDs
       const ordersWithChef = await Promise.all(
         (data || []).map(async (order: any) => {
-          const { data: profile } = await supabase
-            .from("profiles")
-            .select("name")
-            .eq("id", order.chef_id)
-            .single();
-
+          const [profileRes, chefRes] = await Promise.all([
+            supabase.from("profiles").select("name").eq("id", order.chef_id).maybeSingle(),
+            supabase.from("chefs").select("id").eq("user_id", order.chef_id).maybeSingle(),
+          ]);
           return {
             ...order,
-            profiles: { name: profile?.name || "Unknown Chef" },
+            profiles: { name: profileRes.data?.name || "Unknown Chef" },
+            chef_profile_id: chefRes.data?.id || null,
           };
         })
       );
@@ -159,46 +159,34 @@ const Orders = () => {
       toast.error("Please select a rating");
       return;
     }
+    if (!selectedOrder.chef_profile_id) {
+      toast.error("Chef profile not found — cannot submit review");
+      return;
+    }
 
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
 
-      // reviews.chef_id is a FK to chefs.id (profile UUID), not auth user id
-      const { data: chefProfile, error: chefErr } = await supabase
-        .from("chefs")
-        .select("id")
-        .eq("user_id", selectedOrder.chef_id)
-        .single();
-
-      if (chefErr || !chefProfile) {
-        console.error("Chef lookup error:", chefErr, "chef_id searched:", selectedOrder.chef_id);
-        toast.error(`Chef lookup failed: ${chefErr?.message || "no chef profile found"}`);
-        return;
-      }
-
-      console.log("Inserting review:", { order_id: selectedOrder.id, customer_id: user.id, chef_id: chefProfile.id, rating });
-
       const { error } = await supabase.from("reviews").insert({
         order_id: selectedOrder.id,
         customer_id: user.id,
-        chef_id: chefProfile.id,
+        chef_id: selectedOrder.chef_profile_id,
         rating,
         comment: comment || null,
       });
 
       if (error) {
-        console.error("Review insert error:", JSON.stringify(error));
+        console.error("Review insert error:", error);
         if (error.code === "23505") {
           toast.error("You have already reviewed this order");
         } else {
-          toast.error(error.message || error.details || error.hint || "Insert failed");
+          toast.error(error.message || "Failed to submit review");
         }
         return;
       }
 
       toast.success("Review submitted! Thank you 🌟");
-      setReviewDialogOpen(false);
       setRating(0);
       setComment("");
       setSelectedOrder(null);
