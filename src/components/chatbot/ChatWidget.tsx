@@ -100,28 +100,6 @@ export function ChatWidget() {
             )}
           </AnimatePresence>
         </motion.button>
-
-        {/* Tooltip label */}
-        <AnimatePresence>
-          {!isOpen && (
-            <motion.div
-              initial={{ opacity: 0, x: 10 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: 10 }}
-              transition={{ delay: 1.5 }}
-              className="
-                absolute right-16 top-1/2 -translate-y-1/2
-                bg-gray-900 text-white text-xs font-medium
-                px-2.5 py-1.5 rounded-lg whitespace-nowrap
-                pointer-events-none
-                after:content-[''] after:absolute after:left-full after:top-1/2 after:-translate-y-1/2
-                after:border-4 after:border-transparent after:border-l-gray-900
-              "
-            >
-              🍛 Ask Platie
-            </motion.div>
-          )}
-        </AnimatePresence>
       </motion.div>
     </>
   );
