@@ -17,6 +17,7 @@ const Partner = () => {
   const [loading, setLoading] = useState(true);
   const [isChef, setIsChef] = useState(false);
   const [chefId, setChefId] = useState<string | null>(null);
+  const [userId, setUserId] = useState<string | null>(null);
   const [stats, setStats] = useState({
     totalOrders: 0,
     pendingOrders: 0,
@@ -37,6 +38,8 @@ const Partner = () => {
         navigate("/login");
         return;
       }
+
+      setUserId(user.id);
 
       // Check if user has chef role
       const { data: roleData, error: roleError } = await supabase
@@ -227,7 +230,7 @@ const Partner = () => {
           </TabsList>
 
           <TabsContent value="orders">
-            <PartnerOrders chefId={chefId} onStatsUpdate={() => checkChefAccess()} />
+            <PartnerOrders chefId={chefId} userId={userId} onStatsUpdate={() => checkChefAccess()} />
           </TabsContent>
 
           <TabsContent value="dishes">

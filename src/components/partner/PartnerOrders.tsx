@@ -24,24 +24,30 @@ interface Order {
 
 interface PartnerOrdersProps {
   chefId: string;
+  userId?: string | null;
   onStatsUpdate: () => void;
 }
 
-export const PartnerOrders = ({ chefId, onStatsUpdate }: PartnerOrdersProps) => {
+export const PartnerOrders = ({ chefId, userId, onStatsUpdate }: PartnerOrdersProps) => {
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(false);
   const [filterStatus, setFilterStatus] = useState<string>("all");
 
   useEffect(() => {
     fetchOrders();
-  }, []);
+  }, [userId, chefId]);
 
   const fetchOrders = async () => {
     try {
+      // Query by auth user ID (chef_id in orders = meals.chef_id = auth user id)
+      // Fall back to chefId (profile id) if userId not available
+      const queryId = userId || chefId;
+      if (!queryId) return;
+
       const { data, error } = await supabase
         .from("orders")
         .select("*")
-        .eq("chef_id", chefId)
+        .eq("chef_id", queryId)
         .order("created_at", { ascending: false });
 
       if (error) throw error;
