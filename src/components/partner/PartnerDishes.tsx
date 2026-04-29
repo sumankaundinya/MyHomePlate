@@ -182,11 +182,11 @@ export const PartnerDishes = ({ chefId, onUpdate }: PartnerDishesProps) => {
               Add Dish
             </Button>
           </DialogTrigger>
-          <DialogContent className="max-w-lg w-[95vw] flex flex-col" style={{ maxHeight: "90vh" }}>
-            <DialogHeader className="shrink-0">
+          <DialogContent className="w-[95vw] max-w-xl flex flex-col gap-0 p-6" style={{ maxHeight: "90vh" }}>
+            <DialogHeader className="shrink-0 mb-4">
               <DialogTitle>{editingDish ? "Edit Dish" : "Add New Dish"}</DialogTitle>
             </DialogHeader>
-            <form onSubmit={handleSubmit} className="space-y-4 overflow-y-auto flex-1 pr-2 pb-2">
+            <form onSubmit={handleSubmit} className="space-y-4 overflow-y-auto flex-1 pb-2">
               <div>
                 <Label htmlFor="title">Dish Name</Label>
                 <Input
