@@ -172,9 +172,12 @@ const Orders = () => {
         .single();
 
       if (chefErr || !chefProfile) {
-        toast.error("Could not find chef profile");
+        console.error("Chef lookup error:", chefErr, "chef_id searched:", selectedOrder.chef_id);
+        toast.error(`Chef lookup failed: ${chefErr?.message || "no chef profile found"}`);
         return;
       }
+
+      console.log("Inserting review:", { order_id: selectedOrder.id, customer_id: user.id, chef_id: chefProfile.id, rating });
 
       const { error } = await supabase.from("reviews").insert({
         order_id: selectedOrder.id,
