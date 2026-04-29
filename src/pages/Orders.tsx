@@ -21,7 +21,18 @@ import {
 } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
-import { ShoppingBag, Star, Clock, ChefHat, CheckCircle2 } from "lucide-react";
+import { ShoppingBag, Star, Clock, ChefHat, CheckCircle2, XCircle } from "lucide-react";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 import { toast } from "sonner";
 import { OrderProgressTracker } from "@/components/OrderProgressTracker";
 import type { User } from "@supabase/supabase-js";
@@ -52,6 +63,43 @@ const Orders = () => {
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
   const [rating, setRating] = useState(0);
   const [comment, setComment] = useState("");
+  const [cancellingId, setCancellingId] = useState<string | null>(null);
+  const [now, setNow] = useState(Date.now());
+
+  useEffect(() => {
+    const timer = setInterval(() => setNow(Date.now()), 1000);
+    return () => clearInterval(timer);
+  }, []);
+
+  const CANCEL_WINDOW_MS = 5 * 60 * 1000;
+
+  const cancelSecondsLeft = (order: Order) => {
+    const elapsed = now - new Date(order.created_at).getTime();
+    return Math.max(0, Math.floor((CANCEL_WINDOW_MS - elapsed) / 1000));
+  };
+
+  const canCancel = (order: Order) =>
+    !["delivered", "cancelled"].includes(order.status) &&
+    cancelSecondsLeft(order) > 0;
+
+  const handleCancelOrder = async (orderId: string) => {
+    setCancellingId(orderId);
+    try {
+      const { error } = await supabase
+        .from("orders")
+        .update({ status: "cancelled" })
+        .eq("id", orderId);
+      if (error) throw error;
+      toast.success("Order cancelled successfully");
+      setOrders((prev) =>
+        prev.map((o) => (o.id === orderId ? { ...o, status: "cancelled" } : o))
+      );
+    } catch (err: any) {
+      toast.error(err.message || "Failed to cancel order");
+    } finally {
+      setCancellingId(null);
+    }
+  };
 
   useEffect(() => {
     checkAuth();
@@ -281,6 +329,45 @@ const Orders = () => {
                       </p>
                     </div>
                   </div>
+
+                  {/* Cancel order — within 5-minute window */}
+                  {canCancel(order) && (
+                    <div className="mb-3 flex items-center gap-3">
+                      <AlertDialog>
+                        <AlertDialogTrigger asChild>
+                          <Button
+                            variant="destructive"
+                            size="sm"
+                            disabled={cancellingId === order.id}
+                          >
+                            <XCircle className="h-4 w-4 mr-1" />
+                            {cancellingId === order.id ? "Cancelling…" : "Cancel Order"}
+                          </Button>
+                        </AlertDialogTrigger>
+                        <AlertDialogContent>
+                          <AlertDialogHeader>
+                            <AlertDialogTitle>Cancel this order?</AlertDialogTitle>
+                            <AlertDialogDescription>
+                              Are you sure you want to cancel <strong>{order.meals.title}</strong>? This cannot be undone.
+                            </AlertDialogDescription>
+                          </AlertDialogHeader>
+                          <AlertDialogFooter>
+                            <AlertDialogCancel>Keep Order</AlertDialogCancel>
+                            <AlertDialogAction
+                              className="bg-destructive hover:bg-destructive/90"
+                              onClick={() => handleCancelOrder(order.id)}
+                            >
+                              Yes, Cancel
+                            </AlertDialogAction>
+                          </AlertDialogFooter>
+                        </AlertDialogContent>
+                      </AlertDialog>
+                      <span className="text-xs text-muted-foreground">
+                        <Clock className="inline h-3 w-3 mr-1" />
+                        {Math.floor(cancelSecondsLeft(order) / 60)}m {cancelSecondsLeft(order) % 60}s left to cancel
+                      </span>
+                    </div>
+                  )}
 
                   {/* Order progress tracker for active orders */}
                   {!["delivered", "cancelled"].includes(order.status) && (
