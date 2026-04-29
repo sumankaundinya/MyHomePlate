@@ -17,9 +17,9 @@ const Index = () => {
       <Navbar />
 
       {/* Hero Section */}
-      <section className="relative overflow-hidden bg-gradient-hero pt-12 pb-12 md:pt-14 md:pb-16">
-        <div className="mx-auto px-6 md:px-8" style={{ maxWidth: '1200px' }}>
-          <div className="grid md:grid-cols-2 lg:grid-cols-[58%_42%] gap-8 lg:gap-10 items-center">
+      <section className="relative overflow-hidden bg-gradient-hero" style={{ minHeight: 'calc(100vh - 64px)', display: 'flex', alignItems: 'center' }}>
+        <div className="w-full mx-auto px-6 md:px-10" style={{ maxWidth: '1200px' }}>
+          <div className="grid md:grid-cols-2 lg:grid-cols-[55%_45%] gap-6 lg:gap-8 items-center py-8">
             {/* Left: Content */}
             <motion.div
               initial={{ opacity: 0, x: -50 }}
@@ -32,7 +32,7 @@ const Index = () => {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.1, duration: 0.5 }}
-                className="inline-flex items-center gap-2 bg-white/15 backdrop-blur-sm px-4 py-1.5 rounded-full mb-6 border border-white/25"
+                className="inline-flex items-center gap-2 bg-white/15 backdrop-blur-sm px-4 py-1.5 rounded-full mb-4 border border-white/25"
               >
                 <MapPin className="h-3.5 w-3.5 text-orange-200" />
                 <span className="text-xs font-semibold tracking-widest uppercase text-orange-100">Nizampet · Now Live</span>
@@ -43,7 +43,7 @@ const Index = () => {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.2, duration: 0.6 }}
-                className="text-4xl md:text-5xl lg:text-6xl font-extrabold leading-[1.1] mb-5 tracking-tight"
+                className="text-4xl md:text-5xl font-extrabold leading-[1.1] mb-4 tracking-tight"
               >
                 Real Food.<br />
                 <span className="text-orange-200">Real Neighbors.</span><br />
@@ -55,7 +55,7 @@ const Index = () => {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.35, duration: 0.6 }}
-                className="text-base md:text-lg mb-8 text-white/75 leading-relaxed max-w-md"
+                className="text-sm md:text-base mb-5 text-white/75 leading-relaxed max-w-md"
               >
                 Fresh home-cooked meals delivered from local kitchens in Nizampet — every single day.
               </motion.p>
@@ -65,7 +65,7 @@ const Index = () => {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.5, duration: 0.6 }}
-                className="flex flex-wrap gap-5 mb-8"
+                className="flex flex-wrap gap-5 mb-6"
               >
                 {[
                   { icon: "🍽", value: "120+", label: "meals daily" },
@@ -73,9 +73,9 @@ const Index = () => {
                   { icon: "👨‍🍳", value: "15+", label: "home chefs" },
                 ].map((stat) => (
                   <div key={stat.label} className="flex items-center gap-2">
-                    <span className="text-xl">{stat.icon}</span>
+                    <span className="text-lg">{stat.icon}</span>
                     <div>
-                      <p className="text-lg font-bold leading-none">{stat.value}</p>
+                      <p className="text-base font-bold leading-none">{stat.value}</p>
                       <p className="text-xs text-white/60">{stat.label}</p>
                     </div>
                   </div>
@@ -91,16 +91,16 @@ const Index = () => {
               >
                 <Button
                   size="lg"
-                  className="bg-white text-primary hover:bg-orange-50 text-base font-bold px-7 py-5 rounded-2xl shadow-warm group"
+                  className="bg-white text-primary hover:bg-orange-50 text-sm font-bold px-6 py-4 rounded-2xl shadow-warm group"
                   onClick={() => window.location.href = '/meals'}
                 >
                   Browse Today's Menu
-                  <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />
+                  <ArrowRight className="ml-2 h-4 w-4 group-hover:translate-x-1 transition-transform" />
                 </Button>
                 <Button
                   size="lg"
                   variant="ghost"
-                  className="border border-white/40 text-white/90 hover:bg-white/10 hover:text-white text-base px-7 py-5 rounded-2xl"
+                  className="border border-white/40 text-white/90 hover:bg-white/10 hover:text-white text-sm px-6 py-4 rounded-2xl"
                   onClick={() => window.location.href = '/partner'}
                 >
                   Cook with us
@@ -114,9 +114,8 @@ const Index = () => {
               animate={{ opacity: 1, scale: 1 }}
               transition={{ delay: 0.3, duration: 0.8 }}
               className="flex items-center justify-center"
-              style={{ minHeight: '300px', maxHeight: '70vh' }}
             >
-              <div className="w-full h-full rounded-2xl overflow-hidden shadow-2xl">
+              <div className="w-full rounded-2xl overflow-hidden shadow-2xl" style={{ height: 'min(420px, 55vh)' }}>
                 <HeroImageCarousel />
               </div>
             </motion.div>

@@ -36,7 +36,7 @@ export const HeroImageCarousel = () => {
   }, []);
 
   return (
-    <div className="relative w-full h-full min-h-[400px] max-h-[70vh] rounded-2xl overflow-hidden shadow-2xl">
+    <div className="relative w-full h-full rounded-2xl overflow-hidden shadow-2xl">
       <AnimatePresence mode="wait">
         <motion.div
           key={currentIndex}
