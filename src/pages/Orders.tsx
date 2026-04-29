@@ -178,8 +178,11 @@ const Orders = () => {
 
       if (error) {
         console.error("Review insert error:", error);
-        if (error.code === "23505") {
-          toast.error("You have already reviewed this order");
+        if (error.code === "23505" || (error as any).status === 409) {
+          toast.info("You have already reviewed this order ✓");
+          setRating(0);
+          setComment("");
+          setSelectedOrder(null);
         } else {
           toast.error(error.message || "Failed to submit review");
         }
