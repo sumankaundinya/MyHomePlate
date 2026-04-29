@@ -96,46 +96,30 @@ const Partner = () => {
 
   const fetchStats = async (userId: string) => {
     try {
-      // orders.chef_id = auth user ID (same as meals.chef_id)
-      // meals.chef_id = auth user ID
-      // So query directly by userId for orders, and by userId for meals
-
-      // Get total orders
-      const { count: totalOrders } = await supabase
+      // Fetch all orders in one query, count client-side (avoids RLS issues with head:true)
+      const { data: ordersData } = await supabase
         .from("orders")
-        .select("*", { count: "exact", head: true })
+        .select("id, status, total_price")
         .eq("chef_id", userId);
 
-      // Get pending orders
-      const { count: pendingOrders } = await supabase
-        .from("orders")
-        .select("*", { count: "exact", head: true })
-        .eq("chef_id", userId)
-        .eq("status", "pending");
+      const totalOrders = ordersData?.length || 0;
+      const pendingOrders = ordersData?.filter(o => o.status === "pending").length || 0;
+      const totalEarnings = ordersData
+        ?.filter(o => o.status === "delivered")
+        .reduce((sum, o) => sum + Number(o.total_price) * 0.85, 0) || 0;
 
-      // Get active dishes
-      const { count: activeDishes } = await supabase
+      // Active dishes
+      const { data: mealsData } = await supabase
         .from("meals")
-        .select("*", { count: "exact", head: true })
+        .select("id")
         .eq("chef_id", userId)
         .eq("available", true);
 
-      // Calculate total earnings (85% of delivered orders)
-      const { data: completedOrders } = await supabase
-        .from("orders")
-        .select("total_price")
-        .eq("chef_id", userId)
-        .in("status", ["delivered"]);
-
-      const totalEarnings = completedOrders?.reduce((sum, order) => {
-        return sum + (Number(order.total_price) * 0.85);
-      }, 0) || 0;
-
       setStats({
-        totalOrders: totalOrders || 0,
-        pendingOrders: pendingOrders || 0,
+        totalOrders,
+        pendingOrders,
         totalEarnings,
-        activeDishes: activeDishes || 0
+        activeDishes: mealsData?.length || 0,
       });
     } catch (error) {
       console.error("Error fetching stats:", error);
