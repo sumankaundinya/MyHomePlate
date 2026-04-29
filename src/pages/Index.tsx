@@ -1,5 +1,5 @@
 import { motion } from "framer-motion";
-import { ArrowRight, MapPin, Star, BookOpen, ChefHat, Users, UtensilsCrossed } from "lucide-react";
+import { ArrowRight, MapPin, BookOpen, ChefHat, Users, UtensilsCrossed } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import SEOHead from "@/components/SEOHead";
@@ -31,49 +31,71 @@ const Index = () => {
               transition={{ duration: 0.8 }}
               className="text-white z-10"
             >
-              {/* Nizampet Location Badge */}
+              {/* Location Badge */}
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.1, duration: 0.5 }}
-                className="inline-flex items-center gap-2 bg-white/20 backdrop-blur-sm px-4 py-2 rounded-full mb-3 border border-white/30"
+                className="inline-flex items-center gap-2 bg-white/15 backdrop-blur-sm px-4 py-1.5 rounded-full mb-6 border border-white/25"
               >
-                <MapPin className="h-4 w-4 text-orange-200" />
-                <span className="text-sm font-semibold">Now Serving Nizampet Neighbors</span>
+                <MapPin className="h-3.5 w-3.5 text-orange-200" />
+                <span className="text-xs font-semibold tracking-widest uppercase text-orange-100">Nizampet · Now Live</span>
               </motion.div>
 
+              {/* Headline */}
               <motion.h1
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.2, duration: 0.6 }}
-                className="text-3xl md:text-4xl lg:text-5xl font-bold leading-tight mb-2"
-                style={{ fontFamily: 'Poppins, Montserrat, sans-serif' }}
+                className="text-4xl md:text-5xl lg:text-6xl font-extrabold leading-[1.1] mb-5 tracking-tight"
               >
-                Taste the <span className="text-orange-200">Home.</span>{" "}
-                <br />
-                Support the <span className="text-orange-200">Neighborhood.</span>
+                Real Food.<br />
+                <span className="text-orange-200">Real Neighbors.</span><br />
+                Real Home.
               </motion.h1>
 
+              {/* Subtext */}
               <motion.p
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.3, duration: 0.6 }}
-                className="text-base md:text-lg mb-6 text-orange-50 leading-relaxed"
+                transition={{ delay: 0.35, duration: 0.6 }}
+                className="text-base md:text-lg mb-8 text-white/75 leading-relaxed max-w-md"
               >
-                Authentic, home-cooked meals by local chefs in <strong className="text-white">Nizampet</strong>.{" "}
-                <strong className="text-white">No industrial kitchens</strong>—just real food from your neighbors.
+                Fresh home-cooked meals delivered from local kitchens in Nizampet — every single day.
               </motion.p>
+
+              {/* Stats Row */}
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.5, duration: 0.6 }}
+                className="flex flex-wrap gap-5 mb-8"
+              >
+                {[
+                  { icon: "🍽", value: "120+", label: "meals daily" },
+                  { icon: "⭐", value: "4.8", label: "rated" },
+                  { icon: "👨‍🍳", value: "15+", label: "home chefs" },
+                ].map((stat) => (
+                  <div key={stat.label} className="flex items-center gap-2">
+                    <span className="text-xl">{stat.icon}</span>
+                    <div>
+                      <p className="text-lg font-bold leading-none">{stat.value}</p>
+                      <p className="text-xs text-white/60">{stat.label}</p>
+                    </div>
+                  </div>
+                ))}
+              </motion.div>
 
               {/* CTA Buttons */}
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.6, duration: 0.6 }}
+                transition={{ delay: 0.65, duration: 0.6 }}
                 className="flex flex-wrap gap-3"
               >
                 <Button
                   size="lg"
-                  className="bg-white text-primary hover:bg-orange-50 text-base md:text-lg px-6 py-5 rounded-xl shadow-warm group font-semibold"
+                  className="bg-white text-primary hover:bg-orange-50 text-base font-bold px-7 py-5 rounded-2xl shadow-warm group"
                   onClick={() => window.location.href = '/meals'}
                 >
                   Browse Today's Menu
@@ -82,10 +104,10 @@ const Index = () => {
                 <Button
                   size="lg"
                   variant="ghost"
-                  className="border-2 border-white/50 text-white hover:bg-white/10 text-base md:text-lg px-6 py-5 rounded-xl backdrop-blur-sm"
+                  className="border border-white/40 text-white/90 hover:bg-white/10 hover:text-white text-base px-7 py-5 rounded-2xl"
                   onClick={() => window.location.href = '/partner'}
                 >
-                  Become a Home Chef
+                  Cook with us
                 </Button>
               </motion.div>
             </motion.div>
@@ -110,43 +132,7 @@ const Index = () => {
         <div className="absolute bottom-20 left-10 w-40 h-40 bg-accent/20 rounded-full blur-3xl animate-float-delayed" />
       </section>
 
-      {/* Important Info Banner */}
-      <section className="bg-gradient-to-r from-orange-50 via-amber-50 to-orange-50 border-y border-orange-100">
-        <div className="container mx-auto px-4 py-4">
-          <div className="flex flex-col md:flex-row items-center justify-center gap-6 md:gap-12">
-            {/* Order Timing */}
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.2 }}
-              className="flex items-center gap-3 bg-white/80 backdrop-blur-sm px-5 py-3 rounded-full shadow-sm"
-            >
-              <span className="text-2xl">⏰</span>
-              <div className="text-sm">
-                <span className="font-semibold text-gray-700">Pre-order by </span>
-                <span className="font-bold text-orange-600">11 AM</span>
-                <span className="text-gray-600"> for Lunch • </span>
-                <span className="font-bold text-orange-600">2 PM</span>
-                <span className="text-gray-600"> for Dinner</span>
-              </div>
-            </motion.div>
 
-            {/* Rating */}
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.3 }}
-              className="flex items-center gap-3 bg-white/80 backdrop-blur-sm px-5 py-3 rounded-full shadow-sm"
-            >
-              <Star className="h-5 w-5 fill-yellow-400 text-yellow-400" />
-              <div className="text-sm">
-                <span className="font-bold text-gray-800">4.8/5</span>
-                <span className="text-gray-600"> - Rated by your Nizampet Neighbors</span>
-              </div>
-            </motion.div>
-          </div>
-        </div>
-      </section>
 
       {/* Navigation Cards Section */}
       <section className="py-16 md:py-20">
