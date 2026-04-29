@@ -14,7 +14,6 @@ import { TrustBanner } from "@/components/TrustBanner";
 import { PlatformComparison } from "@/components/PlatformComparison";
 import { FoodAnimatedIcon } from "@/components/FoodAnimatedIcon";
 import { LiveActivityIndicator } from "@/components/LiveActivityIndicator";
-import { FloatingActionBubble } from "@/components/FloatingActionBubble";
 import { DiscountBadge } from "@/components/DiscountBadge";
 
 const Home = () => {
@@ -28,7 +27,6 @@ const Home = () => {
       <Navbar />
 
       {/* Floating Action Menu */}
-      <FloatingActionBubble />
 
       {/* Page Header */}
       <section className="pt-24 pb-12 bg-gradient-hero text-white">

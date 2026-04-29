@@ -5,7 +5,6 @@ import { Card } from "@/components/ui/card";
 import SEOHead from "@/components/SEOHead";
 import Navbar from "@/components/Navbar";
 import { HeroImageCarousel } from "@/components/HeroImageCarousel";
-import { FloatingActionBubble } from "@/components/FloatingActionBubble";
 
 const Index = () => {
   return (
@@ -16,9 +15,6 @@ const Index = () => {
       />
       
       <Navbar />
-
-      {/* Floating Action Menu */}
-      <FloatingActionBubble />
 
       {/* Hero Section */}
       <section className="relative overflow-hidden bg-gradient-hero pt-12 pb-12 md:pt-14 md:pb-16">
