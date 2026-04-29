@@ -223,7 +223,7 @@ const MealDetail = () => {
         oil_preference: oilPreference || null,
       });
 
-      // 2. Open Razorpay checkout
+      // 2. Create Razorpay server-side order
       const razorpayKey = import.meta.env.VITE_RAZORPAY_KEY_ID;
       if (!razorpayKey || !window.Razorpay) {
         // No Razorpay key — skip payment, mark as pending
@@ -232,13 +232,36 @@ const MealDetail = () => {
         return;
       }
 
+      // Call Edge Function to get Razorpay order_id
+      const { data: { session } } = await supabase.auth.getSession();
+      const edgeFnRes = await fetch(
+        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/create-razorpay-order`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${session?.access_token}`,
+            "apikey": import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
+          },
+          body: JSON.stringify({
+            amount: totalPrice,
+            currency: "INR",
+            receipt: `order_${order.id.slice(0, 8)}`,
+          }),
+        }
+      );
+      const rzpOrder = await edgeFnRes.json();
+      if (!edgeFnRes.ok || !rzpOrder.order_id) {
+        throw new Error(rzpOrder.error || "Failed to create payment order");
+      }
+
       const options = {
         key: razorpayKey,
-        amount: Math.round(totalPrice * 100), // paise
+        amount: rzpOrder.amount,
         currency: "INR",
         name: "MyHomePlate",
         description: `${meal.title} x${quantity}`,
-        order_id: undefined as string | undefined, // server-side order id (optional for test)
+        order_id: rzpOrder.order_id,
         prefill: {
           email: user.email,
         },
