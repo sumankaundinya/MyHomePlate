@@ -268,11 +268,20 @@ const Navbar = () => {
                 </DropdownMenuContent>
               </DropdownMenu>
             ) : (
-              <div className="hidden md:flex items-center space-x-2">
-                <Button variant="ghost" onClick={() => navigate("/login")}>
+              <div className="hidden md:flex items-center gap-2">
+                <Button
+                  variant="outline"
+                  className="border-primary/40 text-primary hover:bg-primary/5 hover:border-primary font-medium"
+                  onClick={() => navigate("/login")}
+                >
                   Sign In
                 </Button>
-                <Button onClick={() => navigate("/signup")}>Get Started</Button>
+                <Button
+                  className="bg-gradient-hero text-white font-semibold shadow-sm hover:opacity-90"
+                  onClick={() => navigate("/signup")}
+                >
+                  Get Started
+                </Button>
               </div>
             )}
           </div>
