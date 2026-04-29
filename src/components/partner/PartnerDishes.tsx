@@ -10,6 +10,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { toast } from "sonner";
 import { Plus, Edit, Trash2 } from "lucide-react";
+import { ImageUpload } from "@/components/ImageUpload";
 
 interface Dish {
   id: string;
@@ -225,12 +226,13 @@ export const PartnerDishes = ({ chefId, onUpdate }: PartnerDishesProps) => {
                 />
               </div>
               <div>
-                <Label htmlFor="image_url">Image URL</Label>
-                <Input
-                  id="image_url"
-                  type="url"
-                  value={formData.image_url}
-                  onChange={(e) => setFormData({ ...formData, image_url: e.target.value })}
+                <Label>Meal Photo</Label>
+                <ImageUpload
+                  bucket="images"
+                  folder="meals"
+                  currentUrl={formData.image_url}
+                  onUpload={(url) => setFormData({ ...formData, image_url: url })}
+                  label="Upload meal photo"
                 />
               </div>
               <div className="flex items-center space-x-2">

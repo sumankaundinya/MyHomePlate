@@ -9,6 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
 import { toast } from "sonner";
 import { Plus, X, MapPin, Navigation } from "lucide-react";
+import { ImageUpload } from "@/components/ImageUpload";
 
 interface PartnerProfileProps {
   chefId: string;
@@ -246,13 +247,13 @@ export const PartnerProfile = ({ chefId }: PartnerProfileProps) => {
             </div>
 
             <div>
-              <Label htmlFor="kitchen_photo">Kitchen Photo URL</Label>
-              <Input
-                id="kitchen_photo"
-                type="url"
-                placeholder="https://example.com/kitchen.jpg"
-                value={profile.kitchen_photo_url}
-                onChange={(e) => setProfile({ ...profile, kitchen_photo_url: e.target.value })}
+              <Label>Kitchen Photo</Label>
+              <ImageUpload
+                bucket="images"
+                folder="kitchens"
+                currentUrl={profile.kitchen_photo_url}
+                onUpload={(url) => setProfile({ ...profile, kitchen_photo_url: url })}
+                label="Upload kitchen photo"
               />
             </div>
 
