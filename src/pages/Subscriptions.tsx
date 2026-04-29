@@ -11,6 +11,13 @@ import {
   CardDescription,
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Calendar as CalendarComponent } from "@/components/ui/calendar";
 import { toast } from "sonner";
 import { Calendar, ChefHat, IndianRupee } from "lucide-react";
 
@@ -18,6 +25,28 @@ const Subscriptions = () => {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   const [subscriptions, setSubscriptions] = useState<any[]>([]);
+  const [calendarSub, setCalendarSub] = useState<any | null>(null);
+  const [pausingId, setPausingId] = useState<string | null>(null);
+
+  const handlePause = async (sub: any) => {
+    const newStatus = sub.status === "active" ? "paused" : "active";
+    setPausingId(sub.id);
+    try {
+      const { error } = await supabase
+        .from("subscriptions")
+        .update({ status: newStatus })
+        .eq("id", sub.id);
+      if (error) throw error;
+      setSubscriptions((prev) =>
+        prev.map((s) => (s.id === sub.id ? { ...s, status: newStatus } : s))
+      );
+      toast.success(newStatus === "paused" ? "Subscription paused" : "Subscription resumed");
+    } catch (err: any) {
+      toast.error(err.message || "Failed to update subscription");
+    } finally {
+      setPausingId(null);
+    }
+  };
 
   useEffect(() => {
     checkAuthAndFetch();
@@ -204,13 +233,23 @@ const Subscriptions = () => {
                       </div>
                     </div>
 
-                    {sub.status === "active" && (
+                    {(sub.status === "active" || sub.status === "paused") && (
                       <div className="mt-4 flex gap-2">
-                        <Button size="sm" variant="outline">
+                        <Button size="sm" variant="outline" onClick={() => setCalendarSub(sub)}>
+                          <Calendar className="h-3 w-3 mr-1" />
                           View Calendar
                         </Button>
-                        <Button size="sm" variant="outline">
-                          Pause
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          disabled={pausingId === sub.id}
+                          onClick={() => handlePause(sub)}
+                        >
+                          {pausingId === sub.id
+                            ? "Updating…"
+                            : sub.status === "active"
+                            ? "Pause"
+                            : "Resume"}
                         </Button>
                       </div>
                     )}
@@ -221,6 +260,38 @@ const Subscriptions = () => {
           )}
         </section>
       </main>
+      {/* Calendar Dialog */}
+      {calendarSub && (
+        <Dialog open={!!calendarSub} onOpenChange={(open) => { if (!open) setCalendarSub(null); }}>
+          <DialogContent className="max-w-sm">
+            <DialogHeader>
+              <DialogTitle>
+                {calendarSub.chef_name} — {calendarSub.plan_type === "weekly" ? "Weekly" : "Monthly"} Plan
+              </DialogTitle>
+            </DialogHeader>
+            <div className="flex flex-col items-center gap-3">
+              <p className="text-sm text-muted-foreground text-center">
+                Subscription active from{" "}
+                <strong>{new Date(calendarSub.start_date).toLocaleDateString()}</strong>{" "}to{" "}
+                <strong>{new Date(calendarSub.end_date).toLocaleDateString()}</strong>
+              </p>
+              <CalendarComponent
+                mode="range"
+                selected={{
+                  from: new Date(calendarSub.start_date),
+                  to: new Date(calendarSub.end_date),
+                }}
+                defaultMonth={new Date(calendarSub.start_date)}
+                disabled={{ before: new Date(calendarSub.start_date), after: new Date(calendarSub.end_date) }}
+              />
+              <div className="text-sm text-center space-y-1">
+                <p><span className="font-semibold">{calendarSub.meals_remaining}</span> meals remaining out of <span className="font-semibold">{calendarSub.meals_count}</span></p>
+                <p className="text-muted-foreground">₹{calendarSub.price_per_meal} per meal</p>
+              </div>
+            </div>
+          </DialogContent>
+        </Dialog>
+      )}
     </div>
   );
 };
