@@ -96,41 +96,35 @@ const Partner = () => {
 
   const fetchStats = async (userId: string) => {
     try {
-      // Get the chef profile id for this user
-      const { data: chefData } = await supabase
-        .from("chefs")
-        .select("id")
-        .eq("user_id", userId)
-        .maybeSingle();
-
-      const profileChefId = chefData?.id;
-      if (!profileChefId) return;
+      // orders.chef_id = auth user ID (same as meals.chef_id)
+      // meals.chef_id = auth user ID
+      // So query directly by userId for orders, and by userId for meals
 
       // Get total orders
       const { count: totalOrders } = await supabase
         .from("orders")
         .select("*", { count: "exact", head: true })
-        .eq("chef_id", profileChefId);
+        .eq("chef_id", userId);
 
       // Get pending orders
       const { count: pendingOrders } = await supabase
         .from("orders")
         .select("*", { count: "exact", head: true })
-        .eq("chef_id", profileChefId)
+        .eq("chef_id", userId)
         .eq("status", "pending");
 
       // Get active dishes
       const { count: activeDishes } = await supabase
         .from("meals")
         .select("*", { count: "exact", head: true })
-        .eq("chef_id", profileChefId)
+        .eq("chef_id", userId)
         .eq("available", true);
 
-      // Calculate total earnings (85% of completed orders)
+      // Calculate total earnings (85% of delivered orders)
       const { data: completedOrders } = await supabase
         .from("orders")
         .select("total_price")
-        .eq("chef_id", profileChefId)
+        .eq("chef_id", userId)
         .in("status", ["delivered"]);
 
       const totalEarnings = completedOrders?.reduce((sum, order) => {
