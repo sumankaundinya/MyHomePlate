@@ -186,7 +186,7 @@ export const PartnerDishes = ({ chefId, onUpdate }: PartnerDishesProps) => {
             <DialogHeader className="shrink-0 mb-4">
               <DialogTitle>{editingDish ? "Edit Dish" : "Add New Dish"}</DialogTitle>
             </DialogHeader>
-            <form onSubmit={handleSubmit} className="space-y-4 overflow-y-auto flex-1 pb-2">
+            <form onSubmit={handleSubmit} className="space-y-4 overflow-y-auto flex-1 pb-2 px-1">
               <div>
                 <Label htmlFor="title">Dish Name</Label>
                 <Input
