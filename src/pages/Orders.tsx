@@ -161,30 +161,47 @@ const Orders = () => {
     }
 
     try {
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
+      const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
+
+      // reviews.chef_id is a FK to chefs.id (profile UUID), not auth user id
+      const { data: chefProfile, error: chefErr } = await supabase
+        .from("chefs")
+        .select("id")
+        .eq("user_id", selectedOrder.chef_id)
+        .single();
+
+      if (chefErr || !chefProfile) {
+        toast.error("Could not find chef profile");
+        return;
+      }
 
       const { error } = await supabase.from("reviews").insert({
         order_id: selectedOrder.id,
         customer_id: user.id,
-        chef_id: selectedOrder.chef_id,
+        chef_id: chefProfile.id,
         rating,
         comment: comment || null,
       });
 
-      if (error) throw error;
+      if (error) {
+        if (error.code === "23505") {
+          toast.error("You have already reviewed this order");
+        } else {
+          throw error;
+        }
+        return;
+      }
 
-      toast.success("Review submitted successfully!");
+      toast.success("Review submitted! Thank you 🌟");
       setReviewDialogOpen(false);
       setRating(0);
       setComment("");
       setSelectedOrder(null);
-      if (user) fetchOrders(user.id);
-    } catch (error) {
+      fetchOrders(user.id);
+    } catch (error: any) {
       console.error("Error submitting review:", error);
-      toast.error("Failed to submit review");
+      toast.error(error.message || "Failed to submit review");
     }
   };
 
