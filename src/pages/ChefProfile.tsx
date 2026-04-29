@@ -9,8 +9,19 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Separator } from "@/components/ui/separator";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 import { toast } from "sonner";
-import { CheckCircle2, ChefHat, Award, ShoppingBag, ArrowLeft } from "lucide-react";
+import { CheckCircle2, ChefHat, Award, ShoppingBag, ArrowLeft, Calendar } from "lucide-react";
+
+declare global {
+  interface Window { Razorpay: any; }
+}
 
 interface ChefData {
   id: string;
@@ -58,6 +69,91 @@ const ChefProfile = () => {
   const [meals, setMeals] = useState<Meal[]>([]);
   const [reviews, setReviews] = useState<Review[]>([]);
   const [loading, setLoading] = useState(true);
+  const [subscribing, setSubscribing] = useState(false);
+  const [subDialogOpen, setSubDialogOpen] = useState(false);
+  const [selectedPlan, setSelectedPlan] = useState<"weekly" | "monthly">("weekly");
+
+  const PLANS = {
+    weekly:  { label: "Weekly",  meals: 5,  days: 7,  price: 625,  pricePerMeal: 125 },
+    monthly: { label: "Monthly", meals: 20, days: 30, price: 2150, pricePerMeal: 107 },
+  };
+
+  const handleSubscribe = async () => {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) { toast.error("Please sign in to subscribe"); navigate("/login"); return; }
+    if (!chef) return;
+
+    const plan = PLANS[selectedPlan];
+    setSubscribing(true);
+
+    try {
+      const razorpayKey = import.meta.env.VITE_RAZORPAY_KEY_ID;
+      if (!razorpayKey || !window.Razorpay) {
+        toast.error("Payment not configured");
+        return;
+      }
+
+      // Create Razorpay order via Edge Function
+      const { data: { session } } = await supabase.auth.getSession();
+      const res = await fetch(
+        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/create-razorpay-order`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${session?.access_token}`,
+            "apikey": import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
+          },
+          body: JSON.stringify({ amount: plan.price, currency: "INR", receipt: `sub_${Date.now()}` }),
+        }
+      );
+      const rzpOrder = await res.json();
+      if (!res.ok || !rzpOrder.order_id) throw new Error(rzpOrder.error || "Payment setup failed");
+
+      const startDate = new Date();
+      const endDate = new Date();
+      endDate.setDate(endDate.getDate() + plan.days);
+
+      const options = {
+        key: razorpayKey,
+        amount: rzpOrder.amount,
+        currency: "INR",
+        name: "MyHomePlate",
+        description: `${plan.label} Tiffin Subscription — ${chef.profiles?.name}`,
+        order_id: rzpOrder.order_id,
+        prefill: { email: user.email },
+        theme: { color: "#0f766e" },
+        handler: async (response: { razorpay_payment_id: string }) => {
+          // Create subscription record
+          const { error } = await supabase.from("subscriptions").insert({
+            customer_id: user.id,
+            chef_id: chef.id,
+            plan_type: selectedPlan,
+            meals_count: plan.meals,
+            meals_remaining: plan.meals,
+            price_per_meal: plan.pricePerMeal,
+            total_price: plan.price,
+            start_date: startDate.toISOString().split("T")[0],
+            end_date: endDate.toISOString().split("T")[0],
+            status: "active",
+          });
+          if (error) { toast.error("Payment succeeded but subscription save failed: " + error.message); return; }
+          toast.success(`🎉 Subscribed to ${chef.profiles?.name}'s ${plan.label} plan!`);
+          setSubDialogOpen(false);
+          navigate("/subscriptions");
+        },
+        modal: {
+          ondismiss: () => { setSubscribing(false); },
+        },
+      };
+
+      const rzp = new window.Razorpay(options);
+      rzp.open();
+    } catch (err: any) {
+      toast.error(err.message || "Failed to start subscription");
+      setSubscribing(false);
+    }
+  };
 
   useEffect(() => {
     if (id) {
@@ -210,6 +306,56 @@ const ChefProfile = () => {
                     <Badge key={idx} variant="secondary">{s.specialty}</Badge>
                   ))}
                 </div>
+
+                {/* Subscribe Button */}
+                <Dialog open={subDialogOpen} onOpenChange={setSubDialogOpen}>
+                  <DialogTrigger asChild>
+                    <Button className="w-full md:w-auto" variant="default">
+                      <Calendar className="h-4 w-4 mr-2" />
+                      Subscribe for Daily Tiffin
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent className="max-w-md">
+                    <DialogHeader>
+                      <DialogTitle>Choose a Subscription Plan</DialogTitle>
+                    </DialogHeader>
+                    <div className="space-y-4 mt-2">
+                      <p className="text-sm text-muted-foreground">
+                        Get daily home-cooked meals from <strong>{chef.profiles?.name}</strong>
+                      </p>
+                      <div className="grid grid-cols-2 gap-3">
+                        {(Object.entries(PLANS) as ["weekly" | "monthly", typeof PLANS.weekly][]).map(([key, plan]) => (
+                          <button
+                            key={key}
+                            onClick={() => setSelectedPlan(key)}
+                            className={`border-2 rounded-xl p-4 text-left transition-all ${
+                              selectedPlan === key
+                                ? "border-primary bg-primary/5"
+                                : "border-border hover:border-primary/40"
+                            }`}
+                          >
+                            <p className="font-bold text-lg">{plan.label}</p>
+                            <p className="text-sm text-muted-foreground">{plan.meals} meals</p>
+                            <p className="text-xl font-bold text-primary mt-2">₹{plan.price}</p>
+                            <p className="text-xs text-muted-foreground">₹{plan.pricePerMeal}/meal</p>
+                          </button>
+                        ))}
+                      </div>
+                      <ul className="text-sm text-muted-foreground space-y-1">
+                        <li>✓ Fresh home-cooked meals daily</li>
+                        <li>✓ Cancel anytime</li>
+                        <li>✓ Secure payment via Razorpay</li>
+                      </ul>
+                      <Button
+                        className="w-full"
+                        onClick={handleSubscribe}
+                        disabled={subscribing}
+                      >
+                        {subscribing ? "Processing…" : `Pay ₹${PLANS[selectedPlan].price} & Subscribe`}
+                      </Button>
+                    </div>
+                  </DialogContent>
+                </Dialog>
 
                 {/* Hygiene Checklist */}
                 <div className="flex gap-4">
