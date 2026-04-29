@@ -34,7 +34,7 @@ export function ChatWidget() {
 
       {/* ─── Floating Toggle Button ───────────────────────────────────────── */}
       <motion.div
-        className="fixed bottom-24 right-4 z-50 md:bottom-8 md:right-6"
+        className="fixed bottom-6 right-4 z-50 md:bottom-6 md:right-5"
         initial={{ scale: 0 }}
         animate={{ scale: 1 }}
         transition={{ type: "spring", stiffness: 260, damping: 20, delay: 0.5 }}
@@ -51,7 +51,7 @@ export function ChatWidget() {
           aria-label={isOpen ? "Close chat assistant" : "Open chat assistant"}
           style={{ background: 'linear-gradient(135deg, #0f766e, #0d9488)' }}
           className="
-            relative w-14 h-14 rounded-full shadow-xl
+            relative w-11 h-11 rounded-full shadow-lg
             text-white flex items-center justify-center
             hover:shadow-teal-200 hover:shadow-2xl
             transition-shadow
@@ -66,7 +66,7 @@ export function ChatWidget() {
                 exit={{ rotate: 90, opacity: 0 }}
                 transition={{ duration: 0.15 }}
               >
-                <X className="w-6 h-6" />
+                <X className="w-5 h-5" />
               </motion.span>
             ) : (
               <motion.span
@@ -76,7 +76,7 @@ export function ChatWidget() {
                 exit={{ rotate: -90, opacity: 0 }}
                 transition={{ duration: 0.15 }}
               >
-                <MessageCircle className="w-6 h-6" />
+                <MessageCircle className="w-5 h-5" />
               </motion.span>
             )}
           </AnimatePresence>
