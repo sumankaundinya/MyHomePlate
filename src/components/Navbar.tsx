@@ -146,15 +146,15 @@ const Navbar = () => {
   return (
     <nav className="sticky top-0 z-50 w-full border-b bg-card/95 backdrop-blur supports-[backdrop-filter]:bg-card/60 shadow-soft">
       <div className="container mx-auto px-4">
-        <div className="flex h-16 items-center justify-between">
+        <div className="flex h-14 items-center justify-between">
           {/* Logo */}
           <Link to="/" className="flex items-center space-x-2">
             <img
               src="/favicon.ico"
               alt="MyHomePlate Logo"
-              className="h-16 w-12 rounded-full"
+              className="h-9 w-9 rounded-full"
             />
-            <span className="text-xl font-bold bg-gradient-hero bg-clip-text text-transparent">
+            <span className="text-lg font-bold bg-gradient-hero bg-clip-text text-transparent">
               MyHomePlate
             </span>
           </Link>

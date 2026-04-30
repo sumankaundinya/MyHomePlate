@@ -17,9 +17,9 @@ const Index = () => {
       <Navbar />
 
       {/* Hero Section */}
-      <section className="relative overflow-hidden bg-gradient-hero" style={{ minHeight: 'calc(100vh - 64px)', display: 'flex', alignItems: 'center' }}>
+      <section className="relative overflow-hidden bg-gradient-hero" style={{ minHeight: 'calc(100vh - 56px)', display: 'flex', alignItems: 'center' }}>
         <div className="w-full mx-auto px-6 md:px-10" style={{ maxWidth: '1200px' }}>
-          <div className="grid md:grid-cols-2 lg:grid-cols-[55%_45%] gap-6 lg:gap-8 items-center py-8">
+          <div className="grid md:grid-cols-2 lg:grid-cols-[55%_45%] gap-6 lg:gap-8 items-center py-5 pb-14">
             {/* Left: Content */}
             <motion.div
               initial={{ opacity: 0, x: -50 }}
@@ -43,7 +43,7 @@ const Index = () => {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.2, duration: 0.6 }}
-                className="text-4xl md:text-5xl font-extrabold leading-[1.1] mb-4 tracking-tight"
+                className="text-3xl md:text-4xl font-extrabold leading-[1.1] mb-3 tracking-tight"
               >
                 Real Food.<br />
                 <span className="text-orange-200">Real Neighbors.</span><br />
@@ -55,7 +55,7 @@ const Index = () => {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.35, duration: 0.6 }}
-                className="text-sm md:text-base mb-5 text-white/75 leading-relaxed max-w-md"
+                className="text-sm mb-4 text-white/75 leading-relaxed max-w-md"
               >
                 Fresh home-cooked meals delivered from local kitchens in Nizampet — every single day.
               </motion.p>
@@ -65,7 +65,7 @@ const Index = () => {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.5, duration: 0.6 }}
-                className="flex flex-wrap gap-5 mb-6"
+                className="flex flex-wrap gap-4 mb-5"
               >
                 {[
                   { icon: "🍽", value: "120+", label: "meals daily" },
@@ -115,7 +115,7 @@ const Index = () => {
               transition={{ delay: 0.3, duration: 0.8 }}
               className="flex items-center justify-center"
             >
-              <div className="w-full rounded-2xl overflow-hidden shadow-2xl" style={{ height: 'min(420px, 55vh)' }}>
+              <div className="w-full rounded-2xl overflow-hidden shadow-2xl" style={{ height: 'min(380px, 52vh)' }}>
                 <HeroImageCarousel />
               </div>
             </motion.div>
