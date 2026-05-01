@@ -418,10 +418,10 @@ const MealDetail = () => {
                         id="quantity"
                         type="number"
                         min="1"
-                        max="10"
+                        max="50"
                         value={quantity}
                         onChange={(e) =>
-                          setQuantity(Math.max(1, Math.min(10, parseInt(e.target.value) || 1)))
+                          setQuantity(Math.max(1, Math.min(50, parseInt(e.target.value) || 1)))
                         }
                         className="text-center font-bold text-lg md:text-base w-16 md:w-20 h-10 md:h-11"
                       />
@@ -429,8 +429,8 @@ const MealDetail = () => {
                         type="button"
                         variant="outline"
                         size="lg"
-                        onClick={() => setQuantity(Math.min(10, quantity + 1))}
-                        disabled={quantity >= 10}
+                        onClick={() => setQuantity(Math.min(50, quantity + 1))}
+                        disabled={quantity >= 50}
                         className="h-10 w-10 md:h-11 md:w-11 p-0"
                       >
                         <Plus className="h-4 w-4 md:h-5 md:w-5" />
