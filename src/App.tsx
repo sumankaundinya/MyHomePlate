@@ -18,6 +18,7 @@ import Chefs from "./pages/Chefs";
 import ChefProfile from "./pages/ChefProfile";
 import Partner from "./pages/Partner";
 import Admin from "./pages/Admin";
+import AdminSMSPanel from "./pages/AdminSMSPanel";
 import Subscriptions from "./pages/Subscriptions";
 
 const queryClient = new QueryClient();
@@ -41,6 +42,7 @@ const App = () => (
           <Route path="/chef/dashboard" element={<ChefDashboard />} />
           <Route path="/partner" element={<Partner />} />
           <Route path="/admin" element={<Admin />} />
+          <Route path="/admin/sms" element={<AdminSMSPanel />} />
           <Route path="/orders" element={<Orders />} />
           <Route path="/subscriptions" element={<Subscriptions />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}

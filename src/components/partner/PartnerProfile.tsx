@@ -21,7 +21,9 @@ export const PartnerProfile = ({ chefId }: PartnerProfileProps) => {
     bio: "",
     kitchen_photo_url: "",
     hygiene_certificate: false,
-    fssai_license: false
+    fssai_license: false,
+    phone_number: "",
+    notification_opt_in: true
   });
   const [specialties, setSpecialties] = useState<string[]>([]);
   const [newSpecialty, setNewSpecialty] = useState("");
@@ -46,7 +48,7 @@ export const PartnerProfile = ({ chefId }: PartnerProfileProps) => {
     try {
       const { data, error } = await supabase
         .from("chefs")
-        .select("bio, kitchen_photo_url, hygiene_certificate, fssai_license")
+        .select("bio, kitchen_photo_url, hygiene_certificate, fssai_license, phone_number, notification_opt_in")
         .eq("id", chefId)
         .single();
 
@@ -56,7 +58,9 @@ export const PartnerProfile = ({ chefId }: PartnerProfileProps) => {
           bio: data.bio || "",
           kitchen_photo_url: data.kitchen_photo_url || "",
           hygiene_certificate: data.hygiene_certificate,
-          fssai_license: data.fssai_license
+          fssai_license: data.fssai_license,
+          phone_number: data.phone_number || "",
+          notification_opt_in: data.notification_opt_in ?? true
         });
       }
     } catch (error) {
@@ -244,6 +248,36 @@ export const PartnerProfile = ({ chefId }: PartnerProfileProps) => {
                 onChange={(e) => setProfile({ ...profile, bio: e.target.value })}
                 rows={4}
               />
+            </div>
+
+            <div>
+              <Label htmlFor="phone">Phone Number (for order notifications)</Label>
+              <Input
+                id="phone"
+                type="tel"
+                placeholder="+91 98765 43210"
+                value={profile.phone_number}
+                onChange={(e) => setProfile({ ...profile, phone_number: e.target.value })}
+              />
+              <p className="text-xs text-muted-foreground mt-1">
+                We'll send you SMS notifications when customers order. No need to open the app!
+              </p>
+            </div>
+
+            <div className="space-y-3">
+              <Label>Notifications</Label>
+              <div className="flex items-center space-x-2">
+                <Switch
+                  id="notifications"
+                  checked={profile.notification_opt_in}
+                  onCheckedChange={(checked) => 
+                    setProfile({ ...profile, notification_opt_in: checked })
+                  }
+                />
+                <Label htmlFor="notifications" className="cursor-pointer">
+                  Receive SMS notifications for new orders
+                </Label>
+              </div>
             </div>
 
             <div>

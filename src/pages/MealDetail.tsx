@@ -24,6 +24,7 @@ import {
   Plus,
   ShoppingCart,
   UtensilsCrossed,
+  Minus,
 } from "lucide-react";
 import { toast } from "sonner";
 import type { User } from "@supabase/supabase-js";
@@ -402,16 +403,39 @@ const MealDetail = () => {
                 <CardContent className="space-y-4">
                   <div className="space-y-2">
                     <Label htmlFor="quantity">Quantity</Label>
-                    <Input
-                      id="quantity"
-                      type="number"
-                      min="1"
-                      max="10"
-                      value={quantity}
-                      onChange={(e) =>
-                        setQuantity(Math.max(1, parseInt(e.target.value) || 1))
-                      }
-                    />
+                    <div className="flex items-center gap-2 md:gap-3 justify-center">
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="lg"
+                        onClick={() => setQuantity(Math.max(1, quantity - 1))}
+                        disabled={quantity <= 1}
+                        className="h-10 w-10 md:h-11 md:w-11 p-0"
+                      >
+                        <Minus className="h-4 w-4 md:h-5 md:w-5" />
+                      </Button>
+                      <Input
+                        id="quantity"
+                        type="number"
+                        min="1"
+                        max="10"
+                        value={quantity}
+                        onChange={(e) =>
+                          setQuantity(Math.max(1, Math.min(10, parseInt(e.target.value) || 1)))
+                        }
+                        className="text-center font-bold text-lg md:text-base w-16 md:w-20 h-10 md:h-11"
+                      />
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="lg"
+                        onClick={() => setQuantity(Math.min(10, quantity + 1))}
+                        disabled={quantity >= 10}
+                        className="h-10 w-10 md:h-11 md:w-11 p-0"
+                      >
+                        <Plus className="h-4 w-4 md:h-5 md:w-5" />
+                      </Button>
+                    </div>
                   </div>
 
                   {meal.spice_levels && meal.spice_levels.length > 0 && (
