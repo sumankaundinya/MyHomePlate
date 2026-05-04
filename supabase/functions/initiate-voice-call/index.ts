@@ -6,6 +6,7 @@ interface CallRequest {
   contact_type: "chef" | "customer";
   contact_name?: string;
   call_type: "chef_onboarding" | "customer_acquisition" | "follow_up";
+  language?: "telugu" | "english";
 }
 
 const TWILIO_ACCOUNT_SID = Deno.env.get("TWILIO_ACCOUNT_SID") || "";
@@ -16,7 +17,8 @@ const SUPABASE_SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || "";
 
 async function initiateCall(
   phoneNumber: string,
-  message: string
+  message: string,
+  language: string = "english"
 ): Promise<string | null> {
   // Format phone number for Twilio (must include country code)
   let formattedPhone = phoneNumber.replace(/\D/g, "");
@@ -26,6 +28,12 @@ async function initiateCall(
   formattedPhone = "+" + formattedPhone;
 
   const auth = btoa(`${TWILIO_ACCOUNT_SID}:${TWILIO_AUTH_TOKEN}`);
+
+  // Determine language and voice
+  let twimlLanguage = "en-US";
+  if (language === "telugu") {
+    twimlLanguage = "te-IN";
+  }
 
   try {
     const response = await fetch(
@@ -41,8 +49,10 @@ async function initiateCall(
           From: TWILIO_PHONE_NUMBER,
           Twiml: `<?xml version="1.0" encoding="UTF-8"?>
             <Response>
-              <Say voice="alice">${escapeXml(message)}</Say>
-              <Record maxLength="60" />
+              <Say voice="woman" language="${twimlLanguage}">${escapeXml(message)}</Say>
+              <Gather numDigits="1" action="#" method="POST">
+                <Say voice="woman" language="${twimlLanguage}">Press 1 to confirm or speak your response</Say>
+              </Gather>
               <Hangup />
             </Response>`,
         }).toString(),
@@ -80,10 +90,25 @@ function escapeXml(unsafe: string): string {
 function buildMessage(
   contactType: string,
   contactName: string | undefined,
-  callType: string
+  callType: string,
+  language: string = "english"
 ): string {
   const name = contactName ? ` ${contactName}` : "";
 
+  // TELUGU MESSAGES
+  if (language === "telugu") {
+    if (contactType === "chef") {
+      if (callType === "chef_onboarding") {
+        return `నమస్కారం! నా పేరు మై హోమ్ ప్లేట్. నేను డెన్మార్క్ నుండి కాల్ చేస్తున్నాను. మేము మీ ఇంటిలో చేసిన ఆహారాన్ని విక్రయించి డబ్బు సంపాదించడంలో మీకు సహాయం చేస్తున్నాము. నిజం గా, ఇది నిజానికి గ్రేట్ సুযోగం! కూకిలో ఉండి డబ్బు సంపాదించండి. మరింత సమాచారం కోసం ఒకటి నొక్కండి.`;
+      } else if (callType === "follow_up") {
+        return `హాయ్${name}, ఇది మై హోమ్ ప్లేట్ నుండి ఫాలో అప్ కాల్. మీరు మా పార్టనర్ చెఫ్ గా ఉండాలని గురించి ఆలోచించారు?`;
+      }
+    } else if (contactType === "customer") {
+      return `నమస్కారం${name}! ఇది మై హోమ్ ప్లేట్. మేము ధృవీకృత ఇంటి చెఫ్‌ల ద్వారా సిద్ధం చేసిన తాజా, నిజమైన ఆహారం మీకు అందిస్తున్నాము. ఆర్డర్ అడ్వాన్సు లో చేసుకోండి. సుస్వాదు ఇంటి ఆహారం ట్రై చేయాలనుకుంటున్నారా? అవును కోసం ఒకటి నొక్కండి.`;
+    }
+  }
+
+  // ENGLISH MESSAGES (DEFAULT)
   if (contactType === "chef") {
     if (callType === "chef_onboarding") {
       return `Hello${name}! This is MyHomePlate calling from Denmark. We are helping home cooks like you earn money by cooking and delivering meals in your neighborhood. Would you like to know more? Press 1 for yes, or just speak to confirm.`;
@@ -127,14 +152,16 @@ Deno.serve(async (req) => {
     }
 
     // Build personalized message
+    const language = callRequest.language || "english";
     const message = buildMessage(
       callRequest.contact_type,
       callRequest.contact_name,
-      callRequest.call_type
+      callRequest.call_type,
+      language
     );
 
     // Initiate Twilio call
-    const callSid = await initiateCall(callRequest.phone_number, message);
+    const callSid = await initiateCall(callRequest.phone_number, message, language);
 
     if (!callSid) {
       return new Response(

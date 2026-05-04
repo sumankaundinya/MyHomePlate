@@ -59,6 +59,7 @@ const VoiceOnboardingAssistant = () => {
   const [loading, setLoading] = useState(true);
   const [calling, setCalling] = useState(false);
   const [selectedContactType, setSelectedContactType] = useState<"chef" | "customer">("chef");
+  const [selectedLanguage, setSelectedLanguage] = useState<"telugu" | "english">("telugu");
 
   // Form state
   const [formData, setFormData] = useState({
@@ -183,6 +184,7 @@ const VoiceOnboardingAssistant = () => {
             contact_type: contact.contact_type,
             contact_name: contact.name,
             call_type: contact.contact_type === "chef" ? "chef_onboarding" : "customer_acquisition",
+            language: selectedLanguage,
           }),
         }
       );
@@ -362,11 +364,25 @@ const VoiceOnboardingAssistant = () => {
           {/* Contacts List */}
           <Card>
             <CardHeader>
-              <div className="flex items-center justify-between">
+              <div className="flex items-center justify-between flex-wrap gap-4">
                 <CardTitle>Onboarding Contacts ({contacts.length})</CardTitle>
-                <Button variant="outline" size="sm" onClick={fetchContacts}>
-                  Refresh
-                </Button>
+                <div className="flex items-center gap-2">
+                  <Label htmlFor="language" className="mr-2">
+                    Call Language:
+                  </Label>
+                  <Select value={selectedLanguage} onValueChange={setSelectedLanguage as any}>
+                    <SelectTrigger id="language" className="w-32">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="telugu">🇮🇳 Telugu</SelectItem>
+                      <SelectItem value="english">🇬🇧 English</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <Button variant="outline" size="sm" onClick={fetchContacts}>
+                    Refresh
+                  </Button>
+                </div>
               </div>
             </CardHeader>
             <CardContent>
