@@ -145,6 +145,12 @@ const Navbar = () => {
             <span>SMS Testing</span>
           </Link>
         )}
+        {isAdmin && (
+          <Link to="/admin/voice" className={linkClass} onClick={handleClick}>
+            {mobile && <span>☎️</span>}
+            <span>Voice Onboarding</span>
+          </Link>
+        )}
       </>
     );
   };
@@ -267,6 +273,10 @@ const Navbar = () => {
                       <DropdownMenuItem onClick={() => navigate("/admin/sms")}>
                         <span className="mr-2">📱</span>
                         <span>SMS Testing</span>
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => navigate("/admin/voice")}>
+                        <span className="mr-2">☎️</span>
+                        <span>Voice Onboarding</span>
                       </DropdownMenuItem>
                     </>
                   )}
