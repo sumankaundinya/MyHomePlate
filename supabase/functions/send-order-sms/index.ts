@@ -10,33 +10,96 @@ interface OrderNotification {
   order_id?: string;
 }
 
-const GUPSHUP_API_URL = "https://api.gupshup.io/sm/api/v1/msg/send/simple";
+const GUPSHUP_API_URL = "https://api.gupshup.io/wa/api/v1/msg/send/simple";
 const GUPSHUP_API_KEY = Deno.env.get("GUPSHUP_API_KEY") || "";
 const GUPSHUP_APP_NAME = Deno.env.get("GUPSHUP_APP_NAME") || "";
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL") || "";
 const SUPABASE_SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || "";
 
-async function sendGupshupSMS(
+// Log initial state for debugging
+console.log("===== WhatsApp Notification Function Initialized =====");
+console.log("API Key present:", !!GUPSHUP_API_KEY, GUPSHUP_API_KEY ? `(${GUPSHUP_API_KEY.length} chars)` : "(missing)");
+console.log("App Name:", GUPSHUP_APP_NAME || "(missing)");
+console.log("API URL:", GUPSHUP_API_URL);
+console.log("=========================================================");
+
+async function sendGupshupWhatsApp(
   phoneNumber: string,
   message: string
 ): Promise<any> {
+  console.log("===== SENDING WhatsApp MESSAGE =====");
+  console.log("Phone:", phoneNumber);
+  console.log("Message:", message.substring(0, 100) + "...");
+  console.log("API Key present:", !!GUPSHUP_API_KEY);
+  console.log("App Name:", GUPSHUP_APP_NAME);
+
+  // WhatsApp requires phone number with country code
+  let formattedPhone = phoneNumber;
+  if (!formattedPhone.startsWith("+")) {
+    formattedPhone = "+" + formattedPhone;
+  }
+
+  // Try with 'msg' parameter (standard Gupshup format)
   const formData = new URLSearchParams({
     apikey: GUPSHUP_API_KEY,
     appname: GUPSHUP_APP_NAME,
-    to: phoneNumber,
+    to: formattedPhone,
     msg: message,
   });
 
-  const response = await fetch(GUPSHUP_API_URL, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/x-www-form-urlencoded",
-      Accept: "application/json",
-    },
-    body: formData.toString(),
-  });
+  const bodyString = formData.toString();
+  console.log("Full request body:", bodyString);
+  console.log("API URL:", GUPSHUP_API_URL);
 
-  return await response.json();
+  try {
+    const response = await fetch(GUPSHUP_API_URL, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/x-www-form-urlencoded",
+      },
+      body: bodyString,
+    });
+
+    console.log("Response status:", response.status);
+    console.log("Response ok:", response.ok);
+    
+    const responseText = await response.text();
+    console.log("Response body length:", responseText.length);
+    console.log("Response body:", responseText || "(empty)");
+    console.log("Response headers:", {
+      contentType: response.headers.get("content-type"),
+      server: response.headers.get("server"),
+    });
+
+    if (!response.ok) {
+      console.error(`❌ Gupshup API error (${response.status})`);
+      return {
+        status: "error",
+        error: `HTTP ${response.status}`,
+        details: responseText || "No response body",
+      };
+    }
+
+    if (!responseText) {
+      console.log("✅ Message sent (Gupshup accepted - empty response)");
+      return { status: "success", message: "WhatsApp message sent" };
+    }
+
+    try {
+      const parsed = JSON.parse(responseText);
+      console.log("✅ Parsed response:", parsed);
+      return parsed;
+    } catch (parseError: any) {
+      console.log("✅ Response successful, treating as sent");
+      return { status: "success", message: "WhatsApp message sent" };
+    }
+  } catch (fetchError: any) {
+    console.error("❌ Fetch error:", fetchError.message);
+    return {
+      status: "error",
+      error: fetchError.message,
+    };
+  }
 }
 
 async function logNotification(
@@ -112,14 +175,14 @@ Delivery: Pick up at your door
 
 No need to open app!`;
 
-    // Send SMS via Gupshup
-    const smsResponse = await sendGupshupSMS(phone, message);
+    // Send WhatsApp message via Gupshup
+    const messageResponse = await sendGupshupWhatsApp(phone, message);
 
     // Initialize Supabase client for logging
     const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);
 
     // Determine status from response
-    const status = smsResponse.status === "success" ? "sent" : "failed";
+    const status = messageResponse.error ? "failed" : (messageResponse.status === "success" || messageResponse.status === "submitted") ? "sent" : "failed";
 
     // Log notification
     await logNotification(
@@ -128,15 +191,33 @@ No need to open app!`;
       phone,
       message,
       status,
-      smsResponse,
+      messageResponse,
       notification.order_id
     );
 
+    if (status === "failed") {
+      return new Response(
+        JSON.stringify({
+          success: false,
+          message: "WhatsApp message failed to send",
+          error: messageResponse.error || messageResponse.response?.error || "Unknown error",
+          provider_response: messageResponse,
+        }),
+        {
+          status: 400,
+          headers: {
+            "Content-Type": "application/json",
+            "Access-Control-Allow-Origin": "*",
+          },
+        }
+      );
+    }
+
     return new Response(
       JSON.stringify({
-        success: status === "sent",
-        message: `SMS ${status}`,
-        provider_response: smsResponse,
+        success: true,
+        message: "WhatsApp message sent successfully",
+        provider_response: messageResponse,
       }),
       {
         headers: {

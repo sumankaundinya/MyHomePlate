@@ -291,7 +291,7 @@ const Navbar = () => {
               <div className="hidden md:flex items-center gap-2">
                 <Button
                   variant="outline"
-                  className="border-primary/40 text-primary hover:bg-primary/5 hover:border-primary font-medium"
+                  className="border-primary/40 text-primary hover:bg-primary hover:text-white hover:border-primary font-medium transition-all"
                   onClick={() => navigate("/login")}
                 >
                   Sign In
