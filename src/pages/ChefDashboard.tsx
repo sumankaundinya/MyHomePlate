@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
+import { getCommissionPercentage } from "@/lib/commissionUtils";
 import Navbar from "@/components/Navbar";
 import { Button } from "@/components/ui/button";
 import {
@@ -60,6 +61,7 @@ const ChefDashboard = () => {
   const [meals, setMeals] = useState<Meal[]>([]);
   const [orders, setOrders] = useState<Order[]>([]);
   const [stats, setStats] = useState({ totalEarnings: 0, totalOrders: 0 });
+  const [commissionRate, setCommissionRate] = useState(0);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingMeal, setEditingMeal] = useState<Meal | null>(null);
 
@@ -151,11 +153,14 @@ const ChefDashboard = () => {
 
     setOrders(ordersWithCustomer);
 
-    // Calculate stats
+    // Calculate stats with dynamic commission
+    const rate = await getCommissionPercentage();
+    setCommissionRate(rate);
+    const chefPercentage = (100 - rate) / 100;
     const earnings =
       data?.reduce((sum, order) => {
         if (order.status === "paid" || order.status === "delivered") {
-          return sum + Number(order.total_price) * 0.85; // 85% goes to chef
+          return sum + Number(order.total_price) * chefPercentage; // Dynamic commission
         }
         return sum;
       }, 0) || 0;
@@ -362,7 +367,7 @@ const ChefDashboard = () => {
           <Card className="shadow-soft">
             <CardHeader className="flex flex-row items-center justify-between pb-2">
               <CardTitle className="text-sm font-medium">
-                Total Earnings (85%)
+                Total Earnings ({100 - commissionRate}%)
               </CardTitle>
               <IndianRupee className="h-4 w-4 text-primary" />
             </CardHeader>

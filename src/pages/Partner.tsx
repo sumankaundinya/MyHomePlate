@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
+import { getCommissionPercentage } from "@/lib/commissionUtils";
 import Navbar from "@/components/Navbar";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -96,6 +97,10 @@ const Partner = () => {
 
   const fetchStats = async (userId: string) => {
     try {
+      // Fetch current commission rate
+      const commissionRate = await getCommissionPercentage();
+      const chefPercentage = (100 - commissionRate) / 100;
+
       // Fetch all orders in one query, count client-side (avoids RLS issues with head:true)
       const { data: ordersData } = await supabase
         .from("orders")
@@ -106,7 +111,7 @@ const Partner = () => {
       const pendingOrders = ordersData?.filter(o => o.status === "pending").length || 0;
       const totalEarnings = ordersData
         ?.filter(o => o.status === "delivered")
-        .reduce((sum, o) => sum + Number(o.total_price) * 0.85, 0) || 0;
+        .reduce((sum, o) => sum + Number(o.total_price) * chefPercentage, 0) || 0;
 
       // Active dishes
       const { data: mealsData } = await supabase

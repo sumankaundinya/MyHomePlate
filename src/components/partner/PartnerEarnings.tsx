@@ -4,6 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { toast } from "sonner";
 import { format } from "date-fns";
 import { IndianRupee, TrendingUp, Calendar } from "lucide-react";
+import { getCommissionPercentage } from "@/lib/commissionUtils";
 
 interface EarningData {
   date: string;
@@ -16,15 +17,31 @@ export const PartnerEarnings = () => {
   const [earnings, setEarnings] = useState<EarningData[]>([]);
   const [totalEarnings, setTotalEarnings] = useState(0);
   const [loading, setLoading] = useState(true);
+  const [commissionRate, setCommissionRate] = useState(0);
 
   useEffect(() => {
+    fetchCommissionRate();
     fetchEarnings();
   }, []);
+
+  const fetchCommissionRate = async () => {
+    try {
+      const rate = await getCommissionPercentage();
+      setCommissionRate(rate);
+    } catch (error) {
+      console.error("Error fetching commission rate:", error);
+      setCommissionRate(0);
+    }
+  };
 
   const fetchEarnings = async () => {
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
+
+      // Fetch current commission rate for calculations
+      const rate = await getCommissionPercentage();
+      const chefPercentage = (100 - rate) / 100; // e.g., if 10% commission, chef gets 90%
 
       // Fetch completed orders
       const { data: orders, error } = await supabase
@@ -42,7 +59,7 @@ export const PartnerEarnings = () => {
       orders?.forEach(order => {
         const date = format(new Date(order.created_at), "yyyy-MM-dd");
         const revenue = Number(order.total_price);
-        const earning = revenue * 0.85; // 85% goes to chef
+        const earning = revenue * chefPercentage; // Dynamic commission
 
         if (!earningsByDate[date]) {
           earningsByDate[date] = {
@@ -63,6 +80,7 @@ export const PartnerEarnings = () => {
         new Date(b.date).getTime() - new Date(a.date).getTime()
       ));
       setTotalEarnings(total);
+      setCommissionRate(rate);
     } catch (error) {
       console.error("Error fetching earnings:", error);
       toast.error("Failed to load earnings data");
@@ -91,7 +109,10 @@ export const PartnerEarnings = () => {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">₹{totalEarnings.toFixed(2)}</div>
-            <p className="text-xs text-muted-foreground">85% of total revenue</p>
+            <p className="text-xs text-muted-foreground">
+              {100 - commissionRate}% of total revenue
+              {commissionRate === 0 && " 🎉 (No commission - Launch phase!)"}
+            </p>
           </CardContent>
         </Card>
 
