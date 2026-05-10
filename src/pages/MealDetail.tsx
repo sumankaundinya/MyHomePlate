@@ -59,6 +59,7 @@ const MealDetail = () => {
   const [spiceLevel, setSpiceLevel] = useState<string>("");
   const [oilPreference, setOilPreference] = useState<string>("");
   const [user, setUser] = useState<User | null>(null);
+  const [customerName, setCustomerName] = useState("");
   const [showAuthModal, setShowAuthModal] = useState(false);
 
   // Address state
@@ -72,7 +73,11 @@ const MealDetail = () => {
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
       setUser(session?.user ?? null);
-      if (session?.user) fetchSavedAddresses(session.user.id);
+      if (session?.user) {
+        fetchSavedAddresses(session.user.id);
+        supabase.from("profiles").select("name").eq("id", session.user.id).maybeSingle()
+          .then(({ data }) => setCustomerName(data?.name || ""));
+      }
     });
 
     const {
@@ -277,6 +282,20 @@ const MealDetail = () => {
               status: "pending", // chef still needs to accept
             })
             .eq("id", order.id);
+
+          // Send order confirmation email (fire and forget)
+          supabase.functions.invoke("send-email-notification", {
+            body: {
+              to: user.email,
+              event: "placed",
+              customerName: customerName || user.email,
+              chefName: meal.chef_name,
+              mealTitle: meal.title,
+              orderId: order.id,
+              totalPrice: totalPrice,
+              quantity,
+            },
+          }).catch(() => {});
 
           toast.success("Payment successful! Order placed 🎉");
           navigate("/orders");

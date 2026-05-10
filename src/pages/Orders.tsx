@@ -45,6 +45,10 @@ interface Order {
   created_at: string;
   chef_id: string;
   chef_profile_id: string | null;
+  payment_id: string | null;
+  payment_status: string | null;
+  refund_id: string | null;
+  refund_status: string | null;
   meals: {
     title: string;
     image_url: string | null;
@@ -84,13 +88,53 @@ const Orders = () => {
 
   const handleCancelOrder = async (orderId: string) => {
     setCancellingId(orderId);
+    const order = orders.find((o) => o.id === orderId);
     try {
       const { error } = await supabase
         .from("orders")
         .update({ status: "cancelled" })
         .eq("id", orderId);
       if (error) throw error;
-      toast.success("Order cancelled successfully");
+
+      // Attempt refund if payment was captured
+      if (order?.payment_id && order.payment_status === "paid") {
+        const { data: refundData, error: refundError } = await supabase.functions.invoke(
+          "process-refund",
+          { body: { payment_id: order.payment_id, notes: { reason: "customer_cancelled" } } }
+        );
+        if (refundError || refundData?.error) {
+          toast.warning("Order cancelled. Refund could not be initiated — contact support.");
+          await supabase
+            .from("orders")
+            .update({ refund_status: "failed" })
+            .eq("id", orderId);
+        } else {
+          await supabase
+            .from("orders")
+            .update({ refund_id: refundData.refund_id, refund_status: "processed" })
+            .eq("id", orderId);
+          toast.success("Order cancelled and refund initiated");
+        }
+      } else {
+        toast.success("Order cancelled successfully");
+      }
+
+      // Notify customer by email (fire and forget)
+      if (user?.email && order) {
+        supabase.functions.invoke("send-email-notification", {
+          body: {
+            to: user.email,
+            event: "cancelled",
+            customerName: user.email,
+            chefName: order.profiles.name,
+            mealTitle: order.meals.title,
+            orderId: order.id,
+            totalPrice: order.total_price,
+            quantity: order.quantity,
+          },
+        }).catch(() => {});
+      }
+
       setOrders((prev) =>
         prev.map((o) => (o.id === orderId ? { ...o, status: "cancelled" } : o))
       );
@@ -136,7 +180,7 @@ const Orders = () => {
     try {
       const { data, error } = await supabase
         .from("orders")
-        .select("*, meals (title, image_url)")
+        .select("*, meals (title, image_url), payment_id, payment_status, refund_id, refund_status")
         .eq("customer_id", userId)
         .order("created_at", { ascending: false });
 
@@ -329,6 +373,15 @@ const Orders = () => {
                       </p>
                     </div>
                   </div>
+
+                  {/* Refund status badge */}
+                  {order.status === "cancelled" && order.refund_status && (
+                    <div className="mb-3">
+                      <Badge variant={order.refund_status === "processed" ? "default" : "destructive"}>
+                        {order.refund_status === "processed" ? "Refund Initiated" : "Refund Failed — Contact Support"}
+                      </Badge>
+                    </div>
+                  )}
 
                   {/* Cancel order — within 5-minute window */}
                   {canCancel(order) && (
