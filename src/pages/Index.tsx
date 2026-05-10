@@ -249,7 +249,7 @@ const Index = () => {
             © 2026 MyHomePlate. All rights reserved.
           </p>
           <p className="text-orange-100/50 text-xs mt-2">
-            Developed and Owned by Suman Kumar Kaundinya • <a href="mailto:sumanj241118@gmail.com" className="hover:text-orange-200 transition-colors">sumanj241118@gmail.com</a>
+            Developed and Founded by Suman Kumar Kaundinya • <a href="mailto:sumanj241118@gmail.com" className="hover:text-orange-200 transition-colors">sumanj241118@gmail.com</a>
           </p>
         </div>
       </footer>
