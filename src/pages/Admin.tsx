@@ -104,7 +104,7 @@ const Admin = () => {
         .from("orders")
         .select("total_price")
         .eq("payment_status", "paid");
-      const totalRevenue = (revenueData || []).reduce(
+      const totalRevenue = (revenueData || []).reduce<number>(
         (sum, o) => sum + Number(o.total_price),
         0
       );
@@ -151,7 +151,7 @@ const Admin = () => {
         </div>
 
         {/* Stats Cards */}
-        <div className="grid md:grid-cols-5 gap-4 mb-8">
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4 mb-8">
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">Total Chefs</CardTitle>
