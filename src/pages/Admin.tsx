@@ -9,11 +9,23 @@ import { Shield, Users, Package, IndianRupee } from "lucide-react";
 import { AdminChefs } from "@/components/admin/AdminChefs";
 import { AdminOrders } from "@/components/admin/AdminOrders";
 import { AdminRevenue } from "@/components/admin/AdminRevenue";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { useAdminSessionTimeout } from "@/hooks/useAdminSessionTimeout";
 
 const Admin = () => {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   const [isAdmin, setIsAdmin] = useState(false);
+  const { showWarning, stayLoggedIn, logout } = useAdminSessionTimeout();
   const [stats, setStats] = useState({
     totalChefs: 0,
     pendingChefs: 0,
@@ -219,6 +231,21 @@ const Admin = () => {
           </TabsContent>
         </Tabs>
       </main>
+
+      <AlertDialog open={showWarning}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Session Expiring Soon</AlertDialogTitle>
+            <AlertDialogDescription>
+              You've been inactive for 25 minutes. For security, you'll be automatically signed out in 5 minutes. Do you want to stay signed in?
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={() => logout()}>Sign Out Now</AlertDialogCancel>
+            <AlertDialogAction onClick={stayLoggedIn}>Stay Signed In</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };
