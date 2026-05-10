@@ -160,13 +160,13 @@ const Navbar = () => {
       <div className="container mx-auto px-4">
         <div className="flex h-14 items-center justify-between">
           {/* Logo */}
-          <Link to="/" className="flex items-center space-x-2">
+          <Link to="/" className="flex items-center space-x-2 shrink-0">
             <img
-              src="/favicon.ico"
+              src="/logo.png"
               alt="MyHomePlate Logo"
-              className="h-9 w-9 rounded-full"
+              className="h-12 w-12 rounded-xl object-contain drop-shadow-sm"
             />
-            <span className="text-lg font-bold bg-gradient-hero bg-clip-text text-transparent">
+            <span className="text-lg font-bold bg-gradient-hero bg-clip-text text-transparent leading-tight">
               MyHomePlate
             </span>
           </Link>
