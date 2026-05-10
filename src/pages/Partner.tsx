@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
-import { ChefHat, IndianRupee, Package, User } from "lucide-react";
+import { ChefHat, IndianRupee, Package, User, History } from "lucide-react";
 import { PartnerDishes } from "@/components/partner/PartnerDishes";
 import { PartnerOrders } from "@/components/partner/PartnerOrders";
 import { PartnerProfile } from "@/components/partner/PartnerProfile";
@@ -221,6 +221,12 @@ const Partner = () => {
           </TabsContent>
 
           <TabsContent value="earnings">
+            <div className="mb-4 flex justify-end">
+              <Button variant="outline" size="sm" onClick={() => navigate("/partner/payments")}>
+                <History className="h-4 w-4 mr-2" />
+                Payment History
+              </Button>
+            </div>
             <PartnerEarnings />
           </TabsContent>
 

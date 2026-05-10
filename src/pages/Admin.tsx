@@ -8,6 +8,7 @@ import { toast } from "sonner";
 import { Shield, Users, Package, IndianRupee } from "lucide-react";
 import { AdminChefs } from "@/components/admin/AdminChefs";
 import { AdminOrders } from "@/components/admin/AdminOrders";
+import { AdminRevenue } from "@/components/admin/AdminRevenue";
 
 const Admin = () => {
   const navigate = useNavigate();
@@ -18,6 +19,7 @@ const Admin = () => {
     pendingChefs: 0,
     totalOrders: 0,
     pendingOrders: 0,
+    totalRevenue: 0,
   });
 
   useEffect(() => {
@@ -85,11 +87,22 @@ const Admin = () => {
         .select("*", { count: "exact", head: true })
         .eq("status", "pending");
 
+      // Total revenue (sum of paid orders)
+      const { data: revenueData } = await supabase
+        .from("orders")
+        .select("total_price")
+        .eq("payment_status", "paid");
+      const totalRevenue = (revenueData || []).reduce(
+        (sum, o) => sum + Number(o.total_price),
+        0
+      );
+
       setStats({
         totalChefs: totalChefs || 0,
         pendingChefs: pendingChefs || 0,
         totalOrders: totalOrders || 0,
         pendingOrders: pendingOrders || 0,
+        totalRevenue,
       });
     } catch (error) {
       console.error("Error fetching stats:", error);
@@ -126,7 +139,7 @@ const Admin = () => {
         </div>
 
         {/* Stats Cards */}
-        <div className="grid md:grid-cols-4 gap-4 mb-8">
+        <div className="grid md:grid-cols-5 gap-4 mb-8">
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">Total Chefs</CardTitle>
@@ -166,19 +179,31 @@ const Admin = () => {
               <CardTitle className="text-sm font-medium">
                 Pending Orders
               </CardTitle>
-              <IndianRupee className="h-4 w-4 text-green-600" />
+              <Package className="h-4 w-4 text-orange-600" />
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">{stats.pendingOrders}</div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Total Revenue</CardTitle>
+              <IndianRupee className="h-4 w-4 text-green-600" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">₹{stats.totalRevenue.toFixed(0)}</div>
+              <p className="text-xs text-muted-foreground">Paid orders</p>
             </CardContent>
           </Card>
         </div>
 
         {/* Tabs */}
         <Tabs defaultValue="chefs" className="w-full">
-          <TabsList className="grid w-full grid-cols-2">
+          <TabsList className="grid w-full grid-cols-3">
             <TabsTrigger value="chefs">Chef Management</TabsTrigger>
             <TabsTrigger value="orders">Order Management</TabsTrigger>
+            <TabsTrigger value="revenue">Revenue</TabsTrigger>
           </TabsList>
 
           <TabsContent value="chefs">
@@ -187,6 +212,10 @@ const Admin = () => {
 
           <TabsContent value="orders">
             <AdminOrders onUpdate={fetchStats} />
+          </TabsContent>
+
+          <TabsContent value="revenue">
+            <AdminRevenue />
           </TabsContent>
         </Tabs>
       </main>

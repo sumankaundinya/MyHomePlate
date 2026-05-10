@@ -21,6 +21,8 @@ import Admin from "./pages/Admin";
 import AdminSMSPanel from "./pages/AdminSMSPanel";
 import VoiceOnboardingAssistant from "./pages/VoiceOnboardingAssistant";
 import Subscriptions from "./pages/Subscriptions";
+import PaymentHistory from "./pages/PaymentHistory";
+import { ErrorBoundary } from "@/components/ErrorBoundary";
 
 const queryClient = new QueryClient();
 
@@ -31,6 +33,7 @@ const App = () => (
       <Sonner />
       <BrowserRouter>
         <RedirectHandler />
+        <ErrorBoundary>
         <Routes>
           <Route path="/" element={<Index />} />
           <Route path="/home" element={<Home />} />
@@ -47,9 +50,11 @@ const App = () => (
           <Route path="/admin/voice" element={<VoiceOnboardingAssistant />} />
           <Route path="/orders" element={<Orders />} />
           <Route path="/subscriptions" element={<Subscriptions />} />
+          <Route path="/partner/payments" element={<PaymentHistory />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>
+        </ErrorBoundary>
         <ChatWidget />
       </BrowserRouter>
     </TooltipProvider>

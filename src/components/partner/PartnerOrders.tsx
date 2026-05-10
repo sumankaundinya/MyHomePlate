@@ -6,8 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
 import { format } from "date-fns";
-import { Clock, Check, X, Package } from "lucide-react";
-import { calculateChefEarnings, getCommissionPercentage } from "@/lib/commissionUtils";
+import { getCommissionPercentage } from "@/lib/commissionUtils";
 
 interface Order {
   id: string;
@@ -15,11 +14,13 @@ interface Order {
   total_price: number;
   status: string;
   created_at: string;
+  customer_id: string;
   meals: {
     title: string;
   };
   profiles: {
     name: string;
+    email: string;
   };
 }
 
@@ -65,7 +66,7 @@ export const PartnerOrders = ({ chefId, userId, onStatsUpdate }: PartnerOrdersPr
         (data || []).map(async (order) => {
           const [mealData, profileData] = await Promise.all([
             supabase.from("meals").select("title").eq("id", order.meal_id).single(),
-            supabase.from("profiles").select("name").eq("id", order.customer_id).single()
+            supabase.from("profiles").select("name, email").eq("id", order.customer_id).single()
           ]);
           
           return {
@@ -93,6 +94,28 @@ export const PartnerOrders = ({ chefId, userId, onStatsUpdate }: PartnerOrdersPr
 
       if (error) throw error;
       toast.success(`Order ${newStatus}`);
+
+      // Send email notification to customer (fire and forget)
+      const order = orders.find((o) => o.id === orderId);
+      const emailEvents: Record<string, string> = {
+        accepted: "accepted", preparing: "preparing",
+        ready: "ready", out_for_delivery: "out_for_delivery", delivered: "delivered",
+      };
+      if (order && emailEvents[newStatus] && order.profiles?.email) {
+        supabase.functions.invoke("send-email-notification", {
+          body: {
+            to: order.profiles.email,
+            event: emailEvents[newStatus],
+            customerName: order.profiles.name || order.profiles.email,
+            chefName: "Your Chef",
+            mealTitle: order.meals.title,
+            orderId: order.id,
+            totalPrice: order.total_price,
+            quantity: order.quantity,
+          },
+        }).catch(() => {});
+      }
+
       fetchOrders();
       onStatsUpdate();
     } catch (error: any) {
@@ -100,23 +123,6 @@ export const PartnerOrders = ({ chefId, userId, onStatsUpdate }: PartnerOrdersPr
       toast.error(error.message || "Failed to update order");
     } finally {
       setLoading(false);
-    }
-  };
-
-  const getStatusIcon = (status: string) => {
-    switch (status) {
-      case "pending":
-        return <Clock className="h-4 w-4" />;
-      case "accepted":
-      case "preparing":
-        return <Package className="h-4 w-4" />;
-      case "delivered":
-        return <Check className="h-4 w-4" />;
-      case "rejected":
-      case "cancelled":
-        return <X className="h-4 w-4" />;
-      default:
-        return null;
     }
   };
 
