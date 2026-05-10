@@ -7,6 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { toast } from "sonner";
 import { format } from "date-fns";
 import { Clock, Check, X, Package } from "lucide-react";
+import { calculateChefEarnings, getCommissionPercentage } from "@/lib/commissionUtils";
 
 interface Order {
   id: string;
@@ -32,10 +33,17 @@ export const PartnerOrders = ({ chefId, userId, onStatsUpdate }: PartnerOrdersPr
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(false);
   const [filterStatus, setFilterStatus] = useState<string>("all");
+  const [commissionRate, setCommissionRate] = useState<number>(0);
 
   useEffect(() => {
     fetchOrders();
+    fetchCommissionRate();
   }, [userId, chefId]);
+
+  const fetchCommissionRate = async () => {
+    const rate = await getCommissionPercentage();
+    setCommissionRate(rate);
+  };
 
   const fetchOrders = async () => {
     try {
@@ -195,8 +203,18 @@ export const PartnerOrders = ({ chefId, userId, onStatsUpdate }: PartnerOrdersPr
                     <p className="text-sm text-muted-foreground">Quantity: {order.quantity}</p>
                     <p className="text-lg font-bold text-primary">₹{order.total_price}</p>
                     <p className="text-xs text-muted-foreground">
-                      Your earnings: ₹{(Number(order.total_price) * 0.85).toFixed(2)}
+                      Your earnings: ₹{(Number(order.total_price) * (1 - commissionRate / 100)).toFixed(2)}
                     </p>
+                    {commissionRate > 0 && (
+                      <p className="text-xs text-muted-foreground mt-1">
+                        (After {commissionRate}% MyHomePlate commission)
+                      </p>
+                    )}
+                    {commissionRate === 0 && (
+                      <p className="text-xs text-green-600 font-semibold mt-1">
+                        🎉 0% Commission - Launch Phase!
+                      </p>
+                    )}
                   </div>
                 </div>
 

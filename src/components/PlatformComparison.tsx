@@ -1,12 +1,29 @@
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Check, X } from "lucide-react";
+import { useEffect, useState } from "react";
+import { getCommissionPercentage } from "@/lib/commissionUtils";
 
 export const PlatformComparison = () => {
+  const [commissionRate, setCommissionRate] = useState<number>(0);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchRate = async () => {
+      try {
+        const rate = await getCommissionPercentage();
+        setCommissionRate(rate);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchRate();
+  }, []);
+
   const features = [
     {
       feature: "Commission from Chefs",
-      myHomePlate: "0%*",
+      myHomePlate: loading ? "Loading..." : `${commissionRate}%${commissionRate === 0 ? "*" : ""}`,
       competitors: "20-30%",
       highlight: true
     },
@@ -125,7 +142,10 @@ export const PlatformComparison = () => {
           </div>
           <div className="p-4 bg-gradient-warm text-center border-t">
             <p className="text-sm text-muted-foreground">
-              * Limited time offer. Standard payment processing fees apply.
+              {commissionRate === 0 
+                ? "* 0% commission during our Launch Phase (6 months). After that: 10% commission."
+                : `* Current commission rate: ${commissionRate}%. Standard payment processing fees apply.`
+              }
             </p>
           </div>
         </Card>

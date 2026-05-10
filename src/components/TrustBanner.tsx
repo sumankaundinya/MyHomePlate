@@ -1,8 +1,31 @@
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Heart, ShieldCheck, Award, Percent } from "lucide-react";
+import { useEffect, useState } from "react";
+import { getCommissionPercentage } from "@/lib/commissionUtils";
 
 export const TrustBanner = () => {
+  const [commissionRate, setCommissionRate] = useState<number>(0);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchRate = async () => {
+      try {
+        const rate = await getCommissionPercentage();
+        setCommissionRate(rate);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchRate();
+  }, []);
+
+  const getCommissionText = () => {
+    if (loading) return "Loading...";
+    if (commissionRate === 0) return "0% Commission - Launch Phase!";
+    if (commissionRate === 10) return "10% Commission";
+    return `${commissionRate}% Commission`;
+  };
   return (
     <section className="py-8 bg-gradient-warm">
       <div className="container mx-auto px-4">
@@ -25,7 +48,7 @@ export const TrustBanner = () => {
               </div>
               <Badge className="bg-gradient-hero text-white px-4 py-2 text-sm font-semibold shadow-warm whitespace-nowrap">
                 <Percent className="h-4 w-4 mr-1.5" />
-                0% Commission*
+                {getCommissionText()}
               </Badge>
             </div>
           </div>
