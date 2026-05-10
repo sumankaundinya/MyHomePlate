@@ -3,12 +3,23 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
-import { CheckCircle, XCircle, Star } from "lucide-react";
+import { CheckCircle, XCircle, Star, Trash2 } from "lucide-react";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 
 interface Chef {
   id: string;
@@ -84,6 +95,23 @@ export const AdminChefs = ({ onUpdate }: AdminChefsProps) => {
       toast.error(error.message || "Failed to update status");
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleDeleteChef = async (chefId: string) => {
+    try {
+      const { error } = await supabase
+        .from("chefs")
+        .delete()
+        .eq("id", chefId);
+
+      if (error) throw error;
+      toast.success("Chef removed");
+      fetchChefs();
+      onUpdate();
+    } catch (error: any) {
+      console.error("Error deleting chef:", error);
+      toast.error(error.message || "Failed to delete chef");
     }
   };
 
@@ -179,7 +207,7 @@ export const AdminChefs = ({ onUpdate }: AdminChefsProps) => {
                       <span>{chef.total_orders ?? 0} orders</span>
                     </div>
 
-                    <div className="flex items-center gap-3">
+                    <div className="flex items-center gap-3 flex-wrap">
                       {chef.verification_status === "pending" && (
                         <>
                           <Button
@@ -201,7 +229,7 @@ export const AdminChefs = ({ onUpdate }: AdminChefsProps) => {
                           </Button>
                         </>
                       )}
-                      
+
                       {chef.verification_status === "approved" && (
                         <div className="flex items-center space-x-2">
                           <Switch
@@ -214,6 +242,32 @@ export const AdminChefs = ({ onUpdate }: AdminChefsProps) => {
                           </Label>
                         </div>
                       )}
+
+                      <AlertDialog>
+                        <AlertDialogTrigger asChild>
+                          <Button size="sm" variant="destructive">
+                            <Trash2 className="h-4 w-4 mr-1" />
+                            Delete
+                          </Button>
+                        </AlertDialogTrigger>
+                        <AlertDialogContent>
+                          <AlertDialogHeader>
+                            <AlertDialogTitle>Delete Chef</AlertDialogTitle>
+                            <AlertDialogDescription>
+                              This will permanently remove <strong>{chef.profile_name}</strong> and all their data (specialties, reviews, subscriptions). This cannot be undone.
+                            </AlertDialogDescription>
+                          </AlertDialogHeader>
+                          <AlertDialogFooter>
+                            <AlertDialogCancel>Cancel</AlertDialogCancel>
+                            <AlertDialogAction
+                              onClick={() => handleDeleteChef(chef.id)}
+                              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                            >
+                              Delete
+                            </AlertDialogAction>
+                          </AlertDialogFooter>
+                        </AlertDialogContent>
+                      </AlertDialog>
                     </div>
                   </div>
                 </div>

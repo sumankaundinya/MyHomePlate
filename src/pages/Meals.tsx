@@ -56,30 +56,45 @@ const Meals = () => {
 
   const fetchMeals = async () => {
     try {
+      const { data: approvedChefs, error: chefsError } = await supabase
+        .from("chefs")
+        .select("user_id")
+        .eq("verification_status", "approved");
+
+      if (chefsError) throw chefsError;
+
+      const approvedChefIds = (approvedChefs || []).map((c) => c.user_id);
+
+      if (approvedChefIds.length === 0) {
+        setMeals([]);
+        return;
+      }
+
       const { data, error } = await supabase
         .from("meals")
         .select("*")
         .eq("available", true)
+        .in("chef_id", approvedChefIds)
         .order("created_at", { ascending: false });
 
       if (error) throw error;
 
-      const mealsWithChefName = await Promise.all(
-        (data || []).map(async (meal: any) => {
-          const { data: profile } = await supabase
-            .from("profiles")
-            .select("name")
-            .eq("id", meal.chef_id)
-            .single();
+      const uniqueChefIds = [...new Set((data || []).map((m: any) => m.chef_id))];
+      const { data: profiles } = await supabase
+        .from("profiles")
+        .select("id, name")
+        .in("id", uniqueChefIds);
 
-          return {
-            ...meal,
-            chef_name: profile?.name || "Unknown Chef",
-          };
-        })
+      const profileMap = Object.fromEntries(
+        (profiles || []).map((p) => [p.id, p.name])
       );
 
-      setMeals(mealsWithChefName);
+      setMeals(
+        (data || []).map((meal: any) => ({
+          ...meal,
+          chef_name: profileMap[meal.chef_id] || "Unknown Chef",
+        }))
+      );
     } catch (error) {
       console.error("Error fetching meals:", error);
       toast.error("Failed to load meals");
