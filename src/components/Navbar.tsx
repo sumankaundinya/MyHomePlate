@@ -180,7 +180,7 @@ const Navbar = () => {
                   <Menu className="h-5 w-5" />
                 </Button>
               </SheetTrigger>
-              <SheetContent side="left" className="w-72">
+              <SheetContent side="left" className="w-[80vw] sm:w-72">
                 <div className="flex flex-col space-y-2 mt-6">
                   <NavLinks mobile onClose={() => setMobileOpen(false)} />
                   {!user && (

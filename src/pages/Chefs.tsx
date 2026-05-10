@@ -193,7 +193,7 @@ const Chefs = () => {
         </div>
 
         {/* Location + Search + View Toggle */}
-        <div className="grid md:grid-cols-3 gap-4 mb-6">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
           {/* GPS button */}
           <Card>
             <CardContent className="pt-5 pb-4">

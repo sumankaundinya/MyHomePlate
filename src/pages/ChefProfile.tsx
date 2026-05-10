@@ -315,7 +315,7 @@ const ChefProfile = () => {
                       Subscribe for Daily Tiffin
                     </Button>
                   </DialogTrigger>
-                  <DialogContent className="max-w-md">
+                  <DialogContent className="w-[95vw] sm:w-auto max-w-md">
                     <DialogHeader>
                       <DialogTitle>Choose a Subscription Plan</DialogTitle>
                     </DialogHeader>

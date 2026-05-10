@@ -161,7 +161,7 @@ const Partner = () => {
         </div>
 
         {/* Stats Cards */}
-        <div className="grid md:grid-cols-4 gap-4 mb-8">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">Total Orders</CardTitle>
@@ -205,7 +205,7 @@ const Partner = () => {
 
         {/* Tabs */}
         <Tabs defaultValue="orders" className="w-full">
-          <TabsList className="grid w-full grid-cols-4">
+          <TabsList className="grid w-full grid-cols-2 sm:grid-cols-4">
             <TabsTrigger value="orders">Orders</TabsTrigger>
             <TabsTrigger value="dishes">Dishes</TabsTrigger>
             <TabsTrigger value="earnings">Earnings</TabsTrigger>

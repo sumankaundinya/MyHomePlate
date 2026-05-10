@@ -345,7 +345,7 @@ export const PartnerProfile = ({ chefId }: PartnerProfileProps) => {
                 onChange={(e) => setAddress({ ...address, address_line: e.target.value })}
               />
             </div>
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div>
                 <Label htmlFor="area">Area / Locality</Label>
                 <Input
@@ -368,7 +368,7 @@ export const PartnerProfile = ({ chefId }: PartnerProfileProps) => {
 
             <div className="space-y-2">
               <Label>GPS Coordinates (for map visibility)</Label>
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
                   <Input
                     placeholder="Latitude e.g. 17.5081"

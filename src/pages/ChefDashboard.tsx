@@ -264,7 +264,7 @@ const ChefDashboard = () => {
                 Add New Meal
               </Button>
             </DialogTrigger>
-            <DialogContent className="max-w-2xl">
+            <DialogContent className="w-[95vw] sm:w-auto max-w-2xl">
               <DialogHeader>
                 <DialogTitle>
                   {editingMeal ? "Edit Meal" : "Add New Meal"}
@@ -297,7 +297,7 @@ const ChefDashboard = () => {
                     required
                   />
                 </div>
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label htmlFor="price">Price (INR)</Label>
                     <Input
