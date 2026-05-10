@@ -51,7 +51,7 @@ async function fetchFeaturedChefs(): Promise<ChefSuggestion[]> {
     .from("chefs")
     .select(
       `id, bio, avg_rating, user_id,
-       profiles:user_id ( full_name )`
+       profiles:profiles(name)`
     )
     .eq("verification_status", "approved")
     .order("avg_rating", { ascending: false })
@@ -61,7 +61,7 @@ async function fetchFeaturedChefs(): Promise<ChefSuggestion[]> {
 
   return data.map((c: any) => ({
     id: c.id,
-    name: c.profiles?.full_name ?? "Home Chef",
+    name: c.profiles?.name ?? "Home Chef",
     bio: c.bio,
     avg_rating: c.avg_rating,
     cuisine: c.bio ?? "Home-style cooking",
@@ -334,12 +334,40 @@ export async function sendChatMessage(
     try {
       const content = await callGemini(systemPrompt, history, userMessage, geminiKey);
       return attachCards(content, meals, chefs);
-    } catch {
+    } catch (err) {
+      console.error("Gemini error:", err);
       // Fall through to OpenAI
     }
   }
 
-  // 2. Try OpenAI (secondary)
+  // 2. Try Groq (secondary — free, high rate limits)
+  const groqKey = import.meta.env.VITE_GROQ_API_KEY as string | undefined;
+  if (groqKey && !groqKey.includes("your-groq")) {
+    try {
+      const messages = [
+        { role: "system" as const, content: systemPrompt },
+        ...history.slice(-8),
+        { role: "user" as const, content: userMessage },
+      ];
+      const response = await fetch("https://api.groq.com/openai/v1/chat/completions", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${groqKey}`,
+        },
+        body: JSON.stringify({ model: "llama-3.3-70b-versatile", messages, max_tokens: 400, temperature: 0.7 }),
+      });
+      if (!response.ok) throw new Error(`Groq ${response.status}`);
+      const json = await response.json();
+      const content: string = json.choices?.[0]?.message?.content ?? "Sorry, I couldn't understand that.";
+      return attachCards(content, meals, chefs);
+    } catch (err) {
+      console.error("Groq error:", err);
+      // Fall through to rule-based
+    }
+  }
+
+  // 3. Try OpenAI (tertiary)
   const openaiKey = import.meta.env.VITE_OPENAI_API_KEY as string | undefined;
   if (openaiKey && openaiKey.startsWith("sk-")) {
     try {
@@ -365,6 +393,6 @@ export async function sendChatMessage(
     }
   }
 
-  // 3. Rule-based fallback (no API key needed)
+  // 4. Rule-based fallback (no API key needed)
   return buildFallbackResponse(userMessage, meals, chefs);
 }
