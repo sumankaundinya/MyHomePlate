@@ -16,6 +16,7 @@ const Signup = () => {
   const [password, setPassword] = useState("");
   const [role, setRole] = useState<"customer" | "chef">("customer");
   const [loading, setLoading] = useState(false);
+  const [awaitingConfirmation, setAwaitingConfirmation] = useState(false);
 
   const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -37,7 +38,7 @@ const Signup = () => {
         email,
         password,
         options: {
-          emailRedirectTo: `${window.location.origin}/`,
+          emailRedirectTo: "https://www.myhomeplate.in/",
           data: {
             name,
             role,
@@ -54,7 +55,11 @@ const Signup = () => {
         return;
       }
 
-      if (data.user) {
+      if (data.user && !data.session) {
+        // Email confirmation required
+        setAwaitingConfirmation(true);
+      } else if (data.user && data.session) {
+        // Auto-confirmed (shouldn't happen now, but safe fallback)
         toast.success("Account created! Welcome to MyHomePlate!");
         navigate("/");
       }
@@ -65,6 +70,32 @@ const Signup = () => {
       setLoading(false);
     }
   };
+
+  if (awaitingConfirmation) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background via-muted to-background p-4">
+        <Card className="w-full max-w-md shadow-warm text-center">
+          <CardContent className="pt-10 pb-8 space-y-4">
+            <div className="text-5xl mb-2">📧</div>
+            <CardTitle className="text-2xl font-bold">Check your email</CardTitle>
+            <CardDescription className="text-base">
+              We sent a confirmation link to <strong>{email}</strong>.<br />
+              Click the link in that email to activate your account.
+            </CardDescription>
+            <p className="text-sm text-muted-foreground pt-2">
+              Didn't receive it? Check your spam folder or{" "}
+              <button
+                className="text-primary hover:underline font-medium"
+                onClick={() => setAwaitingConfirmation(false)}
+              >
+                try again
+              </button>.
+            </p>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background via-muted to-background p-4">
