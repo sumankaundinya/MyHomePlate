@@ -17,6 +17,26 @@ const Signup = () => {
   const [role, setRole] = useState<"customer" | "chef">("customer");
   const [loading, setLoading] = useState(false);
   const [awaitingConfirmation, setAwaitingConfirmation] = useState(false);
+  const [resending, setResending] = useState(false);
+  const [resent, setResent] = useState(false);
+
+  const handleResend = async () => {
+    setResending(true);
+    setResent(false);
+    try {
+      const { error } = await supabase.auth.resend({
+        type: "signup",
+        email,
+        options: { emailRedirectTo: `${window.location.origin}/` },
+      });
+      if (error) throw error;
+      setResent(true);
+    } catch (err: any) {
+      toast.error(err.message || "Failed to resend email");
+    } finally {
+      setResending(false);
+    }
+  };
 
   const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -38,7 +58,7 @@ const Signup = () => {
         email,
         password,
         options: {
-          emailRedirectTo: "https://www.myhomeplate.in/",
+          emailRedirectTo: `${window.location.origin}/`,
           data: {
             name,
             role,
@@ -82,15 +102,24 @@ const Signup = () => {
               We sent a confirmation link to <strong>{email}</strong>.<br />
               Click the link in that email to activate your account.
             </CardDescription>
-            <p className="text-sm text-muted-foreground pt-2">
-              Didn't receive it? Check your spam folder or{" "}
+            {resent && (
+              <p className="text-sm text-green-600 font-medium">Confirmation email resent!</p>
+            )}
+            <div className="flex flex-col gap-2 pt-2">
+              <Button onClick={handleResend} disabled={resending} variant="outline" className="w-full">
+                {resending ? (
+                  <><Loader2 className="mr-2 h-4 w-4 animate-spin" />Resending...</>
+                ) : (
+                  "Resend confirmation email"
+                )}
+              </Button>
               <button
-                className="text-primary hover:underline font-medium"
-                onClick={() => setAwaitingConfirmation(false)}
+                className="text-sm text-muted-foreground hover:underline"
+                onClick={() => { setAwaitingConfirmation(false); setResent(false); }}
               >
-                try again
-              </button>.
-            </p>
+                Use a different email
+              </button>
+            </div>
           </CardContent>
         </Card>
       </div>
