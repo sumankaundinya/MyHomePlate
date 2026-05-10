@@ -272,16 +272,33 @@ const MealDetail = () => {
           email: user.email,
         },
         theme: { color: "#0f766e" },
-        handler: async (response: { razorpay_payment_id: string }) => {
-          // 3. On payment success — update order with payment_id
-          await supabase
-            .from("orders")
-            .update({
-              payment_id: response.razorpay_payment_id,
-              payment_status: "paid",
-              status: "pending", // chef still needs to accept
-            })
-            .eq("id", order.id);
+        handler: async (response: { razorpay_payment_id: string; razorpay_order_id: string; razorpay_signature: string }) => {
+          // 3. Verify payment signature server-side before trusting the result
+          const { data: { session } } = await supabase.auth.getSession();
+          const verifyRes = await fetch(
+            `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/verify-razorpay-payment`,
+            {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+                "Authorization": `Bearer ${session?.access_token}`,
+                "apikey": import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
+              },
+              body: JSON.stringify({
+                razorpay_payment_id: response.razorpay_payment_id,
+                razorpay_order_id: response.razorpay_order_id,
+                razorpay_signature: response.razorpay_signature,
+                internal_order_id: order.id,
+              }),
+            }
+          );
+
+          const verifyData = await verifyRes.json();
+          if (!verifyRes.ok || !verifyData.success) {
+            toast.error("Payment verification failed. Contact support.");
+            setOrdering(false);
+            return;
+          }
 
           // Send order confirmation email (fire and forget)
           supabase.functions.invoke("send-email-notification", {
