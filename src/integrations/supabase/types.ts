@@ -243,6 +243,8 @@ export type Database = {
           delivery_partner_id: string | null
           id: string
           meal_id: string
+          payment_id: string | null
+          payment_status: string | null
           quantity: number
           scheduled_delivery_time: string | null
           status: string
@@ -259,6 +261,8 @@ export type Database = {
           delivery_partner_id?: string | null
           id?: string
           meal_id: string
+          payment_id?: string | null
+          payment_status?: string | null
           quantity?: number
           scheduled_delivery_time?: string | null
           status?: string
@@ -275,6 +279,8 @@ export type Database = {
           delivery_partner_id?: string | null
           id?: string
           meal_id?: string
+          payment_id?: string | null
+          payment_status?: string | null
           quantity?: number
           scheduled_delivery_time?: string | null
           status?: string
