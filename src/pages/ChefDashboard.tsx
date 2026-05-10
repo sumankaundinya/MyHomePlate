@@ -50,9 +50,11 @@ interface Order {
   quantity: number;
   total_price: number;
   status: string;
+  payment_status: string | null;
   created_at: string;
+  customer_id: string;
   meals: { title: string };
-  profiles: { name: string };
+  profiles: { name: string; email: string };
 }
 
 const ChefDashboard = () => {
@@ -106,14 +108,30 @@ const ChefDashboard = () => {
       return;
     }
 
-    fetchMeals();
-    fetchOrders();
+    fetchMeals(session.user.id);
+    fetchOrders(session.user.id);
+
+    // Realtime — refresh orders when a new one lands for this chef
+    const channel = supabase
+      .channel("chef-orders")
+      .on(
+        "postgres_changes",
+        { event: "INSERT", schema: "public", table: "orders", filter: `chef_id=eq.${session.user.id}` },
+        () => {
+          fetchOrders(session.user.id);
+          toast.info("New order received!");
+        }
+      )
+      .subscribe();
+
+    return () => { supabase.removeChannel(channel); };
   };
 
-  const fetchMeals = async () => {
+  const fetchMeals = async (userId: string) => {
     const { data, error } = await supabase
       .from("meals")
       .select("*")
+      .eq("chef_id", userId)
       .order("created_at", { ascending: false });
 
     if (error) {
@@ -124,10 +142,11 @@ const ChefDashboard = () => {
     setMeals(data || []);
   };
 
-  const fetchOrders = async () => {
+  const fetchOrders = async (userId: string) => {
     const { data, error } = await supabase
       .from("orders")
       .select("*, meals (title)")
+      .eq("chef_id", userId)
       .order("created_at", { ascending: false });
 
     if (error) {
@@ -135,18 +154,18 @@ const ChefDashboard = () => {
       return;
     }
 
-    // Fetch customer names
+    // Fetch customer names and emails
     const ordersWithCustomer = await Promise.all(
       (data || []).map(async (order: any) => {
         const { data: profile } = await supabase
           .from("profiles")
-          .select("name")
+          .select("name, email")
           .eq("id", order.customer_id)
           .single();
 
         return {
           ...order,
-          profiles: { name: profile?.name || "Unknown" },
+          profiles: { name: profile?.name || "Unknown", email: profile?.email || "" },
         };
       })
     );
@@ -200,7 +219,7 @@ const ChefDashboard = () => {
 
       setDialogOpen(false);
       resetForm();
-      fetchMeals();
+      if (user) fetchMeals(user.id);
     } catch (error) {
       console.error("Error saving meal:", error);
       toast.error("Failed to save meal");
@@ -231,7 +250,34 @@ const ChefDashboard = () => {
     }
 
     toast.success("Meal deleted");
-    fetchMeals();
+    if (user) fetchMeals(user.id);
+  };
+
+  const updateOrderStatus = async (order: Order, newStatus: string) => {
+    const { error } = await supabase
+      .from("orders")
+      .update({ status: newStatus })
+      .eq("id", order.id);
+
+    if (error) { toast.error("Failed to update order"); return; }
+
+    if (user) fetchOrders(user.id);
+
+    // Email customer about status change
+    supabase.functions.invoke("send-email-notification", {
+      body: {
+        to: order.profiles.email,
+        event: newStatus,
+        customerName: order.profiles.name,
+        chefName: "",
+        mealTitle: order.meals.title,
+        orderId: order.id,
+        totalPrice: order.total_price,
+        quantity: order.quantity,
+      },
+    }).catch(() => {});
+
+    toast.success(`Order ${newStatus}`);
   };
 
   const resetForm = () => {
@@ -494,9 +540,9 @@ const ChefDashboard = () => {
                 {orders.map((order) => (
                   <div
                     key={order.id}
-                    className="flex items-center justify-between p-4 border rounded-lg"
+                    className="flex items-start justify-between p-4 border rounded-lg gap-4"
                   >
-                    <div>
+                    <div className="flex-1">
                       <h3 className="font-semibold">{order.meals.title}</h3>
                       <p className="text-sm text-muted-foreground">
                         Customer: {order.profiles.name} • Qty: {order.quantity}
@@ -505,20 +551,36 @@ const ChefDashboard = () => {
                         {new Date(order.created_at).toLocaleDateString()}
                       </p>
                     </div>
-                    <div className="text-right">
-                      <p className="font-bold text-primary">
-                        INR {order.total_price}
-                      </p>
+                    <div className="text-right flex flex-col items-end gap-2">
+                      <p className="font-bold text-primary">₹{order.total_price}</p>
                       <Badge
                         variant={
-                          order.status === "paid" ||
-                          order.status === "delivered"
+                          order.status === "delivered" || order.status === "accepted"
                             ? "default"
+                            : order.status === "cancelled"
+                            ? "destructive"
                             : "secondary"
                         }
                       >
                         {order.status}
                       </Badge>
+                      {order.status === "pending" && order.payment_status === "paid" && (
+                        <div className="flex gap-2 mt-1">
+                          <Button
+                            size="sm"
+                            onClick={() => updateOrderStatus(order, "accepted")}
+                          >
+                            Accept
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="destructive"
+                            onClick={() => updateOrderStatus(order, "cancelled")}
+                          >
+                            Reject
+                          </Button>
+                        </div>
+                      )}
                     </div>
                   </div>
                 ))}
