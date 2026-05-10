@@ -51,6 +51,7 @@ interface Order {
   total_price: number;
   status: string;
   payment_status: string | null;
+  payment_id: string | null;
   created_at: string;
   customer_id: string;
   meals: { title: string };
@@ -254,12 +255,37 @@ const ChefDashboard = () => {
   };
 
   const updateOrderStatus = async (order: Order, newStatus: string) => {
-    const { error } = await supabase
-      .from("orders")
-      .update({ status: newStatus })
-      .eq("id", order.id);
+    // If chef is rejecting a paid order, trigger a full refund first
+    if (newStatus === "cancelled" && order.payment_id && order.payment_status === "paid") {
+      const refundRes = await supabase.functions.invoke("process-refund", {
+        body: {
+          payment_id: order.payment_id,
+          notes: { reason: "Chef rejected order" },
+        },
+      });
 
-    if (error) { toast.error("Failed to update order"); return; }
+      if (refundRes.error) {
+        toast.error("Refund failed — order not cancelled. Contact support.");
+        return;
+      }
+
+      // Mark payment as refunded alongside cancellation
+      await supabase
+        .from("orders")
+        .update({ status: "cancelled", payment_status: "refunded" })
+        .eq("id", order.id);
+
+      toast.success("Order rejected — customer refund initiated");
+    } else {
+      const { error } = await supabase
+        .from("orders")
+        .update({ status: newStatus })
+        .eq("id", order.id);
+
+      if (error) { toast.error("Failed to update order"); return; }
+
+      toast.success(`Order ${newStatus}`);
+    }
 
     if (user) fetchOrders(user.id);
 
@@ -276,8 +302,6 @@ const ChefDashboard = () => {
         quantity: order.quantity,
       },
     }).catch(() => {});
-
-    toast.success(`Order ${newStatus}`);
   };
 
   const resetForm = () => {
