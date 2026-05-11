@@ -95,8 +95,9 @@ export const PartnerOrders = ({ chefId, userId, onStatsUpdate }: PartnerOrdersPr
       if (error) throw error;
       toast.success(`Order ${newStatus}`);
 
-      // Send email notification to customer (fire and forget)
       const order = orders.find((o) => o.id === orderId);
+
+      // Send email notification to customer (fire and forget)
       const emailEvents: Record<string, string> = {
         accepted: "accepted", preparing: "preparing",
         ready: "ready", out_for_delivery: "out_for_delivery", delivered: "delivered",
@@ -114,6 +115,25 @@ export const PartnerOrders = ({ chefId, userId, onStatsUpdate }: PartnerOrdersPr
             quantity: order.quantity,
           },
         }).catch(() => {});
+      }
+
+      // Trigger automatic payout to chef when order is delivered
+      if (newStatus === "delivered" && order) {
+        const chefEarnings = (Number(order.total_price) * (1 - commissionRate / 100)).toFixed(2);
+        supabase.functions.invoke("process-chef-payout", {
+          body: { order_id: orderId, chef_id: chefId },
+        }).then(({ data, error: payoutError }) => {
+          if (payoutError || data?.error) {
+            toast.warning(
+              `Order delivered! Payout failed: ${data?.error || payoutError?.message}. Check your payout details in Profile.`,
+              { duration: 6000 }
+            );
+          } else {
+            toast.success(`Payout of ₹${chefEarnings} initiated to your ${data?.status === "processed" ? "account" : "account (processing)"}!`);
+          }
+        }).catch(() => {
+          toast.warning("Order delivered! Could not initiate payout. Please check your payout details in Profile.");
+        });
       }
 
       fetchOrders();

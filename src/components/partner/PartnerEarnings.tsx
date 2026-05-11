@@ -1,9 +1,10 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import { format } from "date-fns";
-import { IndianRupee, TrendingUp, Calendar } from "lucide-react";
+import { IndianRupee, TrendingUp, Calendar, Banknote } from "lucide-react";
 import { getCommissionPercentage } from "@/lib/commissionUtils";
 
 interface EarningData {
@@ -13,15 +14,31 @@ interface EarningData {
   earnings: number;
 }
 
+interface PayoutRecord {
+  id: string;
+  order_id: string;
+  order_amount: number;
+  commission_rate: number;
+  payout_amount: number;
+  payout_method: string;
+  razorpay_payout_id: string | null;
+  status: string;
+  failure_reason: string | null;
+  created_at: string;
+}
+
 export const PartnerEarnings = () => {
   const [earnings, setEarnings] = useState<EarningData[]>([]);
   const [totalEarnings, setTotalEarnings] = useState(0);
   const [loading, setLoading] = useState(true);
   const [commissionRate, setCommissionRate] = useState(0);
+  const [payouts, setPayouts] = useState<PayoutRecord[]>([]);
+  const [payoutsLoading, setPayoutsLoading] = useState(true);
 
   useEffect(() => {
     fetchCommissionRate();
     fetchEarnings();
+    fetchPayouts();
   }, []);
 
   const fetchCommissionRate = async () => {
@@ -86,6 +103,44 @@ export const PartnerEarnings = () => {
       toast.error("Failed to load earnings data");
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchPayouts = async () => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      // Get chef profile id from user id
+      const { data: chef } = await supabase
+        .from("chefs")
+        .select("id")
+        .eq("user_id", user.id)
+        .single();
+
+      if (!chef) return;
+
+      const { data, error } = await (supabase as any)
+        .from("chef_payouts")
+        .select("*")
+        .eq("chef_id", chef.id)
+        .order("created_at", { ascending: false });
+
+      if (error) throw error;
+      setPayouts(data || []);
+    } catch (error) {
+      console.error("Error fetching payouts:", error);
+    } finally {
+      setPayoutsLoading(false);
+    }
+  };
+
+  const getPayoutStatusBadge = (status: string) => {
+    switch (status) {
+      case "processed":  return <Badge className="bg-green-100 text-green-700 border-green-200">Paid</Badge>;
+      case "processing": return <Badge className="bg-blue-100 text-blue-700 border-blue-200">Processing</Badge>;
+      case "failed":     return <Badge variant="destructive">Failed</Badge>;
+      default:           return <Badge variant="secondary">Pending</Badge>;
     }
   };
 
@@ -179,6 +234,58 @@ export const PartnerEarnings = () => {
                     <p className="text-xs text-muted-foreground">
                       from ₹{earning.revenue.toFixed(2)}
                     </p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Payout Ledger */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Banknote className="h-5 w-5 text-green-600" />
+            Payout History
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          {payoutsLoading ? (
+            <p className="text-center text-muted-foreground py-8">Loading payouts...</p>
+          ) : payouts.length === 0 ? (
+            <p className="text-center text-muted-foreground py-8">
+              No payouts yet. Payouts are triggered automatically when you mark an order as delivered.
+            </p>
+          ) : (
+            <div className="space-y-3">
+              {payouts.map((payout) => (
+                <div
+                  key={payout.id}
+                  className="flex items-center justify-between py-3 border-b last:border-0"
+                >
+                  <div className="flex items-center gap-3">
+                    <IndianRupee className="h-4 w-4 text-muted-foreground" />
+                    <div>
+                      <p className="font-medium">₹{Number(payout.payout_amount).toFixed(2)}</p>
+                      <p className="text-xs text-muted-foreground">
+                        {format(new Date(payout.created_at), "MMM dd, yyyy 'at' hh:mm a")}
+                      </p>
+                      <p className="text-xs text-muted-foreground">
+                        via {payout.payout_method === "upi" ? "UPI" : "Bank"} · Order ₹{Number(payout.order_amount).toFixed(2)} · {Number(payout.commission_rate)}% fee
+                      </p>
+                      {payout.failure_reason && (
+                        <p className="text-xs text-destructive mt-0.5">{payout.failure_reason}</p>
+                      )}
+                    </div>
+                  </div>
+                  <div className="text-right">
+                    {getPayoutStatusBadge(payout.status)}
+                    {payout.razorpay_payout_id && (
+                      <p className="text-xs text-muted-foreground mt-1">
+                        ID: {payout.razorpay_payout_id.slice(-8)}
+                      </p>
+                    )}
                   </div>
                 </div>
               ))}
