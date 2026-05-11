@@ -8,7 +8,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
 import { toast } from "sonner";
-import { Plus, X, MapPin, Navigation } from "lucide-react";
+import { Plus, X, MapPin, Navigation, IndianRupee } from "lucide-react";
 import { ImageUpload } from "@/components/ImageUpload";
 
 interface PartnerProfileProps {
@@ -37,16 +37,26 @@ export const PartnerProfile = ({ chefId }: PartnerProfileProps) => {
   });
   const [addressLoading, setAddressLoading] = useState(false);
   const [gpsLoading, setGpsLoading] = useState(false);
+  const [payoutDetails, setPayoutDetails] = useState({
+    payout_method: "upi" as "upi" | "bank",
+    upi_id: "",
+    account_holder_name: "",
+    account_number: "",
+    ifsc_code: "",
+  });
+  const [payoutLoading, setPayoutLoading] = useState(false);
+  const [payoutExists, setPayoutExists] = useState(false);
 
   useEffect(() => {
     fetchProfile();
     fetchSpecialties();
     fetchAddress();
+    fetchPayoutDetails();
   }, [chefId]);
 
   const fetchProfile = async () => {
     try {
-      const { data, error } = await supabase
+      const { data, error } = await (supabase as any)
         .from("chefs")
         .select("bio, kitchen_photo_url, hygiene_certificate, fssai_license, phone_number, notification_opt_in")
         .eq("id", chefId)
@@ -104,6 +114,77 @@ export const PartnerProfile = ({ chefId }: PartnerProfileProps) => {
       }
     } catch (error) {
       console.error("Error fetching address:", error);
+    }
+  };
+
+  const fetchPayoutDetails = async () => {
+    try {
+      const { data } = await (supabase as any)
+        .from("chef_payout_details")
+        .select("payout_method, upi_id, account_holder_name, account_number, ifsc_code")
+        .eq("chef_id", chefId)
+        .maybeSingle();
+
+      if (data) {
+        setPayoutExists(true);
+        setPayoutDetails({
+          payout_method: data.payout_method || "upi",
+          upi_id: data.upi_id || "",
+          account_holder_name: data.account_holder_name || "",
+          account_number: data.account_number || "",
+          ifsc_code: data.ifsc_code || "",
+        });
+      }
+    } catch (error) {
+      console.error("Error fetching payout details:", error);
+    }
+  };
+
+  const handleSavePayoutDetails = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (payoutDetails.payout_method === "upi" && !payoutDetails.upi_id.trim()) {
+      toast.error("Please enter your UPI ID");
+      return;
+    }
+    if (payoutDetails.payout_method === "bank") {
+      if (!payoutDetails.account_holder_name.trim() || !payoutDetails.account_number.trim() || !payoutDetails.ifsc_code.trim()) {
+        toast.error("Please fill in all bank account details");
+        return;
+      }
+    }
+    setPayoutLoading(true);
+    try {
+      const payload = {
+        chef_id: chefId,
+        payout_method: payoutDetails.payout_method,
+        upi_id: payoutDetails.payout_method === "upi" ? payoutDetails.upi_id.trim() : null,
+        account_holder_name: payoutDetails.payout_method === "bank" ? payoutDetails.account_holder_name.trim() : null,
+        account_number: payoutDetails.payout_method === "bank" ? payoutDetails.account_number.trim() : null,
+        ifsc_code: payoutDetails.payout_method === "bank" ? payoutDetails.ifsc_code.trim().toUpperCase() : null,
+        // Reset Razorpay IDs when bank details change so they get recreated
+        razorpay_contact_id: null,
+        razorpay_fund_account_id: null,
+      };
+
+      if (payoutExists) {
+        const { error } = await (supabase as any)
+          .from("chef_payout_details")
+          .update(payload)
+          .eq("chef_id", chefId);
+        if (error) throw error;
+      } else {
+        const { error } = await (supabase as any)
+          .from("chef_payout_details")
+          .insert(payload);
+        if (error) throw error;
+        setPayoutExists(true);
+      }
+      toast.success("Payout details saved! Earnings will be transferred here after each delivery.");
+    } catch (error: any) {
+      console.error("Error saving payout details:", error);
+      toast.error(error.message || "Failed to save payout details");
+    } finally {
+      setPayoutLoading(false);
     }
   };
 
@@ -402,6 +483,97 @@ export const PartnerProfile = ({ chefId }: PartnerProfileProps) => {
 
             <Button type="submit" disabled={addressLoading} className="w-full">
               {addressLoading ? "Saving…" : "Save Kitchen Address"}
+            </Button>
+          </form>
+        </CardContent>
+      </Card>
+
+      {/* Payout Details */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <IndianRupee className="h-5 w-5 text-green-600" />
+            Payout Details
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <p className="text-sm text-muted-foreground mb-4">
+            Add your UPI ID or bank account so MyHomePlate can automatically transfer your earnings when an order is delivered.
+          </p>
+          <form onSubmit={handleSavePayoutDetails} className="space-y-4">
+            <div>
+              <Label>Payout Method</Label>
+              <div className="flex gap-6 mt-2">
+                <label className="flex items-center gap-2 cursor-pointer text-sm">
+                  <input
+                    type="radio"
+                    name="payout_method"
+                    value="upi"
+                    checked={payoutDetails.payout_method === "upi"}
+                    onChange={() => setPayoutDetails({ ...payoutDetails, payout_method: "upi" })}
+                  />
+                  UPI
+                </label>
+                <label className="flex items-center gap-2 cursor-pointer text-sm">
+                  <input
+                    type="radio"
+                    name="payout_method"
+                    value="bank"
+                    checked={payoutDetails.payout_method === "bank"}
+                    onChange={() => setPayoutDetails({ ...payoutDetails, payout_method: "bank" })}
+                  />
+                  Bank Account
+                </label>
+              </div>
+            </div>
+
+            {payoutDetails.payout_method === "upi" ? (
+              <div>
+                <Label htmlFor="upi_id">UPI ID</Label>
+                <Input
+                  id="upi_id"
+                  placeholder="e.g. yourname@upi or 9876543210@ybl"
+                  value={payoutDetails.upi_id}
+                  onChange={(e) => setPayoutDetails({ ...payoutDetails, upi_id: e.target.value })}
+                />
+                <p className="text-xs text-muted-foreground mt-1">
+                  Earnings will be sent here instantly after each delivery
+                </p>
+              </div>
+            ) : (
+              <div className="space-y-3">
+                <div>
+                  <Label htmlFor="account_holder_name">Account Holder Name</Label>
+                  <Input
+                    id="account_holder_name"
+                    placeholder="Name exactly as on bank account"
+                    value={payoutDetails.account_holder_name}
+                    onChange={(e) => setPayoutDetails({ ...payoutDetails, account_holder_name: e.target.value })}
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="account_number">Account Number</Label>
+                  <Input
+                    id="account_number"
+                    placeholder="Your bank account number"
+                    value={payoutDetails.account_number}
+                    onChange={(e) => setPayoutDetails({ ...payoutDetails, account_number: e.target.value })}
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="ifsc_code">IFSC Code</Label>
+                  <Input
+                    id="ifsc_code"
+                    placeholder="e.g. HDFC0001234"
+                    value={payoutDetails.ifsc_code}
+                    onChange={(e) => setPayoutDetails({ ...payoutDetails, ifsc_code: e.target.value.toUpperCase() })}
+                  />
+                </div>
+              </div>
+            )}
+
+            <Button type="submit" disabled={payoutLoading} className="w-full">
+              {payoutLoading ? "Saving..." : payoutExists ? "Update Payout Details" : "Save Payout Details"}
             </Button>
           </form>
         </CardContent>
