@@ -35,7 +35,7 @@ export const PartnerOrders = ({ chefId, userId, onStatsUpdate }: PartnerOrdersPr
   const [loading, setLoading] = useState(false);   // disables action buttons
   const [fetching, setFetching] = useState(true);  // initial data load only
   const isFirstLoad = useRef(true);
-  const [filterStatus, setFilterStatus] = useState<string>("all");
+  const [filterStatus, setFilterStatus] = useState<string>("active");
   const [commissionRate, setCommissionRate] = useState<number>(0);
 
   useEffect(() => {
@@ -184,9 +184,13 @@ export const PartnerOrders = ({ chefId, userId, onStatsUpdate }: PartnerOrdersPr
     return labels[status] ?? status;
   };
 
-  const filteredOrders = filterStatus === "all" 
-    ? orders 
-    : orders.filter(order => order.status === filterStatus);
+  const ACTIVE_STATUSES = ["pending", "accepted", "preparing", "ready", "out_for_delivery"];
+
+  const filteredOrders = filterStatus === "all"
+    ? orders
+    : filterStatus === "active"
+    ? orders.filter(o => ACTIVE_STATUSES.includes(o.status))
+    : orders.filter(o => o.status === filterStatus);
 
   return (
     <div className="space-y-4">
@@ -197,6 +201,7 @@ export const PartnerOrders = ({ chefId, userId, onStatsUpdate }: PartnerOrdersPr
             <SelectValue placeholder="Filter by status" />
           </SelectTrigger>
           <SelectContent>
+            <SelectItem value="active">Active Orders</SelectItem>
             <SelectItem value="all">All Orders</SelectItem>
             <SelectItem value="pending">Pending</SelectItem>
             <SelectItem value="accepted">Accepted</SelectItem>
@@ -204,6 +209,7 @@ export const PartnerOrders = ({ chefId, userId, onStatsUpdate }: PartnerOrdersPr
             <SelectItem value="out_for_delivery">Out for Delivery</SelectItem>
             <SelectItem value="delivered">Delivered</SelectItem>
             <SelectItem value="rejected">Rejected</SelectItem>
+            <SelectItem value="cancelled">Cancelled</SelectItem>
           </SelectContent>
         </Select>
       </div>
@@ -221,7 +227,11 @@ export const PartnerOrders = ({ chefId, userId, onStatsUpdate }: PartnerOrdersPr
         ) : filteredOrders.length === 0 ? (
           <Card>
             <CardContent className="py-8 text-center text-muted-foreground">
-              {filterStatus === "all" ? "No orders yet" : `No ${filterStatus} orders`}
+              {filterStatus === "active"
+                ? "No active orders right now"
+                : filterStatus === "all"
+                ? "No orders yet"
+                : `No ${filterStatus} orders`}
             </CardContent>
           </Card>
         ) : (
