@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -33,7 +33,8 @@ interface PartnerOrdersProps {
 export const PartnerOrders = ({ chefId, userId, onStatsUpdate }: PartnerOrdersProps) => {
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(false);   // disables action buttons
-  const [fetching, setFetching] = useState(true);  // initial data load
+  const [fetching, setFetching] = useState(true);  // initial data load only
+  const isFirstLoad = useRef(true);
   const [filterStatus, setFilterStatus] = useState<string>("all");
   const [commissionRate, setCommissionRate] = useState<number>(0);
 
@@ -65,7 +66,8 @@ export const PartnerOrders = ({ chefId, userId, onStatsUpdate }: PartnerOrdersPr
   };
 
   const fetchOrders = async () => {
-    setFetching(true);
+    // Only show spinner on the very first load — background refreshes are silent
+    if (isFirstLoad.current) setFetching(true);
     try {
       const queryId = userId || chefId;
       if (!queryId) return;
@@ -99,7 +101,10 @@ export const PartnerOrders = ({ chefId, userId, onStatsUpdate }: PartnerOrdersPr
       console.error("Error fetching orders:", error);
       toast.error("Failed to load orders");
     } finally {
-      setFetching(false);
+      if (isFirstLoad.current) {
+        setFetching(false);
+        isFirstLoad.current = false;
+      }
     }
   };
 
