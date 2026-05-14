@@ -213,7 +213,7 @@ const Partner = () => {
           </TabsList>
 
           <TabsContent value="orders">
-            <PartnerOrders chefId={chefId} userId={userId} onStatsUpdate={() => checkChefAccess()} />
+            <PartnerOrders chefId={chefId} userId={userId} onStatsUpdate={() => userId && fetchStats(userId)} />
           </TabsContent>
 
           <TabsContent value="dishes">

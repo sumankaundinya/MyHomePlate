@@ -39,6 +39,23 @@ export const PartnerOrders = ({ chefId, userId, onStatsUpdate }: PartnerOrdersPr
   useEffect(() => {
     fetchOrders();
     fetchCommissionRate();
+
+    // Realtime — auto-refresh when any order for this chef changes
+    const queryId = userId || chefId;
+    if (!queryId) return;
+    const channel = supabase
+      .channel("partner-orders-watch")
+      .on("postgres_changes", {
+        event: "*",
+        schema: "public",
+        table: "orders",
+        filter: `chef_id=eq.${queryId}`,
+      }, () => {
+        fetchOrders();
+      })
+      .subscribe();
+
+    return () => { supabase.removeChannel(channel); };
   }, [userId, chefId]);
 
   const fetchCommissionRate = async () => {
@@ -85,6 +102,8 @@ export const PartnerOrders = ({ chefId, userId, onStatsUpdate }: PartnerOrdersPr
   };
 
   const handleStatusUpdate = async (orderId: string, newStatus: string) => {
+    // Optimistic update — show new status instantly, no flash
+    setOrders(prev => prev.map(o => o.id === orderId ? { ...o, status: newStatus } : o));
     setLoading(true);
     try {
       const { error } = await supabase
@@ -92,7 +111,11 @@ export const PartnerOrders = ({ chefId, userId, onStatsUpdate }: PartnerOrdersPr
         .update({ status: newStatus })
         .eq("id", orderId);
 
-      if (error) throw error;
+      if (error) {
+        // Revert optimistic update on failure
+        fetchOrders();
+        throw error;
+      }
       toast.success(`Order ${newStatus}`);
 
       const order = orders.find((o) => o.id === orderId);
@@ -160,10 +183,10 @@ export const PartnerOrders = ({ chefId, userId, onStatsUpdate }: PartnerOrdersPr
 
   return (
     <div className="space-y-4">
-      <div className="flex justify-between items-center">
+      <div className="flex justify-between items-center gap-3">
         <h2 className="text-xl font-semibold">Orders</h2>
         <Select value={filterStatus} onValueChange={setFilterStatus}>
-          <SelectTrigger className="w-[180px]">
+          <SelectTrigger className="w-28 sm:w-44">
             <SelectValue placeholder="Filter by status" />
           </SelectTrigger>
           <SelectContent>
