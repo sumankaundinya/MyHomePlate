@@ -155,19 +155,24 @@ const Meals = () => {
       if (error) throw error;
 
       const uniqueChefIds = [...new Set((data || []).map((m: any) => m.chef_id))];
-      const { data: profiles } = await supabase
-        .from("profiles")
-        .select("id, name")
-        .in("id", uniqueChefIds);
+
+      const [{ data: profiles }, { data: chefData }] = await Promise.all([
+        supabase.from("profiles").select("id, name").in("id", uniqueChefIds),
+        (supabase as any).from("chefs").select("user_id, delivery_fee").in("user_id", uniqueChefIds),
+      ]);
 
       const profileMap = Object.fromEntries(
         (profiles || []).map((p) => [p.id, p.name])
+      );
+      const deliveryMap = Object.fromEntries(
+        (chefData || []).map((c: any) => [c.user_id, c.delivery_fee ?? 0])
       );
 
       setMeals(
         (data || []).map((meal: any) => ({
           ...meal,
           chef_name: profileMap[meal.chef_id] || "Home Chef",
+          delivery_fee: deliveryMap[meal.chef_id] ?? 0,
         }))
       );
     } catch {

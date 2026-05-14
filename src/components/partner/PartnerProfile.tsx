@@ -23,7 +23,9 @@ export const PartnerProfile = ({ chefId }: PartnerProfileProps) => {
     hygiene_certificate: false,
     fssai_license: false,
     phone_number: "",
-    notification_opt_in: true
+    notification_opt_in: true,
+    delivery_fee: 0,
+    delivery_radius_km: 3,
   });
   const [specialties, setSpecialties] = useState<string[]>([]);
   const [newSpecialty, setNewSpecialty] = useState("");
@@ -58,7 +60,7 @@ export const PartnerProfile = ({ chefId }: PartnerProfileProps) => {
     try {
       const { data, error } = await (supabase as any)
         .from("chefs")
-        .select("bio, kitchen_photo_url, hygiene_certificate, fssai_license, phone_number, notification_opt_in")
+        .select("bio, kitchen_photo_url, hygiene_certificate, fssai_license, phone_number, notification_opt_in, delivery_fee, delivery_radius_km")
         .eq("id", chefId)
         .single();
 
@@ -70,7 +72,9 @@ export const PartnerProfile = ({ chefId }: PartnerProfileProps) => {
           hygiene_certificate: data.hygiene_certificate,
           fssai_license: data.fssai_license,
           phone_number: data.phone_number || "",
-          notification_opt_in: data.notification_opt_in ?? true
+          notification_opt_in: data.notification_opt_in ?? true,
+          delivery_fee: data.delivery_fee ?? 0,
+          delivery_radius_km: data.delivery_radius_km ?? 3,
         });
       }
     } catch (error) {
@@ -397,6 +401,49 @@ export const PartnerProfile = ({ chefId }: PartnerProfileProps) => {
                 <Label htmlFor="fssai" className="cursor-pointer">
                   FSSAI License
                 </Label>
+              </div>
+            </div>
+
+            {/* Delivery Settings */}
+            <div className="space-y-3 border rounded-xl p-4 bg-muted/30">
+              <div className="flex items-center gap-2">
+                <IndianRupee className="h-4 w-4 text-primary" />
+                <Label className="font-semibold">Delivery Settings</Label>
+              </div>
+              <p className="text-xs text-muted-foreground">
+                Set a flat delivery fee for your area. Customers pay this on every order. Enter 0 for free delivery.
+              </p>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <Label htmlFor="delivery_fee">Delivery Fee (₹)</Label>
+                  <Input
+                    id="delivery_fee"
+                    type="number"
+                    min="0"
+                    step="5"
+                    value={profile.delivery_fee}
+                    onChange={(e) => setProfile({ ...profile, delivery_fee: parseFloat(e.target.value) || 0 })}
+                    placeholder="e.g. 30"
+                  />
+                  <p className="text-xs text-muted-foreground mt-1">0 = free delivery</p>
+                </div>
+                <div>
+                  <Label htmlFor="delivery_radius">Delivery Radius (km)</Label>
+                  <Input
+                    id="delivery_radius"
+                    type="number"
+                    min="1"
+                    max="20"
+                    step="1"
+                    value={profile.delivery_radius_km}
+                    onChange={(e) => setProfile({ ...profile, delivery_radius_km: parseInt(e.target.value) || 3 })}
+                    placeholder="e.g. 3"
+                  />
+                  <p className="text-xs text-muted-foreground mt-1">Max km you deliver to</p>
+                </div>
+              </div>
+              <div className="bg-blue-50 border border-blue-200 rounded-lg px-3 py-2 text-xs text-blue-800">
+                Most chefs in Nizampet charge <strong>₹30–₹50</strong> for deliveries within <strong>3 km</strong>. Your delivery fee applies to all your dishes.
               </div>
             </div>
 

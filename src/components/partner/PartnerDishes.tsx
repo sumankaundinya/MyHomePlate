@@ -219,34 +219,21 @@ export const PartnerDishes = ({ onUpdate }: PartnerDishesProps) => {
                   onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                 />
               </div>
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <Label htmlFor="price">Dish Price (₹)</Label>
-                  <Input
-                    id="price"
-                    type="number"
-                    step="1"
-                    min="1"
-                    required
-                    value={formData.price}
-                    onChange={(e) => setFormData({ ...formData, price: e.target.value })}
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="delivery_fee">Delivery Fee (₹)</Label>
-                  <Input
-                    id="delivery_fee"
-                    type="number"
-                    step="1"
-                    min="0"
-                    value={formData.delivery_fee}
-                    onChange={(e) => setFormData({ ...formData, delivery_fee: e.target.value })}
-                  />
-                  <p className="text-xs text-muted-foreground mt-1">0 = free delivery</p>
-                </div>
-              </div>
-              <div className="bg-blue-50 border border-blue-200 rounded-lg px-3 py-2 text-xs text-blue-800">
-                Minimum order on MyHomePlate is <strong>₹80</strong> worth of food. Price your dishes so customers can reach this easily.
+              <div>
+                <Label htmlFor="price">Dish Price (₹)</Label>
+                <Input
+                  id="price"
+                  type="number"
+                  step="1"
+                  min="1"
+                  required
+                  value={formData.price}
+                  onChange={(e) => setFormData({ ...formData, price: e.target.value })}
+                  placeholder="e.g. 120"
+                />
+                <p className="text-xs text-muted-foreground mt-1">
+                  Minimum order is ₹80 · Delivery fee is set in your Profile tab
+                </p>
               </div>
               <div>
                 <Label>Meal Type <span className="text-destructive">*</span></Label>
