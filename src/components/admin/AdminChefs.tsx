@@ -151,11 +151,11 @@ export const AdminChefs = ({ onUpdate }: AdminChefsProps) => {
 
   return (
     <div className="space-y-4">
-      <div className="flex justify-between items-center">
+      <div className="flex justify-between items-center gap-3">
         <h2 className="text-xl font-semibold">Chef Applications</h2>
         <Select value={filterStatus} onValueChange={setFilterStatus}>
-          <SelectTrigger className="w-[180px]">
-            <SelectValue placeholder="Filter by status" />
+          <SelectTrigger className="w-28 sm:w-44">
+            <SelectValue placeholder="Filter" />
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="all">All Chefs</SelectItem>
@@ -177,37 +177,37 @@ export const AdminChefs = ({ onUpdate }: AdminChefsProps) => {
           filteredChefs.map((chef) => (
             <Card key={chef.id}>
               <CardContent className="pt-6">
-                <div className="flex items-start gap-4">
-                  <Avatar className="h-16 w-16">
-                    <AvatarFallback className="bg-gradient-hero text-white text-lg">
+                <div className="flex items-start gap-3">
+                  <Avatar className="h-12 w-12 sm:h-16 sm:w-16 shrink-0">
+                    <AvatarFallback className="bg-gradient-hero text-white text-base sm:text-lg">
                       {chef.profile_name.charAt(0)}
                     </AvatarFallback>
                   </Avatar>
-                  
-                  <div className="flex-1">
-                    <div className="flex items-start justify-between mb-2">
-                      <div>
-                        <h3 className="font-semibold text-lg">{chef.profile_name}</h3>
+
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-start justify-between gap-2 mb-1.5">
+                      <div className="min-w-0">
+                        <h3 className="font-semibold text-base sm:text-lg truncate">{chef.profile_name}</h3>
                         {chef.bio && (
-                          <p className="text-sm text-muted-foreground line-clamp-2">
+                          <p className="text-xs sm:text-sm text-muted-foreground line-clamp-1 sm:line-clamp-2">
                             {chef.bio}
                           </p>
                         )}
                       </div>
-                      <Badge variant={getStatusColor(chef.verification_status) as any}>
+                      <Badge variant={getStatusColor(chef.verification_status) as any} className="shrink-0 text-xs">
                         {chef.verification_status}
                       </Badge>
                     </div>
 
-                    <div className="flex items-center gap-4 text-sm text-muted-foreground mb-3">
+                    <div className="flex items-center gap-3 text-xs sm:text-sm text-muted-foreground mb-3">
                       <span className="flex items-center gap-1">
                         <Star className="h-3 w-3 fill-amber-400 text-amber-400" />
-                        {(chef.avg_rating ?? 0).toFixed(1)} ({chef.total_reviews ?? 0} reviews)
+                        {(chef.avg_rating ?? 0).toFixed(1)} ({chef.total_reviews ?? 0})
                       </span>
                       <span>{chef.total_orders ?? 0} orders</span>
                     </div>
 
-                    <div className="flex items-center gap-3 flex-wrap">
+                    <div className="flex items-center gap-2 flex-wrap">
                       {chef.verification_status === "pending" && (
                         <>
                           <Button

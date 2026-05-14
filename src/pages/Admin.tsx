@@ -213,8 +213,12 @@ const Admin = () => {
         {/* Tabs */}
         <Tabs defaultValue="chefs" className="w-full">
           <TabsList className="grid w-full grid-cols-3">
-            <TabsTrigger value="chefs">Chef Management</TabsTrigger>
-            <TabsTrigger value="orders">Order Management</TabsTrigger>
+            <TabsTrigger value="chefs">
+              Chefs<span className="hidden sm:inline"> Management</span>
+            </TabsTrigger>
+            <TabsTrigger value="orders">
+              Orders<span className="hidden sm:inline"> Management</span>
+            </TabsTrigger>
             <TabsTrigger value="revenue">Revenue</TabsTrigger>
           </TabsList>
 

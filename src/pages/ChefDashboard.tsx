@@ -31,9 +31,24 @@ import {
   UtensilsCrossed,
   IndianRupee,
   ShoppingBag,
+  ImagePlus,
+  X,
 } from "lucide-react";
 import { toast } from "sonner";
+import { useRef } from "react";
 import type { User } from "@supabase/supabase-js";
+
+const MEAL_CATEGORIES = [
+  { value: "breakfast", label: "Breakfast", icon: "🍳", hint: "Idli, dosa, upma, paratha & more" },
+  { value: "lunch",     label: "Lunch",     icon: "🍱", hint: "Dal, rice, sabzi, roti & more" },
+  { value: "dinner",    label: "Dinner",    icon: "🍛", hint: "Curry, chapati, rice & more" },
+  { value: "snacks",    label: "Snacks",    icon: "🥪", hint: "Samosa, sandwich, tea-time bites" },
+  { value: "dessert",   label: "Dessert",   icon: "🍰", hint: "Kheer, halwa, gulab jamun & more" },
+  { value: "other",     label: "Other",     icon: "🍽️", hint: "Anything that doesn't fit above" },
+] as const;
+
+const categoryMeta = (value: string) =>
+  MEAL_CATEGORIES.find((c) => c.value === value) ?? { icon: "🍽️", label: value };
 
 interface Meal {
   id: string;
@@ -77,6 +92,10 @@ const ChefDashboard = () => {
     image_url: "",
     available: true,
   });
+  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [imagePreview, setImagePreview] = useState<string>("");
+  const [uploading, setUploading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     checkAuth();
@@ -191,39 +210,68 @@ const ChefDashboard = () => {
     });
   };
 
+  const handleImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (file.size > 5 * 1024 * 1024) { toast.error("Image must be under 5 MB"); return; }
+    setImageFile(file);
+    setImagePreview(URL.createObjectURL(file));
+  };
+
+  const clearImage = () => {
+    setImageFile(null);
+    setImagePreview("");
+    setFormData((f) => ({ ...f, image_url: "" }));
+    if (fileInputRef.current) fileInputRef.current.value = "";
+  };
+
+  const uploadImage = async (file: File, userId: string): Promise<string> => {
+    const ext = file.name.split(".").pop() ?? "jpg";
+    const path = `${userId}/${Date.now()}.${ext}`;
+    const { error } = await supabase.storage
+      .from("images")
+      .upload(path, file, { upsert: true });
+    if (error) throw error;
+    const { data } = supabase.storage.from("images").getPublicUrl(path);
+    return data.publicUrl;
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-
     if (!user) return;
 
-    const mealData = {
-      ...formData,
-      price: parseFloat(formData.price),
-      chef_id: user.id,
-    };
-
+    setUploading(true);
     try {
-      if (editingMeal) {
-        const { error } = await supabase
-          .from("meals")
-          .update(mealData)
-          .eq("id", editingMeal.id);
+      let imageUrl = formData.image_url;
+      if (imageFile) {
+        imageUrl = await uploadImage(imageFile, user.id);
+      }
 
+      const mealData = {
+        ...formData,
+        price: parseFloat(formData.price),
+        chef_id: user.id,
+        image_url: imageUrl || null,
+      };
+
+      if (editingMeal) {
+        const { error } = await supabase.from("meals").update(mealData).eq("id", editingMeal.id);
         if (error) throw error;
         toast.success("Meal updated successfully");
       } else {
         const { error } = await supabase.from("meals").insert(mealData);
-
         if (error) throw error;
-        toast.success("Meal created successfully");
+        toast.success("Meal added to your menu!");
       }
 
       setDialogOpen(false);
       resetForm();
-      if (user) fetchMeals(user.id);
-    } catch (error) {
+      fetchMeals(user.id);
+    } catch (error: any) {
       console.error("Error saving meal:", error);
-      toast.error("Failed to save meal");
+      toast.error(error.message || "Failed to save meal");
+    } finally {
+      setUploading(false);
     }
   };
 
@@ -237,6 +285,8 @@ const ChefDashboard = () => {
       image_url: meal.image_url || "",
       available: meal.available,
     });
+    setImageFile(null);
+    setImagePreview(meal.image_url || "");
     setDialogOpen(true);
   };
 
@@ -305,15 +355,11 @@ const ChefDashboard = () => {
   };
 
   const resetForm = () => {
-    setFormData({
-      title: "",
-      description: "",
-      price: "",
-      category: "",
-      image_url: "",
-      available: true,
-    });
+    setFormData({ title: "", description: "", price: "", category: "", image_url: "", available: true });
     setEditingMeal(null);
+    setImageFile(null);
+    setImagePreview("");
+    if (fileInputRef.current) fileInputRef.current.value = "";
   };
 
   return (
@@ -369,41 +415,88 @@ const ChefDashboard = () => {
                 </div>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <Label htmlFor="price">Price (INR)</Label>
+                    <Label htmlFor="price">Price (₹)</Label>
                     <Input
                       id="price"
                       type="number"
-                      step="0.01"
+                      step="1"
+                      min="1"
                       value={formData.price}
-                      onChange={(e) =>
-                        setFormData({ ...formData, price: e.target.value })
-                      }
+                      onChange={(e) => setFormData({ ...formData, price: e.target.value })}
+                      placeholder="e.g. 120"
                       required
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="category">Category</Label>
-                    <Input
-                      id="category"
-                      value={formData.category}
-                      onChange={(e) =>
-                        setFormData({ ...formData, category: e.target.value })
-                      }
-                      placeholder="e.g., Curry, Biryani, Snacks"
-                      required
-                    />
+                    <Label>Meal Type <span className="text-destructive">*</span></Label>
+                    <div className="flex flex-wrap gap-2">
+                      {MEAL_CATEGORIES.map((cat) => (
+                        <button
+                          key={cat.value}
+                          type="button"
+                          onClick={() => setFormData({ ...formData, category: cat.value })}
+                          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl border-2 text-sm font-medium transition-all ${
+                            formData.category === cat.value
+                              ? "border-primary bg-primary/5 text-primary"
+                              : "border-border text-muted-foreground hover:border-primary/40"
+                          }`}
+                        >
+                          <span>{cat.icon}</span>
+                          <span>{cat.label}</span>
+                        </button>
+                      ))}
+                    </div>
+                    {formData.category && (
+                      <p className="text-xs text-muted-foreground">
+                        {MEAL_CATEGORIES.find((c) => c.value === formData.category)?.hint}
+                      </p>
+                    )}
+                    {!formData.category && (
+                      <p className="text-xs text-destructive">Please select a meal type</p>
+                    )}
                   </div>
                 </div>
+
+                {/* Image upload */}
                 <div className="space-y-2">
-                  <Label htmlFor="image_url">Image URL (optional)</Label>
-                  <Input
-                    id="image_url"
-                    value={formData.image_url}
-                    onChange={(e) =>
-                      setFormData({ ...formData, image_url: e.target.value })
-                    }
-                    placeholder="https://..."
+                  <Label>Dish Photo <span className="text-muted-foreground font-normal">(optional · max 5 MB)</span></Label>
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept="image/jpeg,image/png,image/webp,image/gif"
+                    className="hidden"
+                    onChange={handleImageSelect}
                   />
+                  <div
+                    onClick={() => fileInputRef.current?.click()}
+                    className="border-2 border-dashed border-border rounded-xl overflow-hidden cursor-pointer hover:border-primary/50 transition-colors"
+                  >
+                    {imagePreview ? (
+                      <div className="relative">
+                        <img
+                          src={imagePreview}
+                          alt="Preview"
+                          className="w-full h-44 object-cover"
+                        />
+                        <button
+                          type="button"
+                          onClick={(e) => { e.stopPropagation(); clearImage(); }}
+                          className="absolute top-2 right-2 bg-black/60 hover:bg-black/80 text-white rounded-full p-1 transition-colors"
+                        >
+                          <X className="h-3.5 w-3.5" />
+                        </button>
+                        <div className="absolute bottom-2 left-2 bg-black/60 text-white text-xs px-2 py-0.5 rounded-full">
+                          Click to change photo
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="flex flex-col items-center justify-center gap-2 py-8 text-muted-foreground">
+                        <ImagePlus className="h-9 w-9" />
+                        <p className="text-sm font-medium">Click to upload a photo</p>
+                        <p className="text-xs">JPG, PNG, WebP or GIF</p>
+                      </div>
+                    )}
+                  </div>
                 </div>
                 <div className="flex items-center space-x-2">
                   <Switch
@@ -416,15 +509,13 @@ const ChefDashboard = () => {
                   <Label htmlFor="available">Available for orders</Label>
                 </div>
                 <div className="flex justify-end space-x-2 pt-4">
-                  <Button
-                    type="button"
-                    variant="outline"
-                    onClick={() => setDialogOpen(false)}
-                  >
+                  <Button type="button" variant="outline" onClick={() => setDialogOpen(false)}>
                     Cancel
                   </Button>
-                  <Button type="submit">
-                    {editingMeal ? "Update Meal" : "Add Meal"}
+                  <Button type="submit" disabled={uploading}>
+                    {uploading
+                      ? (imageFile ? "Uploading photo…" : "Saving…")
+                      : editingMeal ? "Update Meal" : "Add Meal"}
                   </Button>
                 </div>
               </form>
@@ -481,67 +572,108 @@ const ChefDashboard = () => {
           </CardHeader>
           <CardContent>
             {meals.length === 0 ? (
-              <div className="text-center py-8 text-muted-foreground">
+              <div className="text-center py-10 text-muted-foreground">
                 <UtensilsCrossed className="h-12 w-12 mx-auto mb-4 opacity-50" />
-                <p>No meals yet. Add your first dish to get started!</p>
+                <p className="font-medium mb-1">No meals yet</p>
+                <p className="text-sm">Add your first dish to start taking orders!</p>
               </div>
             ) : (
-              <div className="space-y-4">
-                {meals.map((meal) => (
-                  <div
-                    key={meal.id}
-                    className="flex items-center justify-between p-4 border rounded-lg hover:bg-muted/50 transition-colors"
-                  >
-                    <div className="flex items-center space-x-4 flex-1">
-                      <div className="w-16 h-16 rounded-lg bg-muted flex items-center justify-center overflow-hidden">
-                        {meal.image_url ? (
-                          <img
-                            src={meal.image_url}
-                            alt={meal.title}
-                            className="w-full h-full object-cover"
-                          />
-                        ) : (
-                          <UtensilsCrossed className="h-6 w-6 text-muted-foreground" />
-                        )}
+              <div className="space-y-6">
+                {MEAL_CATEGORIES.filter((cat) =>
+                  meals.some((m) => m.category === cat.value)
+                ).map((cat) => {
+                  const group = meals.filter((m) => m.category === cat.value);
+                  return (
+                    <div key={cat.value}>
+                      <div className="flex items-center gap-2 mb-3">
+                        <span className="text-lg">{cat.icon}</span>
+                        <h3 className="font-semibold text-sm text-muted-foreground uppercase tracking-wide">
+                          {cat.label}
+                        </h3>
+                        <span className="text-xs text-muted-foreground">({group.length})</span>
                       </div>
-                      <div className="flex-1">
-                        <h3 className="font-semibold">{meal.title}</h3>
-                        <p className="text-sm text-muted-foreground line-clamp-1">
-                          {meal.description}
-                        </p>
-                        <div className="flex items-center gap-2 mt-1">
-                          <Badge variant="secondary">{meal.category}</Badge>
-                          <Badge
-                            variant={meal.available ? "default" : "outline"}
-                          >
-                            {meal.available ? "Available" : "Unavailable"}
-                          </Badge>
-                        </div>
-                      </div>
-                      <div className="text-right">
-                        <p className="text-xl font-bold text-primary">
-                          INR {meal.price}
-                        </p>
+                      <div className="space-y-2">
+                        {group.map((meal) => {
+                          const meta = categoryMeta(meal.category);
+                          return (
+                            <div
+                              key={meal.id}
+                              className="flex items-center justify-between p-3 border rounded-xl hover:bg-muted/40 transition-colors gap-3"
+                            >
+                              <div className="flex items-center gap-3 flex-1 min-w-0">
+                                <div className="w-14 h-14 rounded-lg bg-muted flex items-center justify-center overflow-hidden shrink-0">
+                                  {meal.image_url ? (
+                                    <img src={meal.image_url} alt={meal.title} className="w-full h-full object-cover" />
+                                  ) : (
+                                    <span className="text-2xl">{meta.icon}</span>
+                                  )}
+                                </div>
+                                <div className="flex-1 min-w-0">
+                                  <h3 className="font-semibold text-sm truncate">{meal.title}</h3>
+                                  <p className="text-xs text-muted-foreground line-clamp-1 mt-0.5">
+                                    {meal.description}
+                                  </p>
+                                  <Badge
+                                    variant={meal.available ? "default" : "outline"}
+                                    className="text-[10px] mt-1 h-4 px-1.5"
+                                  >
+                                    {meal.available ? "On menu" : "Hidden"}
+                                  </Badge>
+                                </div>
+                              </div>
+                              <div className="flex items-center gap-2 shrink-0">
+                                <p className="text-base font-bold text-primary">₹{meal.price}</p>
+                                <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => handleEdit(meal)}>
+                                  <Edit className="h-3.5 w-3.5" />
+                                </Button>
+                                <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive hover:text-destructive" onClick={() => handleDelete(meal.id)}>
+                                  <Trash2 className="h-3.5 w-3.5" />
+                                </Button>
+                              </div>
+                            </div>
+                          );
+                        })}
                       </div>
                     </div>
-                    <div className="flex items-center space-x-2 ml-4">
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => handleEdit(meal)}
-                      >
-                        <Edit className="h-4 w-4" />
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => handleDelete(meal.id)}
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
+                  );
+                })}
+                {/* Meals with unrecognised categories */}
+                {meals.filter((m) => !MEAL_CATEGORIES.some((c) => c.value === m.category)).length > 0 && (
+                  <div>
+                    <div className="flex items-center gap-2 mb-3">
+                      <span className="text-lg">🍽️</span>
+                      <h3 className="font-semibold text-sm text-muted-foreground uppercase tracking-wide">Other</h3>
+                    </div>
+                    <div className="space-y-2">
+                      {meals.filter((m) => !MEAL_CATEGORIES.some((c) => c.value === m.category)).map((meal) => (
+                        <div key={meal.id} className="flex items-center justify-between p-3 border rounded-xl hover:bg-muted/40 transition-colors gap-3">
+                          <div className="flex items-center gap-3 flex-1 min-w-0">
+                            <div className="w-14 h-14 rounded-lg bg-muted flex items-center justify-center overflow-hidden shrink-0">
+                              {meal.image_url ? (
+                                <img src={meal.image_url} alt={meal.title} className="w-full h-full object-cover" />
+                              ) : (
+                                <UtensilsCrossed className="h-5 w-5 text-muted-foreground" />
+                              )}
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <h3 className="font-semibold text-sm truncate">{meal.title}</h3>
+                              <Badge variant="secondary" className="text-[10px] mt-1">{meal.category}</Badge>
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-2 shrink-0">
+                            <p className="text-base font-bold text-primary">₹{meal.price}</p>
+                            <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => handleEdit(meal)}>
+                              <Edit className="h-3.5 w-3.5" />
+                            </Button>
+                            <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive hover:text-destructive" onClick={() => handleDelete(meal.id)}>
+                              <Trash2 className="h-3.5 w-3.5" />
+                            </Button>
+                          </div>
+                        </div>
+                      ))}
                     </div>
                   </div>
-                ))}
+                )}
               </div>
             )}
           </CardContent>

@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { RatingStars } from "./RatingStars";
 import { AvailabilityChip } from "./AvailabilityChip";
-import { CheckCircle2, MapPin, UtensilsCrossed, Timer } from "lucide-react";
+import { CheckCircle2, MapPin, UtensilsCrossed, Timer, CalendarCheck } from "lucide-react";
 
 interface ChefCardProps {
   id: string;
@@ -128,12 +128,18 @@ export const ChefCard = ({
             )}
           </div>
 
+          {/* Subscription hint */}
+          <div className="flex items-center gap-1.5 text-xs text-muted-foreground bg-muted/50 rounded-lg px-3 py-1.5">
+            <CalendarCheck className="h-3.5 w-3.5 text-primary shrink-0" />
+            <span>Meal subscriptions from <strong className="text-foreground">₹80/meal</strong></span>
+          </div>
+
           {/* CTA Button */}
-          <Button 
-            className="w-full mt-2 shadow-soft group-hover:shadow-warm transition-all"
+          <Button
+            className="w-full shadow-soft group-hover:shadow-warm transition-all"
             size="sm"
           >
-            Pre-Order Meal
+            View Profile & Subscribe
           </Button>
         </CardContent>
 

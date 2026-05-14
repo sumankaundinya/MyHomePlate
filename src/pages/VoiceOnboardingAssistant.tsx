@@ -8,14 +8,6 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
-import {
   Table,
   TableBody,
   TableCell,
@@ -30,7 +22,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Phone, Plus, Download, Upload, CheckCircle2, XCircle, Clock } from "lucide-react";
+import { Phone, Plus, Upload, CheckCircle2, XCircle, Clock } from "lucide-react";
 import { toast } from "sonner";
 
 interface OnboardingContact {
@@ -78,7 +70,7 @@ const VoiceOnboardingAssistant = () => {
 
   const fetchContacts = async () => {
     try {
-      const { data, error } = await supabase
+      const { data, error } = await (supabase as any)
         .from("onboarding_contacts")
         .select("*")
         .order("created_at", { ascending: false });
@@ -95,7 +87,7 @@ const VoiceOnboardingAssistant = () => {
 
   const fetchCallLogs = async () => {
     try {
-      const { data, error } = await supabase
+      const { data, error } = await (supabase as any)
         .from("voice_call_logs")
         .select("*")
         .order("created_at", { ascending: false })
@@ -115,7 +107,7 @@ const VoiceOnboardingAssistant = () => {
     }
 
     try {
-      const { error } = await supabase.from("onboarding_contacts").insert({
+      const { error } = await (supabase as any).from("onboarding_contacts").insert({
         phone_number: formData.phone_number.trim(),
         contact_type: formData.contact_type,
         name: formData.name || null,
@@ -154,7 +146,7 @@ const VoiceOnboardingAssistant = () => {
         area: "Nizampet",
       }));
 
-      const { error } = await supabase
+      const { error } = await (supabase as any)
         .from("onboarding_contacts")
         .insert(contactsToInsert);
 
@@ -235,8 +227,8 @@ const VoiceOnboardingAssistant = () => {
 
       <main className="container mx-auto px-4 py-8">
         <div className="mb-8">
-          <h1 className="text-3xl font-bold mb-2 flex items-center gap-2">
-            <Phone className="h-8 w-8 text-primary" />
+          <h1 className="text-2xl font-bold mb-2 flex items-center gap-2">
+            <Phone className="h-6 w-6 text-primary" />
             Voice Onboarding Assistant
           </h1>
           <p className="text-muted-foreground">
@@ -354,9 +346,14 @@ const VoiceOnboardingAssistant = () => {
                   </p>
                 </div>
 
-                <Button onClick={addBulkContacts} className="w-full">
-                  Add {bulkPhones.split("\n").filter((p) => p.trim()).length} Contacts
-                </Button>
+                {(() => {
+                  const count = bulkPhones.split("\n").filter((p) => p.trim()).length;
+                  return (
+                    <Button onClick={addBulkContacts} className="w-full" disabled={count === 0}>
+                      {count === 0 ? "Paste numbers above to add" : `Add ${count} Contact${count !== 1 ? "s" : ""}`}
+                    </Button>
+                  );
+                })()}
               </div>
             </CardContent>
           </Card>
@@ -422,36 +419,15 @@ const VoiceOnboardingAssistant = () => {
                             </div>
                           </TableCell>
                           <TableCell>
-                            <Dialog>
-                              <DialogTrigger asChild>
-                                <Button
-                                  size="sm"
-                                  variant="default"
-                                  disabled={calling}
-                                  onClick={() => initiateCall(contact)}
-                                >
-                                  <Phone className="h-4 w-4 mr-1" />
-                                  Call
-                                </Button>
-                              </DialogTrigger>
-                              <DialogContent>
-                                <DialogHeader>
-                                  <DialogTitle>Initiating Call</DialogTitle>
-                                  <DialogDescription>
-                                    Calling {contact.phone_number}
-                                    {contact.name && ` (${contact.name})`}
-                                  </DialogDescription>
-                                </DialogHeader>
-                                <div className="py-4">
-                                  <p className="text-center text-lg font-semibold">
-                                    📞 Connecting...
-                                  </p>
-                                  <p className="text-center text-sm text-muted-foreground mt-2">
-                                    A personalized message will be played to the recipient.
-                                  </p>
-                                </div>
-                              </DialogContent>
-                            </Dialog>
+                            <Button
+                              size="sm"
+                              variant="default"
+                              disabled={calling}
+                              onClick={() => initiateCall(contact)}
+                            >
+                              <Phone className="h-4 w-4 mr-1" />
+                              {calling ? "Calling…" : "Call"}
+                            </Button>
                           </TableCell>
                         </TableRow>
                       ))}

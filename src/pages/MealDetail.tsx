@@ -47,7 +47,11 @@ interface Meal {
   chef_name: string;
   spice_levels: string[] | null;
   oil_options: string[] | null;
+  delivery_fee?: number;
 }
+
+// Minimum food value (before delivery fee) for an order to make sense
+const PLATFORM_MIN_ORDER = 80;
 
 const MealDetail = () => {
   const { id } = useParams();
@@ -68,7 +72,6 @@ const MealDetail = () => {
   const [selectedAddressId, setSelectedAddressId] = useState<string>("");
   const [showNewAddress, setShowNewAddress] = useState(false);
   const [newAddress, setNewAddress] = useState({ address_line: "", area: "", pincode: "" });
-  const [savingAddress, setSavingAddress] = useState(false);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -148,7 +151,6 @@ const MealDetail = () => {
       toast.error("Please fill in all address fields");
       return null;
     }
-    setSavingAddress(true);
     try {
       const { data: { user: u } } = await supabase.auth.getUser();
       if (!u) return null;
@@ -172,8 +174,6 @@ const MealDetail = () => {
     } catch (err: any) {
       toast.error(err.message || "Failed to save address");
       return null;
-    } finally {
-      setSavingAddress(false);
     }
   };
 
@@ -200,7 +200,7 @@ const MealDetail = () => {
     setOrdering(true);
 
     try {
-      const totalPrice = meal.price * quantity;
+      const totalPrice = meal.price * quantity + (meal.delivery_fee ?? 0);
 
       // 1. Create order (status pending, payment_status pending)
       const { data: order, error: orderError } = await supabase
@@ -409,8 +409,8 @@ const MealDetail = () => {
           <div className="space-y-6">
             <div>
               <div className="flex items-start justify-between mb-2">
-                <h1 className="text-4xl font-bold">{meal.title}</h1>
-                <Badge variant="secondary" className="text-sm">
+                <h1 className="text-2xl sm:text-4xl font-bold">{meal.title}</h1>
+                <Badge variant="secondary" className="text-xs sm:text-sm shrink-0 ml-2">
                   {meal.category}
                 </Badge>
               </div>
@@ -418,7 +418,7 @@ const MealDetail = () => {
                 <ChefHat className="h-4 w-4 mr-2" />
                 <span>by {meal.chef_name}</span>
               </div>
-              <p className="text-3xl font-bold text-primary mb-6">
+              <p className="text-2xl sm:text-3xl font-bold text-primary mb-4">
                 ₹{meal.price}
               </p>
             </div>
@@ -592,17 +592,38 @@ const MealDetail = () => {
                     )}
                   </div>
 
-                  <div className="flex items-center justify-between pt-2">
-                    <span className="text-lg font-semibold">Total:</span>
-                    <span className="text-2xl font-bold text-primary">
-                      ₹{(meal.price * quantity).toFixed(2)}
-                    </span>
+                  <div className="space-y-1.5 pt-2 border-t">
+                    <div className="flex items-center justify-between text-sm text-muted-foreground">
+                      <span>Food ({quantity} × ₹{meal.price})</span>
+                      <span>₹{(meal.price * quantity).toFixed(0)}</span>
+                    </div>
+                    <div className="flex items-center justify-between text-sm text-muted-foreground">
+                      <span>Delivery</span>
+                      <span className={(meal.delivery_fee ?? 0) === 0 ? "text-green-600 font-medium" : ""}>
+                        {(meal.delivery_fee ?? 0) === 0 ? "Free" : `₹${meal.delivery_fee}`}
+                      </span>
+                    </div>
+                    <div className="flex items-center justify-between font-semibold text-base pt-1 border-t">
+                      <span>Total</span>
+                      <span className="text-xl font-bold text-primary">
+                        ₹{(meal.price * quantity + (meal.delivery_fee ?? 0)).toFixed(0)}
+                      </span>
+                    </div>
                   </div>
+
+                  {/* Minimum order warning */}
+                  {meal.price * quantity < PLATFORM_MIN_ORDER && (
+                    <div className="bg-amber-50 border border-amber-200 rounded-lg px-3 py-2 text-xs text-amber-800">
+                      Minimum food order is <strong>₹{PLATFORM_MIN_ORDER}</strong>.
+                      Add <strong>{Math.ceil((PLATFORM_MIN_ORDER - meal.price * quantity) / meal.price)} more</strong> to proceed.
+                    </div>
+                  )}
+
                   <Button
                     className="w-full"
                     size="lg"
                     onClick={handleOrder}
-                    disabled={ordering || !meal.available}
+                    disabled={ordering || !meal.available || meal.price * quantity < PLATFORM_MIN_ORDER}
                   >
                     {ordering ? (
                       <>
