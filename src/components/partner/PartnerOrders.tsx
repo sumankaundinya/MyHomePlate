@@ -72,10 +72,15 @@ export const PartnerOrders = ({ chefId, userId, onStatsUpdate }: PartnerOrdersPr
       const queryId = userId || chefId;
       if (!queryId) return;
 
+      // Only fetch last 60 days — older history is in DB but not needed in dashboard
+      const since = new Date();
+      since.setDate(since.getDate() - 60);
+
       const { data, error } = await supabase
         .from("orders")
         .select("*")
         .eq("chef_id", queryId)
+        .gte("created_at", since.toISOString())
         .order("created_at", { ascending: false });
 
       if (error) throw error;
