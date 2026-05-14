@@ -104,15 +104,15 @@ const MealDetail = () => {
 
       if (error) throw error;
 
-      const { data: profile } = await supabase
-        .from("profiles")
-        .select("name")
-        .eq("id", data.chef_id)
-        .single();
+      const [{ data: profile }, { data: chefSettings }] = await Promise.all([
+        supabase.from("profiles").select("name").eq("id", data.chef_id).single(),
+        (supabase as any).from("chefs").select("delivery_fee").eq("user_id", data.chef_id).single(),
+      ]);
 
       const mealData = {
         ...data,
         chef_name: profile?.name || "Unknown Chef",
+        delivery_fee: chefSettings?.delivery_fee ?? 0,
       };
 
       setMeal(mealData);
