@@ -12,11 +12,21 @@ import { toast } from "sonner";
 import { Plus, Edit, Trash2 } from "lucide-react";
 import { ImageUpload } from "@/components/ImageUpload";
 
+const MEAL_CATEGORIES = [
+  { value: "breakfast", label: "Breakfast", icon: "🍳", hint: "Idli, dosa, upma, paratha & more" },
+  { value: "lunch",     label: "Lunch",     icon: "🍱", hint: "Dal, rice, sabzi, roti & more" },
+  { value: "dinner",    label: "Dinner",    icon: "🍛", hint: "Curry, chapati, rice & more" },
+  { value: "snacks",    label: "Snacks",    icon: "🥪", hint: "Samosa, sandwich, tea-time bites" },
+  { value: "dessert",   label: "Dessert",   icon: "🍰", hint: "Kheer, halwa, gulab jamun & more" },
+  { value: "other",     label: "Other",     icon: "🍽️", hint: "Anything that doesn't fit above" },
+] as const;
+
 interface Dish {
   id: string;
   title: string;
   description: string;
   price: number;
+  delivery_fee?: number;
   category: string;
   available: boolean;
   image_url: string | null;
@@ -27,7 +37,7 @@ interface PartnerDishesProps {
   onUpdate: () => void;
 }
 
-export const PartnerDishes = ({ chefId, onUpdate }: PartnerDishesProps) => {
+export const PartnerDishes = ({ onUpdate }: PartnerDishesProps) => {
   const [dishes, setDishes] = useState<Dish[]>([]);
   const [loading, setLoading] = useState(false);
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -36,7 +46,8 @@ export const PartnerDishes = ({ chefId, onUpdate }: PartnerDishesProps) => {
     title: "",
     description: "",
     price: "",
-    category: "main course",
+    delivery_fee: "0",
+    category: "",
     available: true,
     image_url: ""
   });
@@ -75,6 +86,7 @@ export const PartnerDishes = ({ chefId, onUpdate }: PartnerDishesProps) => {
       const dishData = {
         ...formData,
         price: parseFloat(formData.price),
+        delivery_fee: parseFloat(formData.delivery_fee) || 0,
         chef_id: user.id
       };
 
@@ -149,6 +161,7 @@ export const PartnerDishes = ({ chefId, onUpdate }: PartnerDishesProps) => {
       title: dish.title,
       description: dish.description,
       price: dish.price.toString(),
+      delivery_fee: (dish.delivery_fee ?? 0).toString(),
       category: dish.category,
       available: dish.available,
       image_url: dish.image_url || ""
@@ -161,7 +174,8 @@ export const PartnerDishes = ({ chefId, onUpdate }: PartnerDishesProps) => {
       title: "",
       description: "",
       price: "",
-      category: "main course",
+      delivery_fee: "0",
+      category: "",
       available: true,
       image_url: ""
     });
@@ -170,14 +184,14 @@ export const PartnerDishes = ({ chefId, onUpdate }: PartnerDishesProps) => {
 
   return (
     <div className="space-y-4">
-      <div className="flex justify-between items-center">
+      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3">
         <h2 className="text-xl font-semibold">My Dishes</h2>
         <Dialog open={dialogOpen} onOpenChange={(open) => {
           setDialogOpen(open);
           if (!open) resetForm();
         }}>
           <DialogTrigger asChild>
-            <Button>
+            <Button className="w-full sm:w-auto">
               <Plus className="h-4 w-4 mr-2" />
               Add Dish
             </Button>
@@ -205,25 +219,61 @@ export const PartnerDishes = ({ chefId, onUpdate }: PartnerDishesProps) => {
                   onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                 />
               </div>
-              <div>
-                <Label htmlFor="price">Price (₹)</Label>
-                <Input
-                  id="price"
-                  type="number"
-                  step="0.01"
-                  required
-                  value={formData.price}
-                  onChange={(e) => setFormData({ ...formData, price: e.target.value })}
-                />
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <Label htmlFor="price">Dish Price (₹)</Label>
+                  <Input
+                    id="price"
+                    type="number"
+                    step="1"
+                    min="1"
+                    required
+                    value={formData.price}
+                    onChange={(e) => setFormData({ ...formData, price: e.target.value })}
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="delivery_fee">Delivery Fee (₹)</Label>
+                  <Input
+                    id="delivery_fee"
+                    type="number"
+                    step="1"
+                    min="0"
+                    value={formData.delivery_fee}
+                    onChange={(e) => setFormData({ ...formData, delivery_fee: e.target.value })}
+                  />
+                  <p className="text-xs text-muted-foreground mt-1">0 = free delivery</p>
+                </div>
+              </div>
+              <div className="bg-blue-50 border border-blue-200 rounded-lg px-3 py-2 text-xs text-blue-800">
+                Minimum order on MyHomePlate is <strong>₹80</strong> worth of food. Price your dishes so customers can reach this easily.
               </div>
               <div>
-                <Label htmlFor="category">Category</Label>
-                <Input
-                  id="category"
-                  required
-                  value={formData.category}
-                  onChange={(e) => setFormData({ ...formData, category: e.target.value })}
-                />
+                <Label>Meal Type <span className="text-destructive">*</span></Label>
+                <div className="flex flex-wrap gap-2 mt-1.5">
+                  {MEAL_CATEGORIES.map((cat) => (
+                    <button
+                      key={cat.value}
+                      type="button"
+                      onClick={() => setFormData({ ...formData, category: cat.value })}
+                      className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl border-2 text-sm font-medium transition-all ${
+                        formData.category === cat.value
+                          ? "border-primary bg-primary/5 text-primary"
+                          : "border-border text-muted-foreground hover:border-primary/40"
+                      }`}
+                    >
+                      <span>{cat.icon}</span>
+                      <span>{cat.label}</span>
+                    </button>
+                  ))}
+                </div>
+                {formData.category ? (
+                  <p className="text-xs text-muted-foreground mt-1">
+                    {MEAL_CATEGORIES.find((c) => c.value === formData.category)?.hint}
+                  </p>
+                ) : (
+                  <p className="text-xs text-destructive mt-1">Please select a meal type</p>
+                )}
               </div>
               <div>
                 <Label>Meal Photo</Label>
@@ -283,7 +333,12 @@ export const PartnerDishes = ({ chefId, onUpdate }: PartnerDishesProps) => {
                       </Badge>
                     </div>
                     <div className="flex items-center justify-between">
-                      <span className="text-lg font-bold text-primary">₹{dish.price}</span>
+                      <div>
+                        <span className="text-lg font-bold text-primary">₹{dish.price}</span>
+                        <span className="text-xs text-muted-foreground ml-2">
+                          {(dish.delivery_fee ?? 0) === 0 ? "Free delivery" : `+ ₹${dish.delivery_fee} delivery`}
+                        </span>
+                      </div>
                       <div className="flex gap-2">
                         <Button
                           size="sm"

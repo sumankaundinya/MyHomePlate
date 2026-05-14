@@ -32,7 +32,7 @@ interface Chef {
   notification_opt_in: boolean;
   user_id: string;
   profiles?: {
-    full_name: string;
+    name: string;
   };
 }
 
@@ -79,7 +79,7 @@ const AdminSMSPanel = () => {
           phone_number,
           notification_opt_in,
           user_id,
-          profiles:profiles(full_name)
+          profiles:profiles(name)
         `)
         .not("phone_number", "is", null)
         .order("created_at", { ascending: false });
@@ -235,9 +235,10 @@ const AdminSMSPanel = () => {
               {loading ? (
                 <p className="text-muted-foreground">Loading chefs...</p>
               ) : chefs.length === 0 ? (
-                <p className="text-muted-foreground">
-                  No chefs with phone numbers found
-                </p>
+                <div className="text-center py-4 space-y-1">
+                  <p className="text-muted-foreground font-medium">No chefs have a phone number saved yet</p>
+                  <p className="text-xs text-muted-foreground">Chefs need to add their phone number in their profile before they appear here.</p>
+                </div>
               ) : (
                 <div className="space-y-4">
                   <div>

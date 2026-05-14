@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useLocation } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import Navbar from "@/components/Navbar";
 import SEOHead from "@/components/SEOHead";
@@ -10,7 +10,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent } from "@/components/ui/card";
 import { toast } from "sonner";
-import { ChefHat, Search, MapPin, Map, LayoutGrid } from "lucide-react";
+import { ChefHat, Search, MapPin, Map, LayoutGrid, Calendar } from "lucide-react";
 
 // Haversine formula — real distance between two GPS coords in km
 function haversineKm(
@@ -45,7 +45,8 @@ interface Chef {
 }
 
 const Chefs = () => {
-  const navigate = useNavigate();
+  const location = useLocation();
+  const fromSubscriptions = !!(location.state as any)?.fromSubscriptions;
   const [chefs, setChefs] = useState<Chef[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
@@ -191,6 +192,19 @@ const Chefs = () => {
             Find authentic home-cooked meals from verified chefs in Nizampet
           </p>
         </div>
+
+        {/* Subscription-mode context banner */}
+        {fromSubscriptions && (
+          <div className="flex items-start gap-3 bg-primary/10 border border-primary/20 rounded-xl px-4 py-3 mb-6">
+            <Calendar className="h-5 w-5 text-primary shrink-0 mt-0.5" />
+            <div>
+              <p className="text-sm font-semibold text-primary">Choosing a chef for your subscription</p>
+              <p className="text-xs text-muted-foreground mt-0.5">
+                Browse the chefs below, open a profile you like, and tap <strong>Subscribe for Daily Meals</strong> to choose Breakfast, Lunch, or Dinner and pay.
+              </p>
+            </div>
+          </div>
+        )}
 
         {/* Location + Search + View Toggle */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">

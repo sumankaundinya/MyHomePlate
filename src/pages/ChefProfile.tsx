@@ -5,7 +5,7 @@ import Navbar from "@/components/Navbar";
 import { RatingStars } from "@/components/RatingStars";
 import { ReviewCard } from "@/components/ReviewCard";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Separator } from "@/components/ui/separator";
@@ -17,7 +17,7 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { toast } from "sonner";
-import { CheckCircle2, ChefHat, Award, ShoppingBag, ArrowLeft, Calendar } from "lucide-react";
+import { CheckCircle2, ChefHat, Award, ArrowLeft, Calendar } from "lucide-react";
 
 declare global {
   interface Window { Razorpay: any; }
@@ -71,11 +71,28 @@ const ChefProfile = () => {
   const [loading, setLoading] = useState(true);
   const [subscribing, setSubscribing] = useState(false);
   const [subDialogOpen, setSubDialogOpen] = useState(false);
+  const [selectedMealType, setSelectedMealType] = useState<"breakfast" | "lunch" | "dinner">("lunch");
   const [selectedPlan, setSelectedPlan] = useState<"weekly" | "monthly">("weekly");
 
-  const PLANS = {
-    weekly:  { label: "Weekly",  meals: 5,  days: 7,  price: 625,  pricePerMeal: 125 },
-    monthly: { label: "Monthly", meals: 20, days: 30, price: 2150, pricePerMeal: 107 },
+  const MEAL_PLANS = {
+    breakfast: {
+      label: "Breakfast", icon: "🍳",
+      note: "Idli, dosa, upma, paratha & more",
+      weekly:  { label: "Weekly",  meals: 5,  days: 7,  price: 400,  pricePerMeal: 80 },
+      monthly: { label: "Monthly", meals: 20, days: 30, price: 1400, pricePerMeal: 70 },
+    },
+    lunch: {
+      label: "Lunch", icon: "🍱",
+      note: "Dal, rice, sabzi, roti & more",
+      weekly:  { label: "Weekly",  meals: 5,  days: 7,  price: 625,  pricePerMeal: 125 },
+      monthly: { label: "Monthly", meals: 20, days: 30, price: 2150, pricePerMeal: 107 },
+    },
+    dinner: {
+      label: "Dinner", icon: "🍛",
+      note: "Full meal with curry, chapati & more",
+      weekly:  { label: "Weekly",  meals: 5,  days: 7,  price: 625,  pricePerMeal: 125 },
+      monthly: { label: "Monthly", meals: 20, days: 30, price: 2150, pricePerMeal: 107 },
+    },
   };
 
   const handleSubscribe = async () => {
@@ -83,7 +100,8 @@ const ChefProfile = () => {
     if (!user) { toast.error("Please sign in to subscribe"); navigate("/login"); return; }
     if (!chef) return;
 
-    const plan = PLANS[selectedPlan];
+    const mealPlan = MEAL_PLANS[selectedMealType];
+    const plan = mealPlan[selectedPlan];
     setSubscribing(true);
 
     try {
@@ -114,21 +132,23 @@ const ChefProfile = () => {
       const endDate = new Date();
       endDate.setDate(endDate.getDate() + plan.days);
 
+      const mealLabel = MEAL_PLANS[selectedMealType].label;
+
       const options = {
         key: razorpayKey,
         amount: rzpOrder.amount,
         currency: "INR",
         name: "MyHomePlate",
-        description: `${plan.label} Tiffin Subscription — ${chef.profiles?.name}`,
+        description: `${plan.label} ${mealLabel} Subscription — ${chef.profiles?.name}`,
         order_id: rzpOrder.order_id,
         prefill: { email: user.email },
         theme: { color: "#0f766e" },
-        handler: async (response: { razorpay_payment_id: string }) => {
-          // Create subscription record
+        handler: async () => {
           const { error } = await supabase.from("subscriptions").insert({
             customer_id: user.id,
             chef_id: chef.id,
             plan_type: selectedPlan,
+            meal_type: selectedMealType,
             meals_count: plan.meals,
             meals_remaining: plan.meals,
             price_per_meal: plan.pricePerMeal,
@@ -136,9 +156,9 @@ const ChefProfile = () => {
             start_date: startDate.toISOString().split("T")[0],
             end_date: endDate.toISOString().split("T")[0],
             status: "active",
-          });
+          } as any);
           if (error) { toast.error("Payment succeeded but subscription save failed: " + error.message); return; }
-          toast.success(`🎉 Subscribed to ${chef.profiles?.name}'s ${plan.label} plan!`);
+          toast.success(`Subscribed to ${chef.profiles?.name}'s ${mealLabel} ${plan.label} plan!`);
           setSubDialogOpen(false);
           navigate("/subscriptions");
         },
@@ -312,46 +332,100 @@ const ChefProfile = () => {
                   <DialogTrigger asChild>
                     <Button className="w-full md:w-auto" variant="default">
                       <Calendar className="h-4 w-4 mr-2" />
-                      Subscribe for Daily Tiffin
+                      Subscribe for Daily Meals
                     </Button>
                   </DialogTrigger>
                   <DialogContent className="w-[95vw] sm:w-auto max-w-md">
                     <DialogHeader>
-                      <DialogTitle>Choose a Subscription Plan</DialogTitle>
+                      <DialogTitle>Subscribe to {chef.profiles?.name}</DialogTitle>
                     </DialogHeader>
-                    <div className="space-y-4 mt-2">
+                    <div className="space-y-4 mt-2 overflow-y-auto max-h-[75vh] pr-1">
                       <p className="text-sm text-muted-foreground">
-                        Get daily home-cooked meals from <strong>{chef.profiles?.name}</strong>
+                        Get fresh home-cooked meals from <strong>{chef.profiles?.name}</strong> delivered daily.
                       </p>
-                      <div className="grid grid-cols-2 gap-3">
-                        {(Object.entries(PLANS) as ["weekly" | "monthly", typeof PLANS.weekly][]).map(([key, plan]) => (
-                          <button
-                            key={key}
-                            onClick={() => setSelectedPlan(key)}
-                            className={`border-2 rounded-xl p-4 text-left transition-all ${
-                              selectedPlan === key
-                                ? "border-primary bg-primary/5"
-                                : "border-border hover:border-primary/40"
-                            }`}
-                          >
-                            <p className="font-bold text-lg">{plan.label}</p>
-                            <p className="text-sm text-muted-foreground">{plan.meals} meals</p>
-                            <p className="text-xl font-bold text-primary mt-2">₹{plan.price}</p>
-                            <p className="text-xs text-muted-foreground">₹{plan.pricePerMeal}/meal</p>
-                          </button>
+
+                      {/* Step 1 — Meal type */}
+                      <div>
+                        <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2">Step 1 — Choose Meal</p>
+                        <div className="grid grid-cols-3 gap-2">
+                          {(Object.entries(MEAL_PLANS) as [keyof typeof MEAL_PLANS, typeof MEAL_PLANS.lunch][]).map(([key, mt]) => (
+                            <button
+                              key={key}
+                              onClick={() => setSelectedMealType(key)}
+                              className={`border-2 rounded-xl p-3 text-center transition-all ${
+                                selectedMealType === key
+                                  ? "border-primary bg-primary/5"
+                                  : "border-border hover:border-primary/40"
+                              }`}
+                            >
+                              <p className="text-2xl mb-1">{mt.icon}</p>
+                              <p className="text-xs font-semibold">{mt.label}</p>
+                              <p className="text-[10px] text-muted-foreground mt-0.5">
+                                from ₹{mt.weekly.pricePerMeal}/meal
+                              </p>
+                            </button>
+                          ))}
+                        </div>
+                        <p className="text-xs text-muted-foreground mt-1.5 text-center">
+                          {MEAL_PLANS[selectedMealType].note}
+                        </p>
+                      </div>
+
+                      {/* Step 2 — Plan duration */}
+                      <div>
+                        <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2">Step 2 — Choose Plan</p>
+                        <div className="grid grid-cols-2 gap-3">
+                          {(["weekly", "monthly"] as const).map((key) => {
+                            const plan = MEAL_PLANS[selectedMealType][key];
+                            const savesPct = key === "monthly" ? Math.round((1 - plan.pricePerMeal / MEAL_PLANS[selectedMealType].weekly.pricePerMeal) * 100) : null;
+                            return (
+                              <button
+                                key={key}
+                                onClick={() => setSelectedPlan(key)}
+                                className={`border-2 rounded-xl p-4 text-left transition-all relative ${
+                                  selectedPlan === key
+                                    ? "border-primary bg-primary/5"
+                                    : "border-border hover:border-primary/40"
+                                }`}
+                              >
+                                {savesPct && (
+                                  <span className="absolute -top-2.5 right-2 text-[10px] bg-green-600 text-white px-1.5 py-0.5 rounded-full font-semibold">
+                                    Save {savesPct}%
+                                  </span>
+                                )}
+                                <p className="font-bold">{plan.label}</p>
+                                <p className="text-xs text-muted-foreground">{plan.meals} meals · {plan.days} days</p>
+                                <p className="text-2xl font-bold text-primary mt-2">₹{plan.price}</p>
+                                <p className="text-xs text-muted-foreground">₹{plan.pricePerMeal}/meal</p>
+                              </button>
+                            );
+                          })}
+                        </div>
+                      </div>
+
+                      {/* What's included */}
+                      <div className="bg-muted/40 rounded-xl p-3 space-y-1.5">
+                        {[
+                          "Fresh home-cooked meals every day",
+                          "Cancel anytime — no lock-in",
+                          "Secure payment via Razorpay",
+                        ].map((item) => (
+                          <p key={item} className="flex items-center gap-2 text-xs text-muted-foreground">
+                            <CheckCircle2 className="h-3.5 w-3.5 text-primary shrink-0" />
+                            {item}
+                          </p>
                         ))}
                       </div>
-                      <ul className="text-sm text-muted-foreground space-y-1">
-                        <li>✓ Fresh home-cooked meals daily</li>
-                        <li>✓ Cancel anytime</li>
-                        <li>✓ Secure payment via Razorpay</li>
-                      </ul>
+
                       <Button
                         className="w-full"
+                        size="lg"
                         onClick={handleSubscribe}
                         disabled={subscribing}
                       >
-                        {subscribing ? "Processing…" : `Pay ₹${PLANS[selectedPlan].price} & Subscribe`}
+                        {subscribing
+                          ? "Processing…"
+                          : `Pay ₹${MEAL_PLANS[selectedMealType][selectedPlan].price} & Subscribe`}
                       </Button>
                     </div>
                   </DialogContent>
@@ -376,6 +450,37 @@ const ChefProfile = () => {
             </div>
           </CardContent>
         </Card>
+
+        {/* Subscription CTA Banner */}
+        <div className="mb-8 rounded-2xl border-2 border-primary/30 bg-primary/5 px-4 md:px-6 py-4 md:py-5 flex flex-col md:flex-row md:items-center gap-4">
+          <div className="flex-1">
+            <p className="font-bold text-lg">Subscribe for Daily Meals</p>
+            <div className="mt-1.5 space-y-1 text-sm text-muted-foreground">
+              <p>
+                <span className="font-medium text-foreground">🍳 Breakfast</span> — Idli, dosa, upma, poha, paratha &amp; more ·{" "}
+                <strong className="text-primary">from ₹80/meal</strong>
+              </p>
+              <p>
+                <span className="font-medium text-foreground">🍱 Lunch &amp; 🍛 Dinner</span> — Dal, rice, sabzi, roti, curry &amp; more ·{" "}
+                <strong className="text-primary">from ₹125/meal</strong>
+              </p>
+              <p className="text-xs">Weekly (5 meals) or Monthly (20 meals) — pay once, eat every day.</p>
+            </div>
+            <div className="flex flex-wrap gap-4 mt-2 text-xs text-muted-foreground">
+              <span className="flex items-center gap-1"><CheckCircle2 className="h-3.5 w-3.5 text-primary" /> As low as ₹70/meal</span>
+              <span className="flex items-center gap-1"><CheckCircle2 className="h-3.5 w-3.5 text-primary" /> Cancel anytime</span>
+              <span className="flex items-center gap-1"><CheckCircle2 className="h-3.5 w-3.5 text-primary" /> Secure Razorpay payment</span>
+            </div>
+          </div>
+          <Button
+            size="lg"
+            className="shrink-0 w-full md:w-auto"
+            onClick={() => setSubDialogOpen(true)}
+          >
+            <Calendar className="h-4 w-4 mr-2" />
+            Subscribe Now
+          </Button>
+        </div>
 
         {/* Meals Section */}
         <section className="mb-8">

@@ -582,24 +582,32 @@ export const PartnerProfile = ({ chefId }: PartnerProfileProps) => {
       <Card>
         <CardHeader>
           <CardTitle>Specialties</CardTitle>
+          <p className="text-sm text-muted-foreground">
+            Add the cuisines and dishes you specialise in — these appear on your chef profile so customers know what to expect.
+          </p>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="flex gap-2">
             <Input
-              placeholder="Add a specialty (e.g., Biryani, South Indian)"
+              placeholder="e.g. Biryani, South Indian, Hyderabadi…"
               value={newSpecialty}
               onChange={(e) => setNewSpecialty(e.target.value)}
-              onKeyPress={(e) => e.key === "Enter" && (e.preventDefault(), handleAddSpecialty())}
+              onKeyDown={(e) => e.key === "Enter" && (e.preventDefault(), handleAddSpecialty())}
             />
-            <Button onClick={handleAddSpecialty}>
-              <Plus className="h-4 w-4" />
+            <Button
+              type="button"
+              onClick={handleAddSpecialty}
+              disabled={!newSpecialty.trim()}
+              className="shrink-0"
+            >
+              <Plus className="h-4 w-4 mr-1" /> Add
             </Button>
           </div>
 
           <div className="flex flex-wrap gap-2">
             {specialties.length === 0 ? (
               <p className="text-sm text-muted-foreground">
-                No specialties added yet
+                No specialties added yet — type one above and click Add
               </p>
             ) : (
               specialties.map((specialty, index) => (
