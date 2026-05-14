@@ -32,7 +32,8 @@ interface PartnerOrdersProps {
 
 export const PartnerOrders = ({ chefId, userId, onStatsUpdate }: PartnerOrdersProps) => {
   const [orders, setOrders] = useState<Order[]>([]);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(false);   // disables action buttons
+  const [fetching, setFetching] = useState(true);  // initial data load
   const [filterStatus, setFilterStatus] = useState<string>("all");
   const [commissionRate, setCommissionRate] = useState<number>(0);
 
@@ -64,9 +65,8 @@ export const PartnerOrders = ({ chefId, userId, onStatsUpdate }: PartnerOrdersPr
   };
 
   const fetchOrders = async () => {
+    setFetching(true);
     try {
-      // Query by auth user ID (chef_id in orders = meals.chef_id = auth user id)
-      // Fall back to chefId (profile id) if userId not available
       const queryId = userId || chefId;
       if (!queryId) return;
 
@@ -98,6 +98,8 @@ export const PartnerOrders = ({ chefId, userId, onStatsUpdate }: PartnerOrdersPr
     } catch (error) {
       console.error("Error fetching orders:", error);
       toast.error("Failed to load orders");
+    } finally {
+      setFetching(false);
     }
   };
 
@@ -202,10 +204,19 @@ export const PartnerOrders = ({ chefId, userId, onStatsUpdate }: PartnerOrdersPr
       </div>
 
       <div className="space-y-4">
-        {filteredOrders.length === 0 ? (
+        {fetching ? (
           <Card>
             <CardContent className="py-8 text-center text-muted-foreground">
-              No orders found
+              <div className="flex items-center justify-center gap-2">
+                <div className="h-4 w-4 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+                Loading orders…
+              </div>
+            </CardContent>
+          </Card>
+        ) : filteredOrders.length === 0 ? (
+          <Card>
+            <CardContent className="py-8 text-center text-muted-foreground">
+              {filterStatus === "all" ? "No orders yet" : `No ${filterStatus} orders`}
             </CardContent>
           </Card>
         ) : (
