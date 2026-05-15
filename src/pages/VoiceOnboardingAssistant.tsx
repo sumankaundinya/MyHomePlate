@@ -585,16 +585,17 @@ const VoiceOnboardingAssistant = () => {
                             </div>
                           </TableCell>
                           <TableCell>
-                            <div className="flex items-center gap-1">
-                              <Button
-                                size="sm"
-                                variant="default"
-                                disabled={calling}
-                                onClick={() => initiateCall(contact)}
+                            <div className="flex items-center gap-1 flex-wrap">
+                              <a
+                                href={`https://wa.me/${contact.phone_number.replace(/\D/g, "")}`}
+                                target="_blank"
+                                rel="noopener noreferrer"
                               >
-                                <Phone className="h-4 w-4 mr-1" />
-                                {calling ? "Calling…" : "Call"}
-                              </Button>
+                                <Button size="sm" variant="default">
+                                  <Phone className="h-4 w-4 mr-1" />
+                                  WA Call
+                                </Button>
+                              </a>
                               <Button
                                 size="sm"
                                 variant="outline"
