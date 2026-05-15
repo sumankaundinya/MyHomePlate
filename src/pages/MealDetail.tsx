@@ -637,25 +637,45 @@ const MealDetail = () => {
                       </Button>
                     )}
 
-                    {/* GPS detect for accurate delivery fee */}
+                    {/* GPS detection — required when chef has coordinates */}
                     {meal.chef_lat && meal.chef_lng && (
-                      <Button
-                        type="button"
-                        variant="outline"
-                        size="sm"
-                        className="w-full mt-2"
-                        onClick={detectLocation}
-                        disabled={detectingLocation}
-                      >
-                        <MapPin className="h-3.5 w-3.5 mr-1.5" />
-                        {detectingLocation
-                          ? "Detecting…"
-                          : customerLocation
-                          ? "📍 Location detected — fee calculated"
-                          : "Detect my location for accurate delivery fee"}
-                      </Button>
+                      <div className="mt-2">
+                        {!customerLocation ? (
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            className="w-full border-amber-300 text-amber-700 hover:bg-amber-50"
+                            onClick={detectLocation}
+                            disabled={detectingLocation}
+                          >
+                            <MapPin className="h-3.5 w-3.5 mr-1.5" />
+                            {detectingLocation ? "Detecting location…" : "📍 Share location to confirm delivery fee"}
+                          </Button>
+                        ) : (
+                          <div className="flex items-center gap-2 bg-green-50 border border-green-200 rounded-lg px-3 py-2 text-xs text-green-800">
+                            <MapPin className="h-3.5 w-3.5 shrink-0" />
+                            Location detected · Delivery fee confirmed
+                          </div>
+                        )}
+                      </div>
                     )}
                   </div>
+
+                  {/* Outside delivery radius warning */}
+                  {(() => {
+                    if (!customerLocation || !meal.chef_lat || !meal.chef_lng) return null;
+                    const dist = haversineKm(meal.chef_lat, meal.chef_lng, customerLocation.lat, customerLocation.lng);
+                    const maxRadius = (meal.delivery_radius_km ?? 3) + 5; // chef radius + 5km buffer
+                    if (dist > maxRadius) {
+                      return (
+                        <div className="bg-red-50 border border-red-200 rounded-lg px-3 py-2 text-xs text-red-800">
+                          You are <strong>{dist.toFixed(1)} km</strong> away. This chef delivers up to <strong>{meal.delivery_radius_km ?? 3} km</strong>. Please choose a closer chef.
+                        </div>
+                      );
+                    }
+                    return null;
+                  })()}
 
                   <div className="space-y-1.5 pt-2 border-t">
                     <div className="flex items-center justify-between text-sm text-muted-foreground">
@@ -663,20 +683,17 @@ const MealDetail = () => {
                       <span>₹{(meal.price * quantity).toFixed(0)}</span>
                     </div>
                     <div className="flex items-center justify-between text-sm text-muted-foreground">
-                      <span>
-                        Delivery
-                        {!customerLocation && meal.chef_lat && (
-                          <span className="text-xs text-amber-600 ml-1">(base rate — share location for exact)</span>
-                        )}
-                      </span>
+                      <span>Delivery</span>
                       <span className={calculatedDeliveryFee === 0 ? "text-green-600 font-medium" : ""}>
-                        {calculatedDeliveryFee === 0 ? "Free" : `₹${calculatedDeliveryFee}`}
+                        {!customerLocation && meal.chef_lat ? "—" : calculatedDeliveryFee === 0 ? "Free" : `₹${calculatedDeliveryFee}`}
                       </span>
                     </div>
                     <div className="flex items-center justify-between font-semibold text-base pt-1 border-t">
                       <span>Total</span>
                       <span className="text-xl font-bold text-primary">
-                        ₹{(meal.price * quantity + calculatedDeliveryFee).toFixed(0)}
+                        {!customerLocation && meal.chef_lat
+                          ? "Share location first"
+                          : `₹${(meal.price * quantity + calculatedDeliveryFee).toFixed(0)}`}
                       </span>
                     </div>
                   </div>
@@ -693,7 +710,16 @@ const MealDetail = () => {
                     className="w-full"
                     size="lg"
                     onClick={handleOrder}
-                    disabled={ordering || !meal.available || meal.price * quantity < PLATFORM_MIN_ORDER}
+                    disabled={
+                      ordering ||
+                      !meal.available ||
+                      meal.price * quantity < PLATFORM_MIN_ORDER ||
+                      // Require location when chef has GPS set
+                      (!!meal.chef_lat && !!meal.chef_lng && !customerLocation) ||
+                      // Block if outside delivery range
+                      (!!customerLocation && !!meal.chef_lat && !!meal.chef_lng &&
+                        haversineKm(meal.chef_lat, meal.chef_lng, customerLocation.lat, customerLocation.lng) > (meal.delivery_radius_km ?? 3) + 5)
+                    }
                   >
                     {ordering ? (
                       <>
