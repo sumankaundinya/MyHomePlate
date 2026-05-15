@@ -2,6 +2,7 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2.38.4";
 
 const GUPSHUP_API_KEY = Deno.env.get("GUPSHUP_API_KEY") || "";
 const GUPSHUP_APP_NAME = Deno.env.get("GUPSHUP_APP_NAME") || "";
+const GUPSHUP_SOURCE_NUMBER = Deno.env.get("GUPSHUP_SOURCE_NUMBER") || "";
 const GUPSHUP_ONBOARDING_TEMPLATE_ID = Deno.env.get("GUPSHUP_ONBOARDING_TEMPLATE_ID") || "";
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL") || "";
 const SUPABASE_SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || "";
@@ -19,47 +20,54 @@ Joining MyHomePlate as a partner chef is completely free. Cook meals for people 
 If interested, just reply "Interested" — we'll call you back!`;
 
 function formatPhone(phoneNumber: string): string {
+  // Gupshup wants digits only, no + prefix (e.g. 919876543210)
   let phone = phoneNumber.replace(/\D/g, "");
   if (!phone.startsWith("91")) {
     phone = "91" + phone.slice(-10);
   }
-  return "+" + phone;
+  return phone;
 }
 
 async function sendWhatsApp(
   phoneNumber: string,
   language: string
 ): Promise<{ success: boolean; messageId?: string; error?: string }> {
-  const formatted = formatPhone(phoneNumber);
-  const message = language === "telugu" ? TELUGU_MESSAGE : ENGLISH_MESSAGE;
+  const destination = formatPhone(phoneNumber);
+  const source = GUPSHUP_SOURCE_NUMBER.replace(/\D/g, "");
+  const messageText = language === "telugu" ? TELUGU_MESSAGE : ENGLISH_MESSAGE;
 
   let url: string;
   let body: URLSearchParams;
 
-  // Use approved template API for cold outreach if template ID is set
   if (GUPSHUP_ONBOARDING_TEMPLATE_ID) {
-    url = "https://api.gupshup.io/wa/api/v1/template/msg";
+    // Approved template — for cold outreach to new contacts
+    url = "https://api.gupshup.io/sm/api/v1/template/msg";
     body = new URLSearchParams({
-      apikey: GUPSHUP_API_KEY,
-      appname: GUPSHUP_APP_NAME,
-      destination: formatted,
+      channel: "whatsapp",
+      source,
+      destination,
       template: JSON.stringify({ id: GUPSHUP_ONBOARDING_TEMPLATE_ID, params: [] }),
+      "src.name": GUPSHUP_APP_NAME,
     });
   } else {
-    // Session message — only works within 24hr window or for testing your own number
-    url = "https://api.gupshup.io/wa/api/v1/msg/send/simple";
+    // Session/free-form message — works for testing with your own number
+    url = "https://api.gupshup.io/sm/api/v1/msg";
     body = new URLSearchParams({
-      apikey: GUPSHUP_API_KEY,
-      appname: GUPSHUP_APP_NAME,
-      to: formatted,
-      msg: message,
+      channel: "whatsapp",
+      source,
+      destination,
+      message: JSON.stringify({ type: "text", text: messageText }),
+      "src.name": GUPSHUP_APP_NAME,
     });
   }
 
   try {
     const response = await fetch(url, {
       method: "POST",
-      headers: { "Content-Type": "application/x-www-form-urlencoded" },
+      headers: {
+        "Content-Type": "application/x-www-form-urlencoded",
+        "apikey": GUPSHUP_API_KEY,
+      },
       body: body.toString(),
     });
 
