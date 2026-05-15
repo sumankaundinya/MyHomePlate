@@ -10,9 +10,10 @@ interface OrderNotification {
   order_id?: string;
 }
 
-const GUPSHUP_API_URL = "https://api.gupshup.io/wa/api/v1/msg/send/simple";
+const GUPSHUP_API_URL = "https://api.gupshup.io/sm/api/v1/msg";
 const GUPSHUP_API_KEY = Deno.env.get("GUPSHUP_API_KEY") || "";
 const GUPSHUP_APP_NAME = Deno.env.get("GUPSHUP_APP_NAME") || "";
+const GUPSHUP_SOURCE_NUMBER = Deno.env.get("GUPSHUP_SOURCE_NUMBER") || "";
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL") || "";
 const SUPABASE_SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || "";
 
@@ -33,18 +34,19 @@ async function sendGupshupWhatsApp(
   console.log("API Key present:", !!GUPSHUP_API_KEY);
   console.log("App Name:", GUPSHUP_APP_NAME);
 
-  // WhatsApp requires phone number with country code
-  let formattedPhone = phoneNumber;
-  if (!formattedPhone.startsWith("+")) {
-    formattedPhone = "+" + formattedPhone;
+  // Gupshup wants digits only, no + (e.g. 919876543210)
+  let formattedPhone = phoneNumber.replace(/\D/g, "");
+  if (!formattedPhone.startsWith("91")) {
+    formattedPhone = "91" + formattedPhone.slice(-10);
   }
+  const source = GUPSHUP_SOURCE_NUMBER.replace(/\D/g, "");
 
-  // Try with 'msg' parameter (standard Gupshup format)
   const formData = new URLSearchParams({
-    apikey: GUPSHUP_API_KEY,
-    appname: GUPSHUP_APP_NAME,
-    to: formattedPhone,
-    msg: message,
+    channel: "whatsapp",
+    source,
+    destination: formattedPhone,
+    message: JSON.stringify({ type: "text", text: message }),
+    "src.name": GUPSHUP_APP_NAME,
   });
 
   const bodyString = formData.toString();
@@ -56,6 +58,7 @@ async function sendGupshupWhatsApp(
       method: "POST",
       headers: {
         "Content-Type": "application/x-www-form-urlencoded",
+        "apikey": GUPSHUP_API_KEY,
       },
       body: bodyString,
     });
