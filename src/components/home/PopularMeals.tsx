@@ -169,7 +169,7 @@ const PopularMeals = () => {
                 </p>
               </CardContent>
               <CardFooter className="flex items-center justify-between pt-0 gap-3">
-                <p className="text-2xl font-bold bg-gradient-hero bg-clip-text text-transparent">
+                <p className="text-2xl font-bold text-primary">
                   ₹{meal.price}
                 </p>
                 <Button 

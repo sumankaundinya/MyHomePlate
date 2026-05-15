@@ -221,7 +221,7 @@ const Meals = () => {
       <main className="container mx-auto px-4 pt-5 pb-12 max-w-6xl">
 
         <div className="mb-4">
-          <h1 className="text-2xl font-bold bg-gradient-hero bg-clip-text text-transparent">
+          <h1 className="text-2xl font-bold text-foreground">
             Homemade Dishes
           </h1>
           {!loading && (

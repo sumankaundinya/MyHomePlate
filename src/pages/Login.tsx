@@ -61,7 +61,7 @@ const Login = () => {
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background via-muted to-background p-4">
       <Card className="w-full max-w-md shadow-warm">
         <CardHeader className="space-y-1 text-center">
-          <CardTitle className="text-3xl font-bold bg-gradient-hero bg-clip-text text-transparent">
+          <CardTitle className="text-3xl font-bold text-foreground">
             Welcome to MyHomePlate
           </CardTitle>
           <CardDescription>Sign in to your account</CardDescription>
