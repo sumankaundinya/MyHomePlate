@@ -198,7 +198,10 @@ const MealDetail = () => {
   };
 
   const detectLocation = () => {
-    if (!navigator.geolocation) { toast.error("Geolocation not supported"); return; }
+    if (!navigator.geolocation) {
+      toast.error("Your browser does not support location. Try Chrome or Safari.");
+      return;
+    }
     setDetectingLocation(true);
     navigator.geolocation.getCurrentPosition(
       (pos) => {
@@ -206,8 +209,17 @@ const MealDetail = () => {
         setDetectingLocation(false);
         toast.success("Location detected — delivery fee updated");
       },
-      () => { setDetectingLocation(false); toast.error("Could not detect location"); },
-      { timeout: 8000 }
+      (err) => {
+        setDetectingLocation(false);
+        if (err.code === 1) {
+          toast.error("Location access denied. Please allow location in your browser settings and try again.");
+        } else if (err.code === 2) {
+          toast.error("Location unavailable. Make sure GPS is enabled on your device.");
+        } else {
+          toast.error("Location timed out. Try again or move to an open area.");
+        }
+      },
+      { timeout: 15000, enableHighAccuracy: false, maximumAge: 60000 }
     );
   };
 
