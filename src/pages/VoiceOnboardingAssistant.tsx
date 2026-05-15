@@ -569,22 +569,20 @@ const VoiceOnboardingAssistant = () => {
                             </div>
                           </TableCell>
                           <TableCell>
-                            {contact.whatsapp_sent ? (
-                              <div className="flex items-center gap-1 text-green-600 text-sm">
-                                <CheckCircle2 className="h-4 w-4" />
-                                Sent
-                              </div>
-                            ) : (
+                            <div className="flex items-center gap-1">
+                              {contact.whatsapp_sent && (
+                                <CheckCircle2 className="h-4 w-4 text-green-600 shrink-0" />
+                              )}
                               <Button
                                 size="sm"
-                                variant="outline"
+                                variant={contact.whatsapp_sent ? "ghost" : "outline"}
                                 disabled={sendingWhatsApp}
                                 onClick={() => sendWhatsApp(contact)}
                               >
                                 <MessageCircle className="h-4 w-4 mr-1" />
-                                Send
+                                {contact.whatsapp_sent ? "Resend" : "Send"}
                               </Button>
-                            )}
+                            </div>
                           </TableCell>
                           <TableCell>
                             <div className="flex items-center gap-1">
