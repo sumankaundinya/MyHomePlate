@@ -71,9 +71,13 @@ const Navbar = () => {
   };
 
   const handleLogout = async () => {
+    // Clear state immediately so UI updates before signOut resolves
+    setUser(null);
+    setUserRole(null);
+    setIsAdmin(false);
     await supabase.auth.signOut();
     toast.success("Logged out successfully");
-    navigate("/");
+    window.location.href = "/"; // full reload clears all React state
   };
 
   const getUserInitials = () => {
