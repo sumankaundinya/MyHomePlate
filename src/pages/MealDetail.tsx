@@ -48,10 +48,23 @@ interface Meal {
   spice_levels: string[] | null;
   oil_options: string[] | null;
   delivery_fee?: number;
+  delivery_radius_km?: number;
+  per_km_rate?: number;
+  chef_lat?: number | null;
+  chef_lng?: number | null;
 }
 
 // Minimum food value (before delivery fee) for an order to make sense
 const PLATFORM_MIN_ORDER = 80;
+
+function haversineKm(lat1: number, lon1: number, lat2: number, lon2: number): number {
+  const R = 6371;
+  const dLat = ((lat2 - lat1) * Math.PI) / 180;
+  const dLon = ((lon2 - lon1) * Math.PI) / 180;
+  const a = Math.sin(dLat / 2) ** 2 +
+    Math.cos((lat1 * Math.PI) / 180) * Math.cos((lat2 * Math.PI) / 180) * Math.sin(dLon / 2) ** 2;
+  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+}
 
 const MealDetail = () => {
   const { id } = useParams();
@@ -72,6 +85,8 @@ const MealDetail = () => {
   const [selectedAddressId, setSelectedAddressId] = useState<string>("");
   const [showNewAddress, setShowNewAddress] = useState(false);
   const [newAddress, setNewAddress] = useState({ address_line: "", area: "", pincode: "" });
+  const [customerLocation, setCustomerLocation] = useState<{ lat: number; lng: number } | null>(null);
+  const [detectingLocation, setDetectingLocation] = useState(false);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -104,15 +119,20 @@ const MealDetail = () => {
 
       if (error) throw error;
 
-      const [{ data: profile }, { data: chefSettings }] = await Promise.all([
+      const [{ data: profile }, { data: chefSettings }, { data: chefAddr }] = await Promise.all([
         supabase.from("profiles").select("name").eq("id", data.chef_id).single(),
-        (supabase as any).from("chefs").select("delivery_fee").eq("user_id", data.chef_id).single(),
+        (supabase as any).from("chefs").select("delivery_fee, delivery_radius_km, per_km_rate").eq("user_id", data.chef_id).single(),
+        supabase.from("addresses").select("latitude, longitude").eq("user_id", data.chef_id).eq("is_primary", true).maybeSingle(),
       ]);
 
       const mealData = {
         ...data,
         chef_name: profile?.name || "Unknown Chef",
         delivery_fee: chefSettings?.delivery_fee ?? 0,
+        delivery_radius_km: chefSettings?.delivery_radius_km ?? 3,
+        per_km_rate: chefSettings?.per_km_rate ?? 10,
+        chef_lat: chefAddr?.latitude ?? null,
+        chef_lng: chefAddr?.longitude ?? null,
       };
 
       setMeal(mealData);
@@ -177,6 +197,32 @@ const MealDetail = () => {
     }
   };
 
+  const detectLocation = () => {
+    if (!navigator.geolocation) { toast.error("Geolocation not supported"); return; }
+    setDetectingLocation(true);
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        setCustomerLocation({ lat: pos.coords.latitude, lng: pos.coords.longitude });
+        setDetectingLocation(false);
+        toast.success("Location detected — delivery fee updated");
+      },
+      () => { setDetectingLocation(false); toast.error("Could not detect location"); },
+      { timeout: 8000 }
+    );
+  };
+
+  // Auto-calculate delivery fee based on distance
+  const calculatedDeliveryFee = (() => {
+    if (!meal) return 0;
+    const baseFee = meal.delivery_fee ?? 0;
+    const baseRadius = meal.delivery_radius_km ?? 3;
+    const perKm = meal.per_km_rate ?? 10;
+    if (!customerLocation || meal.chef_lat == null || meal.chef_lng == null) return baseFee;
+    const distKm = haversineKm(meal.chef_lat, meal.chef_lng, customerLocation.lat, customerLocation.lng);
+    const extraKm = Math.max(0, distKm - baseRadius);
+    return Math.round(baseFee + extraKm * perKm);
+  })();
+
   const handleOrder = async () => {
     if (!user) {
       setShowAuthModal(true);
@@ -200,7 +246,7 @@ const MealDetail = () => {
     setOrdering(true);
 
     try {
-      const totalPrice = meal.price * quantity + (meal.delivery_fee ?? 0);
+      const totalPrice = meal.price * quantity + calculatedDeliveryFee;
 
       // 1. Create order (status pending, payment_status pending)
       const { data: order, error: orderError } = await supabase
@@ -590,6 +636,25 @@ const MealDetail = () => {
                         <Plus className="h-4 w-4 mr-1" /> Add new address
                       </Button>
                     )}
+
+                    {/* GPS detect for accurate delivery fee */}
+                    {meal.chef_lat && meal.chef_lng && (
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        className="w-full mt-2"
+                        onClick={detectLocation}
+                        disabled={detectingLocation}
+                      >
+                        <MapPin className="h-3.5 w-3.5 mr-1.5" />
+                        {detectingLocation
+                          ? "Detecting…"
+                          : customerLocation
+                          ? "📍 Location detected — fee calculated"
+                          : "Detect my location for accurate delivery fee"}
+                      </Button>
+                    )}
                   </div>
 
                   <div className="space-y-1.5 pt-2 border-t">
@@ -598,15 +663,20 @@ const MealDetail = () => {
                       <span>₹{(meal.price * quantity).toFixed(0)}</span>
                     </div>
                     <div className="flex items-center justify-between text-sm text-muted-foreground">
-                      <span>Delivery</span>
-                      <span className={(meal.delivery_fee ?? 0) === 0 ? "text-green-600 font-medium" : ""}>
-                        {(meal.delivery_fee ?? 0) === 0 ? "Free" : `₹${meal.delivery_fee}`}
+                      <span>
+                        Delivery
+                        {!customerLocation && meal.chef_lat && (
+                          <span className="text-xs text-amber-600 ml-1">(base rate — share location for exact)</span>
+                        )}
+                      </span>
+                      <span className={calculatedDeliveryFee === 0 ? "text-green-600 font-medium" : ""}>
+                        {calculatedDeliveryFee === 0 ? "Free" : `₹${calculatedDeliveryFee}`}
                       </span>
                     </div>
                     <div className="flex items-center justify-between font-semibold text-base pt-1 border-t">
                       <span>Total</span>
                       <span className="text-xl font-bold text-primary">
-                        ₹{(meal.price * quantity + (meal.delivery_fee ?? 0)).toFixed(0)}
+                        ₹{(meal.price * quantity + calculatedDeliveryFee).toFixed(0)}
                       </span>
                     </div>
                   </div>

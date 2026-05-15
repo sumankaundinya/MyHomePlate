@@ -26,6 +26,7 @@ export const PartnerProfile = ({ chefId }: PartnerProfileProps) => {
     notification_opt_in: true,
     delivery_fee: 0,
     delivery_radius_km: 3,
+    per_km_rate: 10,
   });
   const [specialties, setSpecialties] = useState<string[]>([]);
   const [newSpecialty, setNewSpecialty] = useState("");
@@ -60,7 +61,7 @@ export const PartnerProfile = ({ chefId }: PartnerProfileProps) => {
     try {
       const { data, error } = await (supabase as any)
         .from("chefs")
-        .select("bio, kitchen_photo_url, hygiene_certificate, fssai_license, phone_number, notification_opt_in, delivery_fee, delivery_radius_km")
+        .select("bio, kitchen_photo_url, hygiene_certificate, fssai_license, phone_number, notification_opt_in, delivery_fee, delivery_radius_km, per_km_rate")
         .eq("id", chefId)
         .single();
 
@@ -75,6 +76,7 @@ export const PartnerProfile = ({ chefId }: PartnerProfileProps) => {
           notification_opt_in: data.notification_opt_in ?? true,
           delivery_fee: data.delivery_fee ?? 0,
           delivery_radius_km: data.delivery_radius_km ?? 3,
+          per_km_rate: data.per_km_rate ?? 10,
         });
       }
     } catch (error) {
@@ -413,9 +415,9 @@ export const PartnerProfile = ({ chefId }: PartnerProfileProps) => {
               <p className="text-xs text-muted-foreground">
                 Set a flat delivery fee for your area. Customers pay this on every order. Enter 0 for free delivery.
               </p>
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-3 gap-3">
                 <div>
-                  <Label htmlFor="delivery_fee">Delivery Fee (₹)</Label>
+                  <Label htmlFor="delivery_fee">Base Fee (₹)</Label>
                   <Input
                     id="delivery_fee"
                     type="number"
@@ -425,10 +427,10 @@ export const PartnerProfile = ({ chefId }: PartnerProfileProps) => {
                     onChange={(e) => setProfile({ ...profile, delivery_fee: parseFloat(e.target.value) || 0 })}
                     placeholder="e.g. 30"
                   />
-                  <p className="text-xs text-muted-foreground mt-1">0 = free delivery</p>
+                  <p className="text-xs text-muted-foreground mt-1">Up to base radius</p>
                 </div>
                 <div>
-                  <Label htmlFor="delivery_radius">Delivery Radius (km)</Label>
+                  <Label htmlFor="delivery_radius">Base Radius (km)</Label>
                   <Input
                     id="delivery_radius"
                     type="number"
@@ -439,11 +441,24 @@ export const PartnerProfile = ({ chefId }: PartnerProfileProps) => {
                     onChange={(e) => setProfile({ ...profile, delivery_radius_km: parseInt(e.target.value) || 3 })}
                     placeholder="e.g. 3"
                   />
-                  <p className="text-xs text-muted-foreground mt-1">Max km you deliver to</p>
+                  <p className="text-xs text-muted-foreground mt-1">Free beyond = extra charge</p>
+                </div>
+                <div>
+                  <Label htmlFor="per_km_rate">Per km (₹)</Label>
+                  <Input
+                    id="per_km_rate"
+                    type="number"
+                    min="0"
+                    step="5"
+                    value={profile.per_km_rate}
+                    onChange={(e) => setProfile({ ...profile, per_km_rate: parseFloat(e.target.value) || 0 })}
+                    placeholder="e.g. 10"
+                  />
+                  <p className="text-xs text-muted-foreground mt-1">Beyond base radius</p>
                 </div>
               </div>
               <div className="bg-blue-50 border border-blue-200 rounded-lg px-3 py-2 text-xs text-blue-800">
-                Most chefs in Nizampet charge <strong>₹30–₹50</strong> for deliveries within <strong>3 km</strong>. Your delivery fee applies to all your dishes.
+                Example: ₹30 base for 3 km · ₹10/km beyond → 5 km away = <strong>₹30 + ₹20 = ₹50</strong> auto-calculated at checkout.
               </div>
             </div>
 
