@@ -53,6 +53,7 @@ const VoiceOnboardingAssistant = () => {
   const [loading, setLoading] = useState(true);
   const [calling, setCalling] = useState(false);
   const [sendingWhatsApp, setSendingWhatsApp] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [editingContact, setEditingContact] = useState<OnboardingContact | null>(null);
   const [selectedContactType, setSelectedContactType] = useState<"chef" | "customer">("chef");
@@ -73,7 +74,8 @@ const VoiceOnboardingAssistant = () => {
     fetchCallLogs();
   }, []);
 
-  const fetchContacts = async () => {
+  const fetchContacts = async (showToast = false) => {
+    setRefreshing(true);
     try {
       const { data, error } = await (supabase as any)
         .from("onboarding_contacts")
@@ -82,11 +84,13 @@ const VoiceOnboardingAssistant = () => {
 
       if (error) throw error;
       setContacts(data || []);
+      if (showToast) toast.success("Contacts refreshed");
     } catch (error) {
       console.error("Error fetching contacts:", error);
       toast.error("Failed to load contacts");
     } finally {
       setLoading(false);
+      setRefreshing(false);
     }
   };
 
@@ -481,8 +485,8 @@ const VoiceOnboardingAssistant = () => {
                     Onboarding Contacts ({contacts.filter((c) => statusFilter === "all" || c.contact_status === statusFilter).length}
                     {statusFilter !== "all" && ` of ${contacts.length}`})
                   </CardTitle>
-                  <Button variant="outline" size="sm" onClick={fetchContacts}>
-                    Refresh
+                  <Button variant="outline" size="sm" onClick={() => fetchContacts(true)} disabled={refreshing}>
+                    {refreshing ? "Refreshing…" : "Refresh"}
                   </Button>
                 </div>
                 <div className="flex flex-wrap items-center gap-2">
