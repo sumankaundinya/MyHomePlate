@@ -24,6 +24,7 @@ import Subscriptions from "./pages/Subscriptions";
 import PaymentHistory from "./pages/PaymentHistory";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { InstallBanner } from "@/components/InstallBanner";
+import { MobileBottomNav } from "@/components/MobileBottomNav";
 
 const queryClient = new QueryClient();
 
@@ -58,6 +59,7 @@ const App = () => (
         </ErrorBoundary>
         <ChatWidget />
         <InstallBanner />
+        <MobileBottomNav />
       </BrowserRouter>
     </TooltipProvider>
   </QueryClientProvider>
