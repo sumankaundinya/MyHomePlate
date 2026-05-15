@@ -23,6 +23,7 @@ import VoiceOnboardingAssistant from "./pages/VoiceOnboardingAssistant";
 import Subscriptions from "./pages/Subscriptions";
 import PaymentHistory from "./pages/PaymentHistory";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
+import { InstallBanner } from "@/components/InstallBanner";
 
 const queryClient = new QueryClient();
 
@@ -56,6 +57,7 @@ const App = () => (
         </Routes>
         </ErrorBoundary>
         <ChatWidget />
+        <InstallBanner />
       </BrowserRouter>
     </TooltipProvider>
   </QueryClientProvider>
