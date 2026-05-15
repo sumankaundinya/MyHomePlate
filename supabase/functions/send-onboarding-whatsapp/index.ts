@@ -21,11 +21,19 @@ If interested, just reply "Interested" — we'll call you back!`;
 
 function formatPhone(phoneNumber: string): string {
   // Gupshup wants digits only, no + prefix (e.g. 919876543210)
-  let phone = phoneNumber.replace(/\D/g, "");
-  if (!phone.startsWith("91")) {
-    phone = "91" + phone.slice(-10);
+  const trimmed = phoneNumber.trim();
+  const digits = trimmed.replace(/\D/g, "");
+
+  // If the original had a + (explicit country code), trust it as-is
+  if (trimmed.startsWith("+")) {
+    return digits;
   }
-  return phone;
+
+  // No country code — assume Indian (+91)
+  if (!digits.startsWith("91")) {
+    return "91" + digits.slice(-10);
+  }
+  return digits;
 }
 
 async function sendWhatsApp(
