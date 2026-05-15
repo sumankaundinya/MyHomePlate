@@ -68,16 +68,13 @@ const Index = () => {
                 className="flex flex-wrap gap-4 mb-5"
               >
                 {[
-                  { icon: "🍽", value: "120+", label: "meals daily" },
-                  { icon: "⭐", value: "4.8", label: "rated" },
-                  { icon: "👨‍🍳", value: "15+", label: "home chefs" },
+                  { icon: "🏠", label: "Home-cooked only" },
+                  { icon: "✅", label: "Verified chefs" },
+                  { icon: "🔒", label: "Secure payments" },
                 ].map((stat) => (
-                  <div key={stat.label} className="flex items-center gap-2">
-                    <span className="text-lg">{stat.icon}</span>
-                    <div>
-                      <p className="text-base font-bold leading-none">{stat.value}</p>
-                      <p className="text-xs text-white/60">{stat.label}</p>
-                    </div>
+                  <div key={stat.label} className="flex items-center gap-2 bg-white/10 backdrop-blur-sm px-3 py-1.5 rounded-full">
+                    <span className="text-sm">{stat.icon}</span>
+                    <p className="text-xs font-medium text-white/90">{stat.label}</p>
                   </div>
                 ))}
               </motion.div>
