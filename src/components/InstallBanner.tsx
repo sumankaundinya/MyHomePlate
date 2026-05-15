@@ -16,10 +16,17 @@ export const InstallBanner = () => {
     if (sessionStorage.getItem("pwa-banner-dismissed")) return;
 
     const ios = /iphone|ipad|ipod/i.test(navigator.userAgent) && !(window as any).MSStream;
-    setIsIOS(ios);
+    const isSafari = ios && /safari/i.test(navigator.userAgent) && !/crios|fxios|opios|mercury/i.test(navigator.userAgent);
+    setIsIOS(ios && isSafari); // only show iOS instructions if on Safari
 
-    if (ios) {
-      // iOS: show manual instruction banner
+    if (ios && !isSafari) {
+      // On iOS but not Safari — prompt to open in Safari
+      setShow(true);
+      setIsIOS(false); // use a different message
+      return;
+    }
+
+    if (ios && isSafari) {
       setShow(true);
       return;
     }
@@ -58,15 +65,18 @@ export const InstallBanner = () => {
         <p className="text-sm font-semibold text-gray-900">Install MyHomePlate</p>
         {isIOS ? (
           <p className="text-xs text-gray-500">
-            Tap <strong>Share</strong> → <strong>Add to Home Screen</strong>
+            Tap the <strong>Share ⎋</strong> button below → <strong>Add to Home Screen</strong>
           </p>
+        ) : prompt ? (
+          <p className="text-xs text-gray-500">Add to your home screen — works like an app</p>
         ) : (
-          <p className="text-xs text-gray-500">
-            Add to your home screen — works like an app
+          // iOS but not Safari
+          <p className="text-xs text-orange-600 font-medium">
+            Open this page in <strong>Safari</strong> to install the app
           </p>
         )}
       </div>
-      {!isIOS && (
+      {!isIOS && prompt && (
         <Button
           size="sm"
           className="shrink-0 bg-orange-500 hover:bg-orange-600 text-white"
