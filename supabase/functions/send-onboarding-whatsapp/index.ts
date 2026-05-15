@@ -36,12 +36,15 @@ async function sendWhatsApp(
   const source = GUPSHUP_SOURCE_NUMBER.replace(/\D/g, "");
   const messageText = language === "telugu" ? TELUGU_MESSAGE : ENGLISH_MESSAGE;
 
-  let url: string;
+  // apikey passed as query param (required for WABA/FBC hosted apps)
+  const baseUrl = GUPSHUP_ONBOARDING_TEMPLATE_ID
+    ? "https://api.gupshup.io/wa/api/v1/template/msg"
+    : "https://api.gupshup.io/wa/api/v1/msg";
+  const url = `${baseUrl}?apikey=${encodeURIComponent(GUPSHUP_API_KEY)}`;
+
   let body: URLSearchParams;
 
   if (GUPSHUP_ONBOARDING_TEMPLATE_ID) {
-    // Approved template — for cold outreach to new contacts
-    url = "https://api.gupshup.io/sm/api/v1/template/msg";
     body = new URLSearchParams({
       channel: "whatsapp",
       source,
@@ -50,8 +53,6 @@ async function sendWhatsApp(
       "src.name": GUPSHUP_APP_NAME,
     });
   } else {
-    // Session/free-form message — works for testing with your own number
-    url = "https://api.gupshup.io/sm/api/v1/msg";
     body = new URLSearchParams({
       channel: "whatsapp",
       source,
