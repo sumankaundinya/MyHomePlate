@@ -22,7 +22,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Phone, Plus, Upload, CheckCircle2, XCircle, Clock } from "lucide-react";
+import { Phone, Plus, Upload, CheckCircle2, XCircle, Clock, MessageCircle, Send } from "lucide-react";
 import { toast } from "sonner";
 
 interface OnboardingContact {
@@ -33,6 +33,8 @@ interface OnboardingContact {
   area: string | null;
   contact_status: string;
   created_at: string;
+  whatsapp_sent: boolean;
+  whatsapp_sent_at: string | null;
 }
 
 interface CallLog {
@@ -50,6 +52,8 @@ const VoiceOnboardingAssistant = () => {
   const [callLogs, setCallLogs] = useState<CallLog[]>([]);
   const [loading, setLoading] = useState(true);
   const [calling, setCalling] = useState(false);
+  const [sendingWhatsApp, setSendingWhatsApp] = useState(false);
+  const [statusFilter, setStatusFilter] = useState<string>("all");
   const [selectedContactType, setSelectedContactType] = useState<"chef" | "customer">("chef");
   const [selectedLanguage, setSelectedLanguage] = useState<"telugu" | "english">("telugu");
 
@@ -157,6 +161,78 @@ const VoiceOnboardingAssistant = () => {
     } catch (error: any) {
       toast.error(error.message || "Failed to add bulk contacts");
     }
+  };
+
+  const sendWhatsApp = async (contact: OnboardingContact) => {
+    setSendingWhatsApp(true);
+    try {
+      const response = await fetch(
+        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/send-onboarding-whatsapp`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${(await supabase.auth.getSession()).data.session?.access_token}`,
+          },
+          body: JSON.stringify({
+            contact_id: contact.id,
+            phone_number: contact.phone_number,
+            language: selectedLanguage,
+          }),
+        }
+      );
+
+      const result = await response.json();
+
+      if (response.ok && result.success) {
+        toast.success(`WhatsApp sent to ${contact.phone_number}`);
+        fetchContacts();
+      } else {
+        toast.error(`Failed: ${result.error}`);
+      }
+    } catch (error: any) {
+      toast.error(error.message || "Failed to send WhatsApp");
+    } finally {
+      setSendingWhatsApp(false);
+    }
+  };
+
+  const sendWhatsAppToAll = async () => {
+    const unsent = contacts.filter((c) => !c.whatsapp_sent);
+    if (unsent.length === 0) {
+      toast.info("All contacts have already been messaged");
+      return;
+    }
+
+    setSendingWhatsApp(true);
+    let successCount = 0;
+    const session = (await supabase.auth.getSession()).data.session;
+
+    for (const contact of unsent) {
+      try {
+        const response = await fetch(
+          `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/send-onboarding-whatsapp`,
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${session?.access_token}`,
+            },
+            body: JSON.stringify({
+              contact_id: contact.id,
+              phone_number: contact.phone_number,
+              language: selectedLanguage,
+            }),
+          }
+        );
+        const result = await response.json();
+        if (result.success) successCount++;
+      } catch {}
+    }
+
+    toast.success(`WhatsApp sent to ${successCount} of ${unsent.length} contacts`);
+    fetchContacts();
+    setSendingWhatsApp(false);
   };
 
   const initiateCall = async (contact: OnboardingContact) => {
@@ -361,14 +437,20 @@ const VoiceOnboardingAssistant = () => {
           {/* Contacts List */}
           <Card>
             <CardHeader>
-              <div className="flex items-center justify-between flex-wrap gap-4">
-                <CardTitle>Onboarding Contacts ({contacts.length})</CardTitle>
-                <div className="flex items-center gap-2">
-                  <Label htmlFor="language" className="mr-2">
-                    Call Language:
-                  </Label>
+              <div className="flex flex-col gap-3 w-full">
+                <div className="flex items-center justify-between flex-wrap gap-2">
+                  <CardTitle>
+                    Onboarding Contacts ({contacts.filter((c) => statusFilter === "all" || c.contact_status === statusFilter).length}
+                    {statusFilter !== "all" && ` of ${contacts.length}`})
+                  </CardTitle>
+                  <Button variant="outline" size="sm" onClick={fetchContacts}>
+                    Refresh
+                  </Button>
+                </div>
+                <div className="flex flex-wrap items-center gap-2">
+                  <Label className="text-sm shrink-0">Language:</Label>
                   <Select value={selectedLanguage} onValueChange={setSelectedLanguage as any}>
-                    <SelectTrigger id="language" className="w-32">
+                    <SelectTrigger className="w-32">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
@@ -376,8 +458,28 @@ const VoiceOnboardingAssistant = () => {
                       <SelectItem value="english">🇬🇧 English</SelectItem>
                     </SelectContent>
                   </Select>
-                  <Button variant="outline" size="sm" onClick={fetchContacts}>
-                    Refresh
+                  <Label className="text-sm shrink-0">Filter:</Label>
+                  <Select value={statusFilter} onValueChange={setStatusFilter}>
+                    <SelectTrigger className="w-36">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">All</SelectItem>
+                      <SelectItem value="interested">Interested</SelectItem>
+                      <SelectItem value="not_contacted">Not Contacted</SelectItem>
+                      <SelectItem value="pending">Pending</SelectItem>
+                      <SelectItem value="contacted">Contacted</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <Button
+                    size="sm"
+                    variant="secondary"
+                    disabled={sendingWhatsApp}
+                    onClick={sendWhatsAppToAll}
+                    className="ml-auto"
+                  >
+                    <Send className="h-4 w-4 mr-1" />
+                    {sendingWhatsApp ? "Sending…" : `WhatsApp All Unsent (${contacts.filter((c) => !c.whatsapp_sent).length})`}
                   </Button>
                 </div>
               </div>
@@ -396,12 +498,18 @@ const VoiceOnboardingAssistant = () => {
                         <TableHead>Name</TableHead>
                         <TableHead>Type</TableHead>
                         <TableHead>Status</TableHead>
-                        <TableHead>Action</TableHead>
+                        <TableHead>WhatsApp</TableHead>
+                        <TableHead>Actions</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {contacts.map((contact) => (
-                        <TableRow key={contact.id}>
+                      {contacts
+                        .filter((c) => statusFilter === "all" || c.contact_status === statusFilter)
+                        .map((contact) => (
+                        <TableRow
+                          key={contact.id}
+                          className={contact.contact_status === "interested" ? "bg-green-50 dark:bg-green-950/20" : ""}
+                        >
                           <TableCell className="font-mono">{contact.phone_number}</TableCell>
                           <TableCell>{contact.name || "—"}</TableCell>
                           <TableCell>
@@ -414,9 +522,27 @@ const VoiceOnboardingAssistant = () => {
                             <div className="flex items-center gap-2">
                               {getStatusIcon(contact.contact_status)}
                               <span className="text-sm capitalize">
-                                {contact.contact_status}
+                                {contact.contact_status.replace(/_/g, " ")}
                               </span>
                             </div>
+                          </TableCell>
+                          <TableCell>
+                            {contact.whatsapp_sent ? (
+                              <div className="flex items-center gap-1 text-green-600 text-sm">
+                                <CheckCircle2 className="h-4 w-4" />
+                                Sent
+                              </div>
+                            ) : (
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                disabled={sendingWhatsApp}
+                                onClick={() => sendWhatsApp(contact)}
+                              >
+                                <MessageCircle className="h-4 w-4 mr-1" />
+                                Send
+                              </Button>
+                            )}
                           </TableCell>
                           <TableCell>
                             <Button
