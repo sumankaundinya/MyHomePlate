@@ -78,61 +78,6 @@ const Home = () => {
         </section>
       </AnimatedSection>
 
-      {/* Flash Sale Section */}
-      <AnimatedSection>
-        <section className="py-16 bg-gradient-to-br from-red-50 to-orange-50">
-          <div className="container mx-auto px-4">
-            <div className="flex items-center justify-between mb-8">
-              <div className="flex items-center gap-4">
-                <FoodAnimatedIcon emoji="⚡" size="lg" />
-                <div>
-                  <h2 className="text-3xl md:text-4xl font-bold mb-2">
-                    Today's Chef Specials!
-                  </h2>
-                  <p className="text-lg text-muted-foreground">
-                    Limited portions - Grab before they're gone
-                  </p>
-                </div>
-              </div>
-              <DiscountBadge type="flash-sale" discount={50} />
-            </div>
-
-            {/* Example flash sale cards */}
-            <div className="grid md:grid-cols-3 gap-6">
-              {[1, 2, 3].map((i) => (
-                <Card key={i} className="group overflow-hidden hover:shadow-elevated transition-all">
-                  <div className="relative aspect-[4/3] overflow-hidden">
-                    <img
-                      src={`https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=500&h=400&fit=crop`}
-                      alt="Meal"
-                      className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
-                    />
-                    <div className="absolute top-3 left-3">
-                      <DiscountBadge type="percentage" discount={40} />
-                    </div>
-                    <LiveActivityIndicator
-                      type="limited-stock"
-                      count={5}
-                      label="left"
-                      className="absolute bottom-3 left-3"
-                    />
-                  </div>
-                  <CardContent className="p-4">
-                    <h3 className="font-bold text-lg mb-2">Special Biryani</h3>
-                    <div className="flex items-center gap-2 mb-2">
-                      <span className="text-2xl font-bold text-primary">₹180</span>
-                      <span className="text-lg text-muted-foreground line-through">₹300</span>
-                    </div>
-                    <Button className="w-full bg-gradient-hero">
-                      Pre-Order Now
-                    </Button>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
-          </div>
-        </section>
-      </AnimatedSection>
 
       {/* Meet Our Chefs */}
       <AnimatedSection>
@@ -203,15 +148,14 @@ const Home = () => {
 
               <div className="mt-12 flex flex-wrap gap-6 justify-center items-center text-orange-100">
                 <div className="flex items-center gap-2">
-                  <Star className="h-5 w-5 fill-yellow-300 text-yellow-300" />
-                  <span>4.8/5 from 12K+ reviews</span>
+                  <span>🏠 Nizampet's first home chef marketplace</span>
                 </div>
                 <span>•</span>
                 <div className="flex items-center gap-2">
-                  <LiveActivityIndicator type="trending" count={50000} label="happy plates served" />
+                  <span>✅ Verified home chefs only</span>
                 </div>
                 <span>•</span>
-                <span>500+ Home Chefs in 15 cities</span>
+                <span>🔒 Secure payments via Razorpay</span>
               </div>
             </motion.div>
           </div>

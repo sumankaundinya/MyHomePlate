@@ -95,6 +95,15 @@
     font-feature-settings: 'rlig' 1, 'calt' 1;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+    /* Space for mobile bottom nav on small screens */
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+
+  /* Add bottom padding on mobile so content clears the bottom nav */
+  @media (max-width: 767px) {
+    #root {
+      padding-bottom: 4rem;
+    }
   }
   
   /* Typography scale */
