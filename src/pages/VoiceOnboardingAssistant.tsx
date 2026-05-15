@@ -22,7 +22,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Phone, Plus, Upload, CheckCircle2, XCircle, Clock, MessageCircle, Send } from "lucide-react";
+import { Phone, Plus, Upload, CheckCircle2, XCircle, Clock, MessageCircle, Send, Trash2, Pencil } from "lucide-react";
 import { toast } from "sonner";
 
 interface OnboardingContact {
@@ -54,6 +54,7 @@ const VoiceOnboardingAssistant = () => {
   const [calling, setCalling] = useState(false);
   const [sendingWhatsApp, setSendingWhatsApp] = useState(false);
   const [statusFilter, setStatusFilter] = useState<string>("all");
+  const [editingContact, setEditingContact] = useState<OnboardingContact | null>(null);
   const [selectedContactType, setSelectedContactType] = useState<"chef" | "customer">("chef");
   const [selectedLanguage, setSelectedLanguage] = useState<"telugu" | "english">("telugu");
 
@@ -233,6 +234,43 @@ const VoiceOnboardingAssistant = () => {
     toast.success(`WhatsApp sent to ${successCount} of ${unsent.length} contacts`);
     fetchContacts();
     setSendingWhatsApp(false);
+  };
+
+  const deleteContact = async (contact: OnboardingContact) => {
+    if (!window.confirm(`Delete ${contact.name || contact.phone_number}?`)) return;
+    try {
+      const { error } = await (supabase as any)
+        .from("onboarding_contacts")
+        .delete()
+        .eq("id", contact.id);
+      if (error) throw error;
+      toast.success("Contact deleted");
+      fetchContacts();
+    } catch (error: any) {
+      toast.error(error.message || "Failed to delete contact");
+    }
+  };
+
+  const saveEdit = async () => {
+    if (!editingContact) return;
+    try {
+      const { error } = await (supabase as any)
+        .from("onboarding_contacts")
+        .update({
+          name: editingContact.name,
+          phone_number: editingContact.phone_number,
+          contact_type: editingContact.contact_type,
+          area: editingContact.area,
+          updated_at: new Date().toISOString(),
+        })
+        .eq("id", editingContact.id);
+      if (error) throw error;
+      toast.success("Contact updated");
+      setEditingContact(null);
+      fetchContacts();
+    } catch (error: any) {
+      toast.error(error.message || "Failed to update contact");
+    }
   };
 
   const initiateCall = async (contact: OnboardingContact) => {
@@ -545,15 +583,31 @@ const VoiceOnboardingAssistant = () => {
                             )}
                           </TableCell>
                           <TableCell>
-                            <Button
-                              size="sm"
-                              variant="default"
-                              disabled={calling}
-                              onClick={() => initiateCall(contact)}
-                            >
-                              <Phone className="h-4 w-4 mr-1" />
-                              {calling ? "Calling…" : "Call"}
-                            </Button>
+                            <div className="flex items-center gap-1">
+                              <Button
+                                size="sm"
+                                variant="default"
+                                disabled={calling}
+                                onClick={() => initiateCall(contact)}
+                              >
+                                <Phone className="h-4 w-4 mr-1" />
+                                {calling ? "Calling…" : "Call"}
+                              </Button>
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => setEditingContact({ ...contact })}
+                              >
+                                <Pencil className="h-4 w-4" />
+                              </Button>
+                              <Button
+                                size="sm"
+                                variant="destructive"
+                                onClick={() => deleteContact(contact)}
+                              >
+                                <Trash2 className="h-4 w-4" />
+                              </Button>
+                            </div>
                           </TableCell>
                         </TableRow>
                       ))}
@@ -563,6 +617,53 @@ const VoiceOnboardingAssistant = () => {
               )}
             </CardContent>
           </Card>
+
+          {/* Edit Contact Dialog */}
+          {editingContact && (
+            <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+              <div className="bg-background rounded-lg p-6 w-full max-w-md space-y-4 shadow-xl">
+                <h2 className="text-lg font-semibold">Edit Contact</h2>
+                <div>
+                  <Label>Phone Number</Label>
+                  <Input
+                    value={editingContact.phone_number}
+                    onChange={(e) => setEditingContact({ ...editingContact, phone_number: e.target.value })}
+                  />
+                </div>
+                <div>
+                  <Label>Name</Label>
+                  <Input
+                    value={editingContact.name || ""}
+                    onChange={(e) => setEditingContact({ ...editingContact, name: e.target.value })}
+                  />
+                </div>
+                <div>
+                  <Label>Contact Type</Label>
+                  <Select
+                    value={editingContact.contact_type}
+                    onValueChange={(v: any) => setEditingContact({ ...editingContact, contact_type: v })}
+                  >
+                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="chef">Chef 👨‍🍳</SelectItem>
+                      <SelectItem value="customer">Customer 👥</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <Label>Area</Label>
+                  <Input
+                    value={editingContact.area || ""}
+                    onChange={(e) => setEditingContact({ ...editingContact, area: e.target.value })}
+                  />
+                </div>
+                <div className="flex gap-2 pt-2">
+                  <Button onClick={saveEdit} className="flex-1">Save</Button>
+                  <Button variant="outline" onClick={() => setEditingContact(null)} className="flex-1">Cancel</Button>
+                </div>
+              </div>
+            </div>
+          )}
 
           {/* Call Logs */}
           <Card>
