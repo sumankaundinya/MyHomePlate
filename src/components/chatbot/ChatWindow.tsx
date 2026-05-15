@@ -8,8 +8,8 @@ const QUICK_ACTIONS = [
   "Browse Meals",
   "Today's Lunch",
   "Pre-order Tomorrow",
+  "Meal Plans",
   "Bulk Orders",
-  "Tiffin Plans",
 ] as const;
 
 type ChatbotHook = ReturnType<typeof useChatbot>;
@@ -75,7 +75,7 @@ export function ChatWindow({
       transition={{ type: "spring", stiffness: 300, damping: 28 }}
       style={{ background: '#ffffff' }}
       className="
-        fixed bottom-[9.5rem] right-4 z-50
+        fixed bottom-[8.5rem] right-4 z-50
         w-[calc(100vw-2rem)] max-w-sm
         md:bottom-[5.5rem] md:right-6
         flex flex-col
@@ -86,13 +86,13 @@ export function ChatWindow({
       "
     >
       {/* ─── Header ─────────────────────────────────────────────────────────── */}
-      <div style={{ background: '#0f766e' }} className="flex items-center gap-3 px-4 py-3 text-white flex-shrink-0">
-        <div className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center font-bold text-sm">
-          P
+      <div style={{ background: 'linear-gradient(135deg, hsl(28,90%,52%), hsl(355,82%,52%))' }} className="flex items-center gap-3 px-4 py-3 text-white flex-shrink-0">
+        <div className="w-9 h-9 rounded-full bg-white/20 flex items-center justify-center font-bold text-sm">
+          🍽
         </div>
         <div className="flex-1 min-w-0">
           <p className="font-semibold text-sm leading-tight">Platie</p>
-          <p className="text-xs" style={{ color: '#99f6e4' }}>MyHomePlate Food Assistant</p>
+          <p className="text-xs text-white/80">MyHomePlate Food Assistant</p>
         </div>
         <div className="flex items-center gap-1">
           <button
@@ -113,10 +113,10 @@ export function ChatWindow({
       </div>
 
       {/* ─── Online status pill ──────────────────────────────────────────────── */}
-      <div className="flex items-center gap-2 px-4 py-2 bg-teal-50 border-b border-teal-100 flex-shrink-0">
-        <span className="w-2 h-2 rounded-full bg-green-400 animate-pulse" />
+      <div className="flex items-center gap-2 px-4 py-2 bg-orange-50 border-b border-orange-100 flex-shrink-0">
+        <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
         <span className="text-xs text-gray-500">
-          🏠 Home-cooked meals • Pre-order only • No instant delivery
+          🏠 Home-cooked • Pre-order only • Nizampet
         </span>
       </div>
 

@@ -34,14 +34,14 @@ export function ChatWidget() {
 
       {/* ─── Floating Toggle Button ───────────────────────────────────────── */}
       <motion.div
-        className="fixed bottom-6 right-4 z-50 md:bottom-6 md:right-5"
+        className="fixed bottom-20 right-4 z-50 md:bottom-6 md:right-5"
         initial={{ scale: 0 }}
         animate={{ scale: 1 }}
         transition={{ type: "spring", stiffness: 260, damping: 20, delay: 0.5 }}
       >
-        {/* Pulse ring when closed */}
+        {/* Pulse ring — brand orange */}
         {!isOpen && (
-          <span className="absolute inset-0 rounded-full bg-teal-400 opacity-30 animate-ping" />
+          <span className="absolute inset-0 rounded-full bg-orange-400 opacity-30 animate-ping" />
         )}
 
         <motion.button
@@ -49,12 +49,11 @@ export function ChatWidget() {
           whileTap={{ scale: 0.9 }}
           onClick={isOpen ? closeChat : openChat}
           aria-label={isOpen ? "Close chat assistant" : "Open chat assistant"}
-          style={{ background: 'linear-gradient(135deg, #0f766e, #0d9488)' }}
+          style={{ background: 'linear-gradient(135deg, hsl(28,90%,52%), hsl(355,82%,52%))' }}
           className="
-            relative w-11 h-11 rounded-full shadow-lg
+            relative w-12 h-12 rounded-full shadow-lg
             text-white flex items-center justify-center
-            hover:shadow-teal-200 hover:shadow-2xl
-            transition-shadow
+            hover:shadow-xl transition-shadow
           "
         >
           <AnimatePresence mode="wait">
