@@ -14,12 +14,17 @@ function isInterested(text: string): boolean {
   return INTEREST_KEYWORDS.some((kw) => normalised.includes(kw.toLowerCase()));
 }
 
-function normalisePhone(raw: string): { withPlus: string; withoutPlus: string } {
-  let digits = raw.replace(/\D/g, "");
+function phoneVariants(raw: string): string[] {
+  const digits = raw.replace(/\D/g, "");
+  // Build several formats to try — we don't know if it's Indian or international
+  const variants = new Set<string>();
+  variants.add("+" + digits);          // +4571361727 or +919876543210
+  variants.add(digits);                // 4571361727  or 919876543210
   if (!digits.startsWith("91")) {
-    digits = "91" + digits.slice(-10);
+    variants.add("+91" + digits.slice(-10)); // Indian fallback
+    variants.add("91" + digits.slice(-10));
   }
-  return { withPlus: "+" + digits, withoutPlus: digits };
+  return Array.from(variants);
 }
 
 Deno.serve(async (req) => {
@@ -79,7 +84,8 @@ Deno.serve(async (req) => {
       return new Response("OK", { status: 200 });
     }
 
-    const { withPlus, withoutPlus } = normalisePhone(senderPhone);
+    const variants = phoneVariants(senderPhone);
+    const orFilter = variants.map((v) => `phone_number.eq.${v}`).join(",");
 
     const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);
 
@@ -89,12 +95,12 @@ Deno.serve(async (req) => {
         contact_status: "interested",
         updated_at: new Date().toISOString(),
       })
-      .or(`phone_number.eq.${withPlus},phone_number.eq.${withoutPlus}`);
+      .or(orFilter);
 
     if (error) {
       console.error("Supabase update error:", error);
     } else {
-      console.log(`Marked ${withPlus} as interested`);
+      console.log(`Marked ${variants[0]} as interested`);
     }
 
     // Always return 200 so Gupshup doesn't retry
