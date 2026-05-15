@@ -70,12 +70,16 @@ export const InstallBanner = () => {
         ) : prompt ? (
           <p className="text-xs text-gray-500">Add to your home screen — works like an app</p>
         ) : (
-          // iOS but not Safari
-          <p className="text-xs text-orange-600 font-medium">
-            Open this page in <strong>Safari</strong> to install the app
+          // iOS but not Safari — button opens current page in Safari
+          <p className="text-xs text-gray-500">
+            Installation requires Safari
           </p>
         )}
       </div>
+      {isIOS && (
+        // Safari: no action button needed, instructions are enough
+        null
+      )}
       {!isIOS && prompt && (
         <Button
           size="sm"
@@ -84,6 +88,19 @@ export const InstallBanner = () => {
         >
           <Download className="h-3.5 w-3.5 mr-1" />
           Install
+        </Button>
+      )}
+      {!isIOS && !prompt && (
+        // iOS Chrome: open in Safari
+        <Button
+          size="sm"
+          className="shrink-0 bg-orange-500 hover:bg-orange-600 text-white"
+          onClick={() => {
+            const url = window.location.href;
+            window.location.href = url.replace("https://", "x-safari-https://");
+          }}
+        >
+          Open Safari
         </Button>
       )}
       <button
