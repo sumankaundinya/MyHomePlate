@@ -96,11 +96,10 @@ const Index = () => {
                 </Button>
                 <Button
                   size="lg"
-                  variant="ghost"
-                  className="border border-white/40 text-white/90 hover:bg-white/10 hover:text-white text-sm px-6 py-4 rounded-2xl"
+                  className="bg-orange-400 hover:bg-orange-300 text-white text-sm font-bold px-6 py-4 rounded-2xl shadow-warm"
                   onClick={() => window.location.href = '/partner'}
                 >
-                  Cook with us
+                  👩‍🍳 Earn by Cooking
                 </Button>
               </motion.div>
             </motion.div>
@@ -182,7 +181,7 @@ const Index = () => {
                   </div>
                   <h3 className="text-xl font-bold">Become a Chef</h3>
                   <p className="text-sm text-muted-foreground">
-                    Share your cooking and earn from home
+                    Cook from home and earn ₹500–2000/day. Free to join.
                   </p>
                 </div>
               </Card>
@@ -218,15 +217,15 @@ const Index = () => {
             >
               <Card
                 className="p-8 hover:shadow-2xl transition-all duration-300 cursor-pointer group border-2 hover:border-primary h-full"
-                onClick={() => window.location.href = '/home'}
+                onClick={() => window.location.href = '/partner'}
               >
                 <div className="flex flex-col items-center text-center space-y-4">
                   <div className="p-4 rounded-2xl bg-gradient-to-br from-green-500 to-emerald-500 shadow-lg group-hover:scale-110 transition-transform duration-300">
                     <BookOpen className="h-10 w-10 text-white" />
                   </div>
-                  <h3 className="text-xl font-bold">Learn More</h3>
+                  <h3 className="text-xl font-bold">How It Works</h3>
                   <p className="text-sm text-muted-foreground">
-                    See how MyHomePlate works
+                    See how to join and start earning
                   </p>
                 </div>
               </Card>
