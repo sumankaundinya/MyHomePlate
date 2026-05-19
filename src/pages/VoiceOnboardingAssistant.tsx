@@ -202,10 +202,10 @@ const VoiceOnboardingAssistant = () => {
     }
   };
 
-  const sendWhatsAppToAll = async () => {
-    const unsent = contacts.filter((c) => !c.whatsapp_sent);
-    if (unsent.length === 0) {
-      toast.info("All contacts have already been messaged");
+  const sendWhatsAppToAll = async (all = false) => {
+    const targets = all ? contacts : contacts.filter((c) => !c.whatsapp_sent);
+    if (targets.length === 0) {
+      toast.info("No contacts to message");
       return;
     }
 
@@ -213,7 +213,7 @@ const VoiceOnboardingAssistant = () => {
     let successCount = 0;
     const session = (await supabase.auth.getSession()).data.session;
 
-    for (const contact of unsent) {
+    for (const contact of targets) {
       try {
         const response = await fetch(
           `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/send-onboarding-whatsapp`,
@@ -235,7 +235,7 @@ const VoiceOnboardingAssistant = () => {
       } catch {}
     }
 
-    toast.success(`WhatsApp sent to ${successCount} of ${unsent.length} contacts`);
+    toast.success(`WhatsApp sent to ${successCount} of ${targets.length} contacts`);
     fetchContacts();
     setSendingWhatsApp(false);
   };
@@ -513,16 +513,26 @@ const VoiceOnboardingAssistant = () => {
                       <SelectItem value="contacted">Contacted</SelectItem>
                     </SelectContent>
                   </Select>
-                  <Button
-                    size="sm"
-                    variant="secondary"
-                    disabled={sendingWhatsApp}
-                    onClick={sendWhatsAppToAll}
-                    className="ml-auto"
-                  >
-                    <Send className="h-4 w-4 mr-1" />
-                    {sendingWhatsApp ? "Sending…" : `WhatsApp All Unsent (${contacts.filter((c) => !c.whatsapp_sent).length})`}
-                  </Button>
+                  <div className="ml-auto flex gap-2">
+                    <Button
+                      size="sm"
+                      variant="secondary"
+                      disabled={sendingWhatsApp}
+                      onClick={() => sendWhatsAppToAll(false)}
+                    >
+                      <Send className="h-4 w-4 mr-1" />
+                      {sendingWhatsApp ? "Sending…" : `Send Unsent (${contacts.filter((c) => !c.whatsapp_sent).length})`}
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="default"
+                      disabled={sendingWhatsApp}
+                      onClick={() => sendWhatsAppToAll(true)}
+                    >
+                      <Send className="h-4 w-4 mr-1" />
+                      {sendingWhatsApp ? "Sending…" : `Resend All (${contacts.length})`}
+                    </Button>
+                  </div>
                 </div>
               </div>
             </CardHeader>
