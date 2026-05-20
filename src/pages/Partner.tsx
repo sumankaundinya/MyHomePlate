@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
-import { ChefHat, IndianRupee, Package, User, History } from "lucide-react";
+import { ChefHat, IndianRupee, Package, User, History, Zap } from "lucide-react";
 import { PartnerDishes } from "@/components/partner/PartnerDishes";
 import { PartnerOrders } from "@/components/partner/PartnerOrders";
 import { PartnerProfile } from "@/components/partner/PartnerProfile";
@@ -159,6 +159,27 @@ const Partner = () => {
             Manage your kitchen, orders, and earnings
           </p>
         </div>
+
+        {/* Quick Setup Banner — shown when chef has no active dishes */}
+        {stats.activeDishes === 0 && (
+          <div className="mb-6 bg-gradient-to-r from-orange-500 to-amber-500 rounded-2xl p-5 flex items-center justify-between gap-4 text-white shadow-lg">
+            <div className="flex items-center gap-3">
+              <div className="bg-white/20 rounded-xl p-2">
+                <Zap className="h-6 w-6" />
+              </div>
+              <div>
+                <p className="font-bold">Complete your quick setup</p>
+                <p className="text-sm text-white/80">Add your first meal and go live in under 3 minutes</p>
+              </div>
+            </div>
+            <Button
+              className="bg-white text-orange-600 hover:bg-orange-50 font-bold shrink-0"
+              onClick={() => navigate("/partner/setup")}
+            >
+              Start Setup →
+            </Button>
+          </div>
+        )}
 
         {/* Stats Cards */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">

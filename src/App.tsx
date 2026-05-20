@@ -20,6 +20,7 @@ import Partner from "./pages/Partner";
 import Admin from "./pages/Admin";
 import AdminSMSPanel from "./pages/AdminSMSPanel";
 import VoiceOnboardingAssistant from "./pages/VoiceOnboardingAssistant";
+import PartnerSetup from "./pages/PartnerSetup";
 import Subscriptions from "./pages/Subscriptions";
 import PaymentHistory from "./pages/PaymentHistory";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
@@ -47,6 +48,7 @@ const App = () => (
           <Route path="/chefs/:id" element={<ChefProfile />} />
           <Route path="/chef/dashboard" element={<ChefDashboard />} />
           <Route path="/partner" element={<Partner />} />
+          <Route path="/partner/setup" element={<PartnerSetup />} />
           <Route path="/admin" element={<Admin />} />
           <Route path="/admin/sms" element={<AdminSMSPanel />} />
           <Route path="/admin/voice" element={<VoiceOnboardingAssistant />} />

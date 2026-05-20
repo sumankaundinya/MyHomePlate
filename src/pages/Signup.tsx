@@ -54,15 +54,16 @@ const Signup = () => {
     setLoading(true);
 
     try {
+      const redirectTo = role === "chef"
+        ? `${window.location.origin}/partner/setup`
+        : `${window.location.origin}/`;
+
       const { data, error } = await supabase.auth.signUp({
         email,
         password,
         options: {
-          emailRedirectTo: `${window.location.origin}/`,
-          data: {
-            name,
-            role,
-          },
+          emailRedirectTo: redirectTo,
+          data: { name, role },
         },
       });
 
@@ -79,9 +80,8 @@ const Signup = () => {
         // Email confirmation required
         setAwaitingConfirmation(true);
       } else if (data.user && data.session) {
-        // Auto-confirmed (shouldn't happen now, but safe fallback)
         toast.success("Account created! Welcome to MyHomePlate!");
-        navigate("/");
+        navigate(role === "chef" ? "/partner/setup" : "/");
       }
     } catch (error) {
       toast.error("An unexpected error occurred");
