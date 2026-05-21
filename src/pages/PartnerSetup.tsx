@@ -57,7 +57,7 @@ const PartnerSetup = () => {
     if (profile?.name) setName(profile.name);
 
     const { data: chef, error: fetchError } = await (supabase as any)
-      .from("chefs").select("id, phone_number, area")
+      .from("chefs").select("id, phone_number")
       .eq("user_id", uid).maybeSingle();
 
     if (fetchError) {
@@ -99,7 +99,7 @@ const PartnerSetup = () => {
       }
 
       const { error: updateError } = await (supabase as any).from("chefs")
-        .update({ phone_number: phone, area }).eq("id", activeChefId);
+        .update({ phone_number: phone }).eq("id", activeChefId);
       if (updateError) throw new Error("Could not save profile: " + updateError.message);
 
       setStep(2);
@@ -141,7 +141,7 @@ const PartnerSetup = () => {
       const { error: mealError } = await (supabase as any).from("meals").insert({
         chef_id: userId,
         title: mealTitle,
-        description: `Fresh homemade ${mealTitle} prepared in ${area}.`,
+        description: `Fresh homemade ${mealTitle} prepared in Nizampet.`,
         price: Number(mealPrice),
         category: mealCategory.toLowerCase(),
         image_url: imageUrl,
