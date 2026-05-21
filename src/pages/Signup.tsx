@@ -76,12 +76,12 @@ const Signup = () => {
         return;
       }
 
-      if (data.user && !data.session) {
-        // Email confirmation required
-        setAwaitingConfirmation(true);
-      } else if (data.user && data.session) {
+      if (data.user && data.session) {
         toast.success("Account created! Welcome to MyHomePlate!");
         navigate(role === "chef" ? "/partner/setup" : "/");
+      } else if (data.user && !data.session) {
+        // Email confirmation still enabled — show waiting screen
+        setAwaitingConfirmation(true);
       }
     } catch (error) {
       toast.error("An unexpected error occurred");
@@ -102,6 +102,11 @@ const Signup = () => {
               We sent a confirmation link to <strong>{email}</strong>.<br />
               Click the link in that email to activate your account.
             </CardDescription>
+            {role === "chef" && (
+              <div className="bg-orange-50 rounded-xl p-3 text-sm text-orange-700">
+                Already confirmed? <a href="/partner/setup" className="font-bold underline">Click here to set up your kitchen →</a>
+              </div>
+            )}
             {resent && (
               <p className="text-sm text-green-600 font-medium">Confirmation email resent!</p>
             )}
