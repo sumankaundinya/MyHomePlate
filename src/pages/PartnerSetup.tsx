@@ -17,6 +17,7 @@ const PartnerSetup = () => {
   const [saving, setSaving] = useState(false);
   const [userId, setUserId] = useState<string | null>(null);
   const [chefId, setChefId] = useState<string | null>(null);
+  const initialised = useRef(false);
 
   // Step 1
   const [name, setName] = useState("");
@@ -49,7 +50,8 @@ const PartnerSetup = () => {
   }, []);
 
   const initUser = async (uid: string) => {
-    if (userId) return; // already initialised
+    if (initialised.current) return;
+    initialised.current = true;
     setUserId(uid);
 
     const { data: profile } = await supabase
@@ -88,13 +90,19 @@ const PartnerSetup = () => {
     try {
       await supabase.from("profiles").update({ name }).eq("id", userId);
 
-      // If chef record wasn't created yet, create it now
+      // If chef record wasn't created yet, create or fetch it now
       let activeChefId = chefId;
       if (!activeChefId) {
-        const { data: newChef, error: insertError } = await (supabase as any)
-          .from("chefs").insert({ user_id: userId }).select("id").single();
-        if (insertError) throw new Error("Could not create chef profile: " + insertError.message);
-        activeChefId = newChef.id;
+        const { data: existing } = await (supabase as any)
+          .from("chefs").select("id").eq("user_id", userId).maybeSingle();
+        if (existing) {
+          activeChefId = existing.id;
+        } else {
+          const { data: newChef, error: insertError } = await (supabase as any)
+            .from("chefs").insert({ user_id: userId }).select("id").single();
+          if (insertError) throw new Error("Could not create chef profile: " + insertError.message);
+          activeChefId = newChef.id;
+        }
         setChefId(activeChefId);
       }
 
