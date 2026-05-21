@@ -30,28 +30,51 @@ const PartnerSetup = () => {
   const [mealImage, setMealImage] = useState<File | null>(null);
   const [mealImagePreview, setMealImagePreview] = useState<string | null>(null);
 
-  useEffect(() => { loadUser(); }, []);
+  useEffect(() => {
+    // onAuthStateChange handles email confirmation redirect tokens properly
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      (event, session) => {
+        if (session?.user) {
+          initUser(session.user.id);
+        } else if (event === "SIGNED_OUT") {
+          navigate("/login");
+        }
+      }
+    );
+    // Also check immediately for already-logged-in users
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (session?.user) initUser(session.user.id);
+    });
+    return () => subscription.unsubscribe();
+  }, []);
 
-  const loadUser = async () => {
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) { navigate("/login"); return; }
-    setUserId(user.id);
+  const initUser = async (uid: string) => {
+    if (userId) return; // already initialised
+    setUserId(uid);
 
     const { data: profile } = await supabase
-      .from("profiles").select("name").eq("id", user.id).single();
+      .from("profiles").select("name").eq("id", uid).single();
     if (profile?.name) setName(profile.name);
 
-    const { data: chef } = await (supabase as any)
+    const { data: chef, error: fetchError } = await (supabase as any)
       .from("chefs").select("id, phone_number, area")
-      .eq("user_id", user.id).maybeSingle();
+      .eq("user_id", uid).maybeSingle();
+
+    if (fetchError) {
+      console.error("Error fetching chef:", fetchError);
+    }
 
     if (chef) {
       setChefId(chef.id);
       if (chef.phone_number) setPhone(chef.phone_number);
       if (chef.area) setArea(chef.area);
     } else {
-      const { data: newChef } = await (supabase as any)
-        .from("chefs").insert({ user_id: user.id }).select("id").single();
+      const { data: newChef, error: insertError } = await (supabase as any)
+        .from("chefs").insert({ user_id: uid }).select("id").single();
+      if (insertError) {
+        console.error("Error creating chef profile:", insertError);
+        toast.error("Failed to create chef profile. Please try again.");
+      }
       if (newChef) setChefId(newChef.id);
     }
   };
@@ -59,12 +82,26 @@ const PartnerSetup = () => {
   const saveStep1 = async () => {
     if (!name.trim()) { toast.error("Please enter your name"); return; }
     if (!phone.trim()) { toast.error("Please enter your phone number"); return; }
+    if (!userId) { toast.error("Session not ready — please wait a moment and try again"); return; }
 
     setSaving(true);
     try {
-      await supabase.from("profiles").update({ name }).eq("id", userId!);
-      await (supabase as any).from("chefs")
-        .update({ phone_number: phone, area }).eq("id", chefId!);
+      await supabase.from("profiles").update({ name }).eq("id", userId);
+
+      // If chef record wasn't created yet, create it now
+      let activeChefId = chefId;
+      if (!activeChefId) {
+        const { data: newChef, error: insertError } = await (supabase as any)
+          .from("chefs").insert({ user_id: userId }).select("id").single();
+        if (insertError) throw new Error("Could not create chef profile: " + insertError.message);
+        activeChefId = newChef.id;
+        setChefId(activeChefId);
+      }
+
+      const { error: updateError } = await (supabase as any).from("chefs")
+        .update({ phone_number: phone, area }).eq("id", activeChefId);
+      if (updateError) throw new Error("Could not save profile: " + updateError.message);
+
       setStep(2);
     } catch (e: any) {
       toast.error(e.message || "Failed to save");
@@ -101,7 +138,7 @@ const PartnerSetup = () => {
         }
       }
 
-      await (supabase as any).from("meals").insert({
+      const { error: mealError } = await (supabase as any).from("meals").insert({
         chef_id: userId,
         title: mealTitle,
         description: `Fresh homemade ${mealTitle} prepared in ${area}.`,
@@ -111,6 +148,7 @@ const PartnerSetup = () => {
         available: true,
       });
 
+      if (mealError) throw new Error("Could not save meal: " + mealError.message);
       setStep(3);
     } catch (e: any) {
       toast.error(e.message || "Failed to save meal");
