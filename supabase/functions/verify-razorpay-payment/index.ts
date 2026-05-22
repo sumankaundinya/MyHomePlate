@@ -153,10 +153,32 @@ serve(async (req) => {
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
     );
 
+    // Verify this razorpay_order_id actually belongs to this internal_order_id
+    const { data: orderCheck } = await supabase
+      .from("orders")
+      .select("id, razorpay_order_id")
+      .eq("id", internal_order_id)
+      .single();
+
+    if (!orderCheck) {
+      return new Response(JSON.stringify({ error: "Order not found" }), {
+        status: 404,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    if (orderCheck.razorpay_order_id && orderCheck.razorpay_order_id !== razorpay_order_id) {
+      return new Response(JSON.stringify({ error: "Order ID mismatch" }), {
+        status: 400,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
     const { error: updateError } = await supabase
       .from("orders")
       .update({
         payment_id: razorpay_payment_id,
+        razorpay_order_id: razorpay_order_id,
         payment_status: "paid",
         status: "pending",
       })
