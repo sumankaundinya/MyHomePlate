@@ -2,6 +2,7 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2.38.4";
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL") || "";
 const SUPABASE_SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || "";
+const WEBHOOK_SECRET = Deno.env.get("GUPSHUP_WEBHOOK_SECRET") || "";
 
 // Keywords that count as "interested" in Telugu and English
 const INTEREST_KEYWORDS = [
@@ -35,6 +36,16 @@ Deno.serve(async (req) => {
 
   if (req.method !== "POST") {
     return new Response("Method not allowed", { status: 405 });
+  }
+
+  // Validate webhook secret if configured
+  if (WEBHOOK_SECRET) {
+    const incomingSecret = req.headers.get("x-gupshup-secret") ||
+                           req.headers.get("x-webhook-secret") || "";
+    if (incomingSecret !== WEBHOOK_SECRET) {
+      console.log("Webhook secret mismatch — rejecting request");
+      return new Response("OK", { status: 200 }); // Return 200 to avoid Gupshup retries
+    }
   }
 
   try {

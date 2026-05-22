@@ -111,6 +111,18 @@ async function sendWhatsApp(
   }
 }
 
+async function assertAdmin(req: Request): Promise<string | null> {
+  const authHeader = req.headers.get("Authorization");
+  if (!authHeader) return "Missing authorization header";
+  const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);
+  const { data: { user }, error } = await supabase.auth.getUser(authHeader.replace("Bearer ", ""));
+  if (error || !user) return "Invalid token";
+  const { data: role } = await supabase.from("user_roles")
+    .select("role").eq("user_id", user.id).eq("role", "admin").single();
+  if (!role) return "Admin access required";
+  return null;
+}
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response("OK", {
@@ -126,6 +138,14 @@ Deno.serve(async (req) => {
     return new Response(JSON.stringify({ error: "Method not allowed" }), {
       status: 405,
       headers: { "Content-Type": "application/json" },
+    });
+  }
+
+  const authError = await assertAdmin(req);
+  if (authError) {
+    return new Response(JSON.stringify({ error: authError }), {
+      status: 401,
+      headers: { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" },
     });
   }
 
