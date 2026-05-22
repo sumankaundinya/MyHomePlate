@@ -138,10 +138,10 @@ const PartnerSetup = () => {
         const ext = mealImage.name.split(".").pop();
         const path = `meals/${chefId}/${Date.now()}.${ext}`;
         const { error: uploadError } = await supabase.storage
-          .from("meal-images").upload(path, mealImage);
+          .from("images").upload(path, mealImage);
         if (!uploadError) {
           const { data: urlData } = supabase.storage
-            .from("meal-images").getPublicUrl(path);
+            .from("images").getPublicUrl(path);
           imageUrl = urlData.publicUrl;
         }
       }
