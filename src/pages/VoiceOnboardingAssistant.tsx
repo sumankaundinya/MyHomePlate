@@ -47,9 +47,21 @@ interface CallLog {
   call_duration_seconds: number | null;
 }
 
+interface WhatsAppMessage {
+  id: string;
+  contact_id: string | null;
+  phone_number: string;
+  message_text: string;
+  message_type: string;
+  is_read: boolean;
+  created_at: string;
+}
+
 const VoiceOnboardingAssistant = () => {
   const [contacts, setContacts] = useState<OnboardingContact[]>([]);
   const [callLogs, setCallLogs] = useState<CallLog[]>([]);
+  const [whatsappMessages, setWhatsappMessages] = useState<WhatsAppMessage[]>([]);
+  const [inboxUnread, setInboxUnread] = useState(0);
   const [loading, setLoading] = useState(true);
   const [calling, setCalling] = useState(false);
   const [sendingWhatsApp, setSendingWhatsApp] = useState(false);
@@ -72,6 +84,24 @@ const VoiceOnboardingAssistant = () => {
   useEffect(() => {
     fetchContacts();
     fetchCallLogs();
+    fetchWhatsAppMessages();
+
+    // Live updates: new inbound messages appear instantly
+    const channel = supabase
+      .channel("whatsapp_inbox_live")
+      .on(
+        "postgres_changes",
+        { event: "INSERT", schema: "public", table: "whatsapp_messages" },
+        (payload) => {
+          const msg = payload.new as WhatsAppMessage;
+          setWhatsappMessages((prev) => [msg, ...prev]);
+          setInboxUnread((n) => n + 1);
+          toast.info(`New reply from ${msg.phone_number}`);
+        }
+      )
+      .subscribe();
+
+    return () => { supabase.removeChannel(channel); };
   }, []);
 
   const fetchContacts = async (showToast = false) => {
@@ -92,6 +122,42 @@ const VoiceOnboardingAssistant = () => {
       setLoading(false);
       setRefreshing(false);
     }
+  };
+
+  const fetchWhatsAppMessages = async () => {
+    try {
+      const { data, error } = await (supabase as any)
+        .from("whatsapp_messages")
+        .select("*")
+        .order("created_at", { ascending: false })
+        .limit(100);
+      if (error) throw error;
+      const msgs: WhatsAppMessage[] = data || [];
+      setWhatsappMessages(msgs);
+      setInboxUnread(msgs.filter((m) => !m.is_read).length);
+    } catch (error) {
+      console.error("Error fetching WhatsApp messages:", error);
+    }
+  };
+
+  const markRead = async (id: string) => {
+    await (supabase as any)
+      .from("whatsapp_messages")
+      .update({ is_read: true })
+      .eq("id", id);
+    setWhatsappMessages((prev) =>
+      prev.map((m) => (m.id === id ? { ...m, is_read: true } : m))
+    );
+    setInboxUnread((n) => Math.max(0, n - 1));
+  };
+
+  const markAllRead = async () => {
+    await (supabase as any)
+      .from("whatsapp_messages")
+      .update({ is_read: true })
+      .eq("is_read", false);
+    setWhatsappMessages((prev) => prev.map((m) => ({ ...m, is_read: true })));
+    setInboxUnread(0);
   };
 
   const fetchCallLogs = async () => {
@@ -677,6 +743,89 @@ const VoiceOnboardingAssistant = () => {
               </div>
             </div>
           )}
+
+          {/* WhatsApp Inbox */}
+          <Card>
+            <CardHeader>
+              <div className="flex items-center justify-between flex-wrap gap-2">
+                <CardTitle className="flex items-center gap-2">
+                  <MessageCircle className="h-5 w-5 text-green-600" />
+                  WhatsApp Inbox
+                  {inboxUnread > 0 && (
+                    <Badge variant="destructive">{inboxUnread} new</Badge>
+                  )}
+                </CardTitle>
+                <div className="flex gap-2">
+                  {inboxUnread > 0 && (
+                    <Button variant="outline" size="sm" onClick={markAllRead}>
+                      Mark all read
+                    </Button>
+                  )}
+                  <Button variant="outline" size="sm" onClick={fetchWhatsAppMessages}>
+                    Refresh
+                  </Button>
+                </div>
+              </div>
+            </CardHeader>
+            <CardContent>
+              {whatsappMessages.length === 0 ? (
+                <p className="text-muted-foreground text-center py-4">
+                  No replies yet — messages from recipients will appear here
+                </p>
+              ) : (
+                <div className="overflow-x-auto">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead className="w-2"></TableHead>
+                        <TableHead>From</TableHead>
+                        <TableHead>Message</TableHead>
+                        <TableHead className="whitespace-nowrap">Time</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {whatsappMessages.map((msg) => {
+                        const contact = contacts.find((c) => c.id === msg.contact_id);
+                        return (
+                          <TableRow
+                            key={msg.id}
+                            className={
+                              !msg.is_read
+                                ? "bg-green-50 dark:bg-green-950/20 cursor-pointer"
+                                : "cursor-pointer"
+                            }
+                            onClick={() => !msg.is_read && markRead(msg.id)}
+                          >
+                            <TableCell>
+                              {!msg.is_read && (
+                                <div className="w-2 h-2 rounded-full bg-green-500" />
+                              )}
+                            </TableCell>
+                            <TableCell>
+                              <div className="font-mono text-sm">{msg.phone_number}</div>
+                              {contact && (
+                                <div className="text-xs text-muted-foreground">
+                                  {contact.name || contact.contact_type}
+                                </div>
+                              )}
+                            </TableCell>
+                            <TableCell className="max-w-xs">
+                              <p className={`text-sm truncate ${!msg.is_read ? "font-medium" : ""}`}>
+                                {msg.message_text}
+                              </p>
+                            </TableCell>
+                            <TableCell className="text-sm text-muted-foreground whitespace-nowrap">
+                              {new Date(msg.created_at).toLocaleString()}
+                            </TableCell>
+                          </TableRow>
+                        );
+                      })}
+                    </TableBody>
+                  </Table>
+                </div>
+              )}
+            </CardContent>
+          </Card>
 
           {/* Call Logs */}
           <Card>
