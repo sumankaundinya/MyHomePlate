@@ -4,7 +4,6 @@ const SUPABASE_URL = Deno.env.get("SUPABASE_URL") || "";
 const SUPABASE_SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || "";
 const WEBHOOK_SECRET = Deno.env.get("GUPSHUP_WEBHOOK_SECRET") || "";
 
-// Keywords that count as "interested" in Telugu and English
 const INTEREST_KEYWORDS = [
   "ఆసక్తి", "ఆసక్తి ఉంది", "interested", "yes", "అవును", "ok", "okay",
   "haan", "ha", "han", "sure", "tell me more", "చెప్పండి",
@@ -17,12 +16,11 @@ function isInterested(text: string): boolean {
 
 function phoneVariants(raw: string): string[] {
   const digits = raw.replace(/\D/g, "");
-  // Build several formats to try — we don't know if it's Indian or international
   const variants = new Set<string>();
-  variants.add("+" + digits);          // +4571361727 or +919876543210
-  variants.add(digits);                // 4571361727  or 919876543210
+  variants.add("+" + digits);
+  variants.add(digits);
   if (!digits.startsWith("91")) {
-    variants.add("+91" + digits.slice(-10)); // Indian fallback
+    variants.add("+91" + digits.slice(-10));
     variants.add("91" + digits.slice(-10));
   }
   return Array.from(variants);
@@ -38,13 +36,12 @@ Deno.serve(async (req) => {
     return new Response("Method not allowed", { status: 405 });
   }
 
-  // Validate webhook secret if configured
   if (WEBHOOK_SECRET) {
     const incomingSecret = req.headers.get("x-gupshup-secret") ||
                            req.headers.get("x-webhook-secret") || "";
     if (incomingSecret !== WEBHOOK_SECRET) {
       console.log("Webhook secret mismatch — rejecting request");
-      return new Response("OK", { status: 200 }); // Return 200 to avoid Gupshup retries
+      return new Response("OK", { status: 200 });
     }
   }
 
@@ -55,7 +52,6 @@ Deno.serve(async (req) => {
     if (contentType.includes("application/json")) {
       body = await req.json();
     } else {
-      // Gupshup sometimes sends form-encoded with a "payload" field
       const text = await req.text();
       const params = new URLSearchParams(text);
       const payloadStr = params.get("payload");
@@ -64,7 +60,6 @@ Deno.serve(async (req) => {
 
     console.log("Webhook body:", JSON.stringify(body));
 
-    // Gupshup message envelope: { type, payload: { type, payload: { text }, sender: { phone } } }
     const type = body.type || body.payload?.type;
     if (type !== "message") {
       return new Response("OK", { status: 200 });
@@ -83,6 +78,17 @@ Deno.serve(async (req) => {
       inner.text ||
       "";
 
+    const messageType: string =
+      inner.payload?.payload?.type ||
+      inner.payload?.type ||
+      "text";
+
+    const gupshupMessageId: string =
+      inner.payload?.id ||
+      inner.id ||
+      body.messageId ||
+      "";
+
     if (!senderPhone || !messageText) {
       console.log("No sender or text — skipping");
       return new Response("OK", { status: 200 });
@@ -90,31 +96,56 @@ Deno.serve(async (req) => {
 
     console.log(`From: ${senderPhone} | Text: "${messageText}"`);
 
-    if (!isInterested(messageText)) {
-      console.log("Not an interest reply — skipping");
-      return new Response("OK", { status: 200 });
-    }
+    const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);
 
+    // Look up the contact for this phone number
     const variants = phoneVariants(senderPhone);
     const orFilter = variants.map((v) => `phone_number.eq.${v}`).join(",");
 
-    const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);
-
-    const { error } = await supabase
+    const { data: contacts } = await supabase
       .from("onboarding_contacts")
-      .update({
-        contact_status: "interested",
-        updated_at: new Date().toISOString(),
-      })
-      .or(orFilter);
+      .select("id")
+      .or(orFilter)
+      .limit(1);
 
-    if (error) {
-      console.error("Supabase update error:", error);
+    const contactId: string | null = contacts?.[0]?.id ?? null;
+
+    // Save every inbound message regardless of content
+    const { error: insertError } = await supabase
+      .from("whatsapp_messages")
+      .insert({
+        contact_id: contactId,
+        phone_number: senderPhone,
+        message_text: messageText,
+        message_type: messageType,
+        direction: "inbound",
+        gupshup_message_id: gupshupMessageId || null,
+        is_read: false,
+      });
+
+    if (insertError) {
+      console.error("Failed to save message:", insertError);
     } else {
-      console.log(`Marked ${variants[0]} as interested`);
+      console.log(`Saved message from ${senderPhone} (contact: ${contactId ?? "unknown"})`);
     }
 
-    // Always return 200 so Gupshup doesn't retry
+    // Update contact status on keyword match
+    if (contactId && isInterested(messageText)) {
+      const { error: updateError } = await supabase
+        .from("onboarding_contacts")
+        .update({
+          contact_status: "interested",
+          updated_at: new Date().toISOString(),
+        })
+        .eq("id", contactId);
+
+      if (updateError) {
+        console.error("Supabase update error:", updateError);
+      } else {
+        console.log(`Marked ${senderPhone} as interested`);
+      }
+    }
+
     return new Response("OK", { status: 200 });
   } catch (e: any) {
     console.error("Webhook error:", e);

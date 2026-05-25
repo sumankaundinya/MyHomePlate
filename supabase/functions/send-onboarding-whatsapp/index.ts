@@ -7,25 +7,37 @@ const GUPSHUP_ONBOARDING_TEMPLATE_ID = Deno.env.get("GUPSHUP_ONBOARDING_TEMPLATE
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL") || "";
 const SUPABASE_SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || "";
 
-const TELUGU_MESSAGE = `నమస్కారం! మీరు ఇంటి నుండి వంట చేసి డబ్బు సంపాదించాలనుకుంటున్నారా?
+const TELUGU_MESSAGE = `నమస్కారం! 👋
 
-MyHomePlate లో పార్టనర్ చెఫ్ గా చేరడం పూర్తిగా ఉచితం. మీ ఇంటి వంటను మీ పక్కనే ఉన్న వారికి అమ్మి సొంతంగా సంపాదించండి.
+మీరు ఇంట్లో చేసే వంట డబ్బు సంపాదించే అవకాశంగా మారితే? 🍛
 
-ఆసక్తి ఉంటే "Interested" అని రిప్లై చేయండి - మేము మీకు కాల్ చేస్తాం!
+*MyHomePlate* లో పార్టనర్ చెఫ్ గా చేరండి — మీ ఇంటి వంటను మీ పక్కనే ఉన్న వారికి అమ్మి, మీ సమయంలో మీరు సంపాదించండి!
 
----
+🚫 Zomato & Swiggy: 25–30% కమీషన్ తీసుకుంటారు
+✅ MyHomePlate:
+   👉 మొదటి 6 నెలలు *0% కమీషన్* — మొత్తం మీకే!
+   👉 తర్వాత 1 సంవత్సరం కేవలం *10%* మాత్రమే
+   👉 ఆ తర్వాత *15%* — అది కూడా Zomato కంటే చాలా తక్కువ!
 
-Hi! Want to earn money cooking from home?
+చేరడం పూర్తిగా ఉచితం. ఒక్కసారి చూడండి 👉 www.myhomeplate.in
 
-Joining MyHomePlate as a partner chef is completely free. Cook meals for people in your neighborhood and earn on your own terms.
+ఆసక్తి ఉంటే *"Interested"* అని రిప్లై చేయండి — మేము మీకు కాల్ చేస్తాం! 📞`;
 
-Just reply "Interested" - we will call you back!`;
+const ENGLISH_MESSAGE = `Hi! 👋
 
-const ENGLISH_MESSAGE = `Hi! Want to earn money cooking from home?
+What if the food you already cook at home could earn you money? 🍛
 
-Joining MyHomePlate as a partner chef is completely free. Cook meals for people in your neighborhood and earn on your own terms.
+Join *MyHomePlate* as a partner chef — sell home-cooked meals to people nearby and earn on your own schedule!
 
-Just reply "Interested" - we will call you back!`;
+🚫 Zomato & Swiggy take 25–30% commission from every order
+✅ MyHomePlate:
+   👉 First 6 months: *0% commission* — you keep every rupee!
+   👉 Next 1 year: just *10%* commission
+   👉 After that: only *15%* — still nearly half of what others charge!
+
+Joining is completely free. Check it out 👉 www.myhomeplate.in
+
+Just reply *"Interested"* and we'll call you back! 📞`;
 
 function formatPhone(phoneNumber: string): string {
   // Gupshup wants digits only, no + prefix (e.g. 919876543210)
