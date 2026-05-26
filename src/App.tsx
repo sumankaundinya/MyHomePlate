@@ -22,6 +22,7 @@ import AdminSMSPanel from "./pages/AdminSMSPanel";
 import VoiceOnboardingAssistant from "./pages/VoiceOnboardingAssistant";
 import PartnerSetup from "./pages/PartnerSetup";
 import Subscriptions from "./pages/Subscriptions";
+import FieldAgentApply from "./pages/FieldAgentApply";
 import PaymentHistory from "./pages/PaymentHistory";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { InstallBanner } from "@/components/InstallBanner";
@@ -55,6 +56,7 @@ const App = () => (
           <Route path="/orders" element={<Orders />} />
           <Route path="/subscriptions" element={<Subscriptions />} />
           <Route path="/partner/payments" element={<PaymentHistory />} />
+          <Route path="/apply" element={<FieldAgentApply />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>
