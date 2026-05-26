@@ -160,6 +160,24 @@ const VoiceOnboardingAssistant = () => {
     setInboxUnread(0);
   };
 
+  const deleteMessage = async (id: string) => {
+    await (supabase as any).from("whatsapp_messages").delete().eq("id", id);
+    setWhatsappMessages((prev) => prev.filter((m) => m.id !== id));
+    setInboxUnread((n) => {
+      const wasUnread = whatsappMessages.find((m) => m.id === id)?.is_read === false;
+      return wasUnread ? Math.max(0, n - 1) : n;
+    });
+  };
+
+  const clearReadMessages = async () => {
+    if (!window.confirm("Delete all read messages?")) return;
+    await (supabase as any)
+      .from("whatsapp_messages")
+      .delete()
+      .eq("is_read", true);
+    setWhatsappMessages((prev) => prev.filter((m) => !m.is_read));
+  };
+
   const fetchCallLogs = async () => {
     try {
       const { data, error } = await (supabase as any)
@@ -761,6 +779,12 @@ const VoiceOnboardingAssistant = () => {
                       Mark all read
                     </Button>
                   )}
+                  {whatsappMessages.some((m) => m.is_read) && (
+                    <Button variant="outline" size="sm" onClick={clearReadMessages}>
+                      <Trash2 className="h-4 w-4 mr-1" />
+                      Clear read
+                    </Button>
+                  )}
                   <Button variant="outline" size="sm" onClick={fetchWhatsAppMessages}>
                     Refresh
                   </Button>
@@ -781,6 +805,7 @@ const VoiceOnboardingAssistant = () => {
                         <TableHead>From</TableHead>
                         <TableHead>Message</TableHead>
                         <TableHead className="whitespace-nowrap">Time</TableHead>
+                        <TableHead></TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -816,6 +841,15 @@ const VoiceOnboardingAssistant = () => {
                             </TableCell>
                             <TableCell className="text-sm text-muted-foreground whitespace-nowrap">
                               {new Date(msg.created_at).toLocaleString()}
+                            </TableCell>
+                            <TableCell>
+                              <Button
+                                size="sm"
+                                variant="ghost"
+                                onClick={(e) => { e.stopPropagation(); deleteMessage(msg.id); }}
+                              >
+                                <Trash2 className="h-4 w-4 text-muted-foreground hover:text-destructive" />
+                              </Button>
                             </TableCell>
                           </TableRow>
                         );
