@@ -3,8 +3,10 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <link rel="icon" type="image/png" href="/logo.png" />
-    <link rel="apple-touch-icon" href="/logo.png" />
+    <link rel="icon" href="/favicon.ico" sizes="48x48" />
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <link rel="icon" href="/favicon-96x96.png" type="image/png" sizes="96x96" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
     <link rel="manifest" href="/manifest.json" />
     <meta name="theme-color" content="#f97316" />
     <meta name="mobile-web-app-capable" content="yes" />
@@ -25,16 +27,30 @@
       "@type": "WebSite",
       "name": "MyHomePlate",
       "url": "https://www.myhomeplate.in",
+      "description": "A home-cooked meal marketplace connecting local home chefs with food lovers."
+    }
+    </script>
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "Organization",
+      "name": "MyHomePlate",
+      "url": "https://www.myhomeplate.in",
+      "logo": "https://www.myhomeplate.in/logo.png",
       "description": "A home-cooked meal marketplace connecting local home chefs with food lovers.",
+      "foundingDate": "2024",
       "founder": {
         "@type": "Person",
-        "name": "Suman Kumar Kaundinya",
-        "email": "sumanj241118@gmail.com"
-      },
-      "author": {
-        "@type": "Person",
         "name": "Suman Kumar Kaundinya"
-      }
+      },
+      "contactPoint": {
+        "@type": "ContactPoint",
+        "telephone": "+916303231913",
+        "contactType": "customer service"
+      },
+      "sameAs": [
+        "https://www.linkedin.com/company/myhomeplate"
+      ]
     }
     </script>
 
@@ -47,11 +63,11 @@
       content="Connect with local home chefs cooking authentic Indian dishes"
     />
     <meta property="og:type" content="website" />
-    <meta property="og:image" content="/images/background.jpg" />
+    <meta property="og:image" content="https://www.myhomeplate.in/logo.png" />
 
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:site" content="@MyHomePlate" />
-    <meta name="twitter:image" content="/images/background.jpg" />
+    <meta name="twitter:image" content="https://www.myhomeplate.in/logo.png" />
 
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
