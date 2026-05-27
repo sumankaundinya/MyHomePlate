@@ -155,6 +155,10 @@ const Navbar = () => {
             <span>Voice Onboarding</span>
           </Link>
         )}
+        <Link to="/apply" className={linkClass} onClick={handleClick}>
+          {mobile && <span>💼</span>}
+          <span className="text-orange-500 font-semibold">We're Hiring</span>
+        </Link>
       </>
     );
   };
@@ -174,6 +178,16 @@ const Navbar = () => {
               MyHomePlate
             </span>
           </Link>
+
+          {/* Desktop Careers Link */}
+          <div className="hidden md:flex items-center">
+            <Link
+              to="/apply"
+              className="text-sm font-semibold text-orange-500 hover:text-orange-600 transition-colors border border-orange-300 rounded-full px-4 py-1.5 hover:bg-orange-50"
+            >
+              💼 We're Hiring
+            </Link>
+          </div>
 
           {/* User Menu / Auth Buttons */}
           <div className="flex items-center space-x-4">

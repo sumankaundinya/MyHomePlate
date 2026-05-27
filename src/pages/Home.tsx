@@ -103,6 +103,32 @@ const Home = () => {
         <PlatformComparison />
       </AnimatedSection>
 
+      {/* We're Hiring Banner */}
+      <AnimatedSection>
+        <section className="py-12 bg-amber-50 border-y border-amber-200">
+          <div className="container mx-auto px-4">
+            <div className="flex flex-col md:flex-row items-center justify-between gap-6 max-w-4xl mx-auto">
+              <div>
+                <div className="flex items-center gap-2 mb-2">
+                  <span className="text-2xl">💼</span>
+                  <span className="text-sm font-semibold text-amber-600 uppercase tracking-wide">Now Hiring</span>
+                </div>
+                <h3 className="text-2xl font-bold text-gray-800 mb-1">Join Us as a Field Agent</h3>
+                <p className="text-gray-600 max-w-lg">
+                  Help home cooks in your area earn money with MyHomePlate. Flexible hours, work in your own neighborhood, earn ₹500 per chef you onboard.
+                </p>
+              </div>
+              <a
+                href="/apply"
+                className="shrink-0 bg-orange-500 hover:bg-orange-600 text-white font-semibold px-8 py-3 rounded-full transition-colors shadow-sm whitespace-nowrap"
+              >
+                Apply Now →
+              </a>
+            </div>
+          </div>
+        </section>
+      </AnimatedSection>
+
       {/* Final CTA */}
       <AnimatedSection>
         <section className="py-20 bg-gradient-hero text-white">
