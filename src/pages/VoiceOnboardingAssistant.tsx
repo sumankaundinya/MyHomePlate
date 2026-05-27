@@ -161,20 +161,28 @@ const VoiceOnboardingAssistant = () => {
   };
 
   const deleteMessage = async (id: string) => {
-    await (supabase as any).from("whatsapp_messages").delete().eq("id", id);
+    const wasUnread = whatsappMessages.find((m) => m.id === id)?.is_read === false;
+    const { error } = await (supabase as any).from("whatsapp_messages").delete().eq("id", id);
+    if (error) {
+      console.error("Failed to delete message:", error);
+      toast.error("Delete failed: " + error.message);
+      return;
+    }
     setWhatsappMessages((prev) => prev.filter((m) => m.id !== id));
-    setInboxUnread((n) => {
-      const wasUnread = whatsappMessages.find((m) => m.id === id)?.is_read === false;
-      return wasUnread ? Math.max(0, n - 1) : n;
-    });
+    if (wasUnread) setInboxUnread((n) => Math.max(0, n - 1));
   };
 
   const clearReadMessages = async () => {
     if (!window.confirm("Delete all read messages?")) return;
-    await (supabase as any)
+    const { error } = await (supabase as any)
       .from("whatsapp_messages")
       .delete()
       .eq("is_read", true);
+    if (error) {
+      console.error("Failed to clear read messages:", error);
+      toast.error("Delete failed: " + error.message);
+      return;
+    }
     setWhatsappMessages((prev) => prev.filter((m) => !m.is_read));
   };
 

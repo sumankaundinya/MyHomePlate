@@ -11,8 +11,8 @@ interface SEOHeadProps {
 const SEOHead = ({
   title = "MyHomePlate - Authentic Indian Home Cooking",
   description = "Discover delicious homemade Indian dishes from local chefs. Order authentic home-cooked meals or become a home chef on MyHomePlate.",
-  image = "/images/background.jpg",
-  url = "https://myhomeplate.com",
+  image = "https://www.myhomeplate.in/images/background.jpg",
+  url = "https://www.myhomeplate.in",
   type = "website",
 }: SEOHeadProps) => {
   const fullTitle = title.includes("MyHomePlate")
