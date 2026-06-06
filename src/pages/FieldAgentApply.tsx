@@ -89,8 +89,8 @@ const FieldAgentApply = () => {
         <p className="text-orange-100 text-sm mb-6">Homemade food, delivered with love</p>
         <h2 className="text-2xl font-semibold mb-3">Join Us as a Field Agent</h2>
         <p className="text-orange-100 max-w-xl mx-auto text-sm leading-relaxed">
-          Help home cooks in your area earn money by partnering with MyHomePlate.
-          Flexible hours, good pay, and a chance to build your own network.
+          Visit home cooks in your area, help them join MyHomePlate, and earn
+          ₹200 for every chef you successfully onboard. Flexible hours, no targets.
         </p>
       </div>
 
@@ -99,8 +99,8 @@ const FieldAgentApply = () => {
         <div className="grid grid-cols-3 gap-4 mb-8 text-center">
           <div className="bg-white rounded-xl p-4 shadow-sm">
             <div className="text-2xl mb-1">💰</div>
-            <p className="text-xs font-semibold text-gray-700">Good Earnings</p>
-            <p className="text-xs text-gray-500">Per chef onboarded</p>
+            <p className="text-xs font-semibold text-gray-700">₹200 Per Chef</p>
+            <p className="text-xs text-gray-500">Every verified onboarding</p>
           </div>
           <div className="bg-white rounded-xl p-4 shadow-sm">
             <div className="text-2xl mb-1">🕐</div>
