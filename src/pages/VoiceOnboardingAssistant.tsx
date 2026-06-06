@@ -23,6 +23,12 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Phone, Plus, Upload, CheckCircle2, XCircle, Clock, MessageCircle, Send, Trash2, Pencil } from "lucide-react";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { toast } from "sonner";
 
 interface OnboardingContact {
@@ -62,6 +68,7 @@ const VoiceOnboardingAssistant = () => {
   const [callLogs, setCallLogs] = useState<CallLog[]>([]);
   const [whatsappMessages, setWhatsappMessages] = useState<WhatsAppMessage[]>([]);
   const [inboxUnread, setInboxUnread] = useState(0);
+  const [selectedMessage, setSelectedMessage] = useState<WhatsAppMessage | null>(null);
   const [loading, setLoading] = useState(true);
   const [calling, setCalling] = useState(false);
   const [sendingWhatsApp, setSendingWhatsApp] = useState(false);
@@ -827,7 +834,10 @@ const VoiceOnboardingAssistant = () => {
                                 ? "bg-green-50 dark:bg-green-950/20 cursor-pointer"
                                 : "cursor-pointer"
                             }
-                            onClick={() => !msg.is_read && markRead(msg.id)}
+                            onClick={() => {
+                              setSelectedMessage(msg);
+                              if (!msg.is_read) markRead(msg.id);
+                            }}
                           >
                             <TableCell>
                               {!msg.is_read && (
@@ -868,6 +878,46 @@ const VoiceOnboardingAssistant = () => {
               )}
             </CardContent>
           </Card>
+
+          {/* Message detail dialog */}
+          <Dialog open={!!selectedMessage} onOpenChange={(open) => !open && setSelectedMessage(null)}>
+            <DialogContent className="max-w-md">
+              <DialogHeader>
+                <DialogTitle className="flex items-center gap-2">
+                  <MessageCircle className="h-5 w-5 text-green-600" />
+                  WhatsApp Message
+                </DialogTitle>
+              </DialogHeader>
+              {selectedMessage && (() => {
+                const contact = contacts.find((c) => c.id === selectedMessage.contact_id);
+                return (
+                  <div className="space-y-4">
+                    <div className="text-sm text-muted-foreground space-y-1">
+                      <div><span className="font-medium text-foreground">From:</span> {selectedMessage.phone_number}</div>
+                      {contact?.name && <div><span className="font-medium text-foreground">Name:</span> {contact.name}</div>}
+                      {contact?.area && <div><span className="font-medium text-foreground">Area:</span> {contact.area}</div>}
+                      <div><span className="font-medium text-foreground">Time:</span> {new Date(selectedMessage.created_at).toLocaleString()}</div>
+                    </div>
+                    <div className="bg-green-50 border border-green-100 rounded-lg p-4">
+                      <p className="text-sm whitespace-pre-wrap break-words">{selectedMessage.message_text}</p>
+                    </div>
+                    <Button
+                      variant="destructive"
+                      size="sm"
+                      className="w-full"
+                      onClick={() => {
+                        deleteMessage(selectedMessage.id);
+                        setSelectedMessage(null);
+                      }}
+                    >
+                      <Trash2 className="h-4 w-4 mr-2" />
+                      Delete Message
+                    </Button>
+                  </div>
+                );
+              })()}
+            </DialogContent>
+          </Dialog>
 
           {/* Call Logs */}
           <Card>
