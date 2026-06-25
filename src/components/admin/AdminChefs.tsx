@@ -81,6 +81,8 @@ export const AdminChefs = ({ onUpdate }: AdminChefsProps) => {
   const handleStatusUpdate = async (chefId: string, status: string) => {
     setLoading(true);
     try {
+      const chef = chefs.find((c) => c.id === chefId);
+
       const { error } = await supabase
         .from("chefs")
         .update({ verification_status: status })
@@ -88,6 +90,16 @@ export const AdminChefs = ({ onUpdate }: AdminChefsProps) => {
 
       if (error) throw error;
       toast.success(`Chef ${status}`);
+
+      // Email the chef their approval/rejection result (fire and forget)
+      if (chef && (status === "approved" || status === "rejected")) {
+        supabase.functions
+          .invoke("notify-chef-approved", {
+            body: { chef_user_id: chef.user_id, status },
+          })
+          .catch(() => {});
+      }
+
       fetchChefs();
       onUpdate();
     } catch (error: any) {

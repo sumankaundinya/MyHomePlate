@@ -117,6 +117,49 @@ async function notifyChef(
   });
 }
 
+async function recordCommission(
+  supabase: ReturnType<typeof createClient>,
+  orderId: string,
+  orderAmount: number,
+  chefUserId: string,
+) {
+  const now = new Date().toISOString();
+
+  // Look up the commission tier active right now
+  const { data: tier } = await supabase
+    .from("commission_tiers")
+    .select("commission_rate, tier_name")
+    .eq("is_active", true)
+    .lte("valid_from", now)
+    .or(`valid_to.is.null,valid_to.gte.${now}`)
+    .order("valid_from", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+
+  const commissionRate = tier?.commission_rate ?? 0;
+  const commissionAmount = Math.round(orderAmount * commissionRate) / 100;
+  const payoutAmount = Math.round((orderAmount - commissionAmount) * 100) / 100;
+
+  // Resolve the chef's chefs.id from their auth user id
+  const { data: chefRecord } = await supabase
+    .from("chefs")
+    .select("id")
+    .eq("user_id", chefUserId)
+    .single();
+
+  if (!chefRecord) return;
+
+  await supabase.from("chef_payouts").insert({
+    chef_id: chefRecord.id,
+    order_id: orderId,
+    order_amount: orderAmount,
+    commission_rate: commissionRate,
+    commission_amount: commissionAmount,
+    payout_amount: payoutAmount,
+    status: "pending",
+  });
+}
+
 serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response("ok", { headers: corsHeaders });
@@ -156,7 +199,7 @@ serve(async (req) => {
     // Verify this razorpay_order_id actually belongs to this internal_order_id
     const { data: orderCheck } = await supabase
       .from("orders")
-      .select("id, razorpay_order_id")
+      .select("id, razorpay_order_id, total_price, chef_id")
       .eq("id", internal_order_id)
       .single();
 
@@ -190,6 +233,9 @@ serve(async (req) => {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
+
+    // Record commission — look up the tier active today then write to chef_payouts
+    recordCommission(supabase, internal_order_id, orderCheck.total_price, orderCheck.chef_id).catch(() => {});
 
     // Notify chef (fire and forget — don't block the response)
     const resendKey = Deno.env.get("RESEND_API_KEY");
