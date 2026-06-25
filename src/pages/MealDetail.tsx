@@ -47,6 +47,8 @@ interface Meal {
   chef_name: string;
   spice_levels: string[] | null;
   oil_options: string[] | null;
+  max_quantity: number | null;
+  servings_available: number | null;
   delivery_fee?: number;
   delivery_radius_km?: number;
   per_km_rate?: number;
@@ -478,9 +480,16 @@ const MealDetail = () => {
                 <ChefHat className="h-4 w-4 mr-2" />
                 <span>by {meal.chef_name}</span>
               </div>
-              <p className="text-2xl sm:text-3xl font-bold text-primary mb-4">
-                ₹{meal.price}
-              </p>
+              <div className="flex items-center gap-3 mb-4">
+                <p className="text-2xl sm:text-3xl font-bold text-primary">
+                  ₹{meal.price}
+                </p>
+                {meal.servings_available !== null && (
+                  <Badge variant={meal.servings_available === 0 ? "destructive" : "outline"}>
+                    {meal.servings_available === 0 ? "Sold out" : `${meal.servings_available} left`}
+                  </Badge>
+                )}
+              </div>
             </div>
 
             <div>
@@ -514,10 +523,10 @@ const MealDetail = () => {
                         id="quantity"
                         type="number"
                         min="1"
-                        max="50"
+                        max={meal.max_quantity ?? 50}
                         value={quantity}
                         onChange={(e) =>
-                          setQuantity(Math.max(1, Math.min(50, parseInt(e.target.value) || 1)))
+                          setQuantity(Math.max(1, Math.min(meal.max_quantity ?? 50, parseInt(e.target.value) || 1)))
                         }
                         className="text-center font-bold text-lg md:text-base w-16 md:w-20 h-10 md:h-11"
                       />
@@ -525,8 +534,8 @@ const MealDetail = () => {
                         type="button"
                         variant="outline"
                         size="lg"
-                        onClick={() => setQuantity(Math.min(50, quantity + 1))}
-                        disabled={quantity >= 50}
+                        onClick={() => setQuantity(Math.min(meal.max_quantity ?? 50, quantity + 1))}
+                        disabled={quantity >= (meal.max_quantity ?? 50)}
                         className="h-10 w-10 md:h-11 md:w-11 p-0"
                       >
                         <Plus className="h-4 w-4 md:h-5 md:w-5" />
@@ -727,6 +736,7 @@ const MealDetail = () => {
                     disabled={
                       ordering ||
                       !meal.available ||
+                      meal.servings_available === 0 ||
                       meal.price * quantity < PLATFORM_MIN_ORDER ||
                       // Require location when chef has GPS set
                       (!!meal.chef_lat && !!meal.chef_lng && !customerLocation) ||
