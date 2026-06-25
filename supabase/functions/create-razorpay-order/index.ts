@@ -49,7 +49,7 @@ serve(async (req) => {
     // Look up the real meal price from the database — never trust client-supplied amount
     const { data: meal, error: mealError } = await supabase
       .from("meals")
-      .select("price, available")
+      .select("price, title, available")
       .eq("id", meal_id)
       .single();
 
@@ -132,10 +132,15 @@ serve(async (req) => {
       });
     }
 
-    // Save the Razorpay order ID so verify-razorpay-payment can cross-check it
+    // Save Razorpay order ID, authoritative price, and meal snapshot for history
     await supabase
       .from("orders")
-      .update({ razorpay_order_id: data.id, total_price: serverTotal })
+      .update({
+        razorpay_order_id: data.id,
+        total_price: serverTotal,
+        meal_title: meal.title,
+        meal_price_at_order: meal.price,
+      })
       .eq("id", internal_order_id);
 
     return new Response(JSON.stringify({ order_id: data.id, amount: data.amount, currency: data.currency }), {
