@@ -58,6 +58,7 @@ interface Meal {
   image_url: string | null;
   category: string;
   available: boolean;
+  servings_available: number | null;
 }
 
 interface Order {
@@ -91,6 +92,7 @@ const ChefDashboard = () => {
     category: "",
     image_url: "",
     available: true,
+    servings_available: "",
   });
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string>("");
@@ -252,6 +254,7 @@ const ChefDashboard = () => {
         price: parseFloat(formData.price),
         chef_id: user.id,
         image_url: imageUrl || null,
+        servings_available: formData.servings_available !== "" ? parseInt(formData.servings_available) : null,
       };
 
       if (editingMeal) {
@@ -284,6 +287,7 @@ const ChefDashboard = () => {
       category: meal.category,
       image_url: meal.image_url || "",
       available: meal.available,
+      servings_available: meal.servings_available != null ? meal.servings_available.toString() : "",
     });
     setImageFile(null);
     setImagePreview(meal.image_url || "");
@@ -355,7 +359,7 @@ const ChefDashboard = () => {
   };
 
   const resetForm = () => {
-    setFormData({ title: "", description: "", price: "", category: "", image_url: "", available: true });
+    setFormData({ title: "", description: "", price: "", category: "", image_url: "", available: true, servings_available: "" });
     setEditingMeal(null);
     setImageFile(null);
     setImagePreview("");
@@ -497,6 +501,20 @@ const ChefDashboard = () => {
                       </div>
                     )}
                   </div>
+                </div>
+                <div className="space-y-1">
+                  <Label htmlFor="servings_available">Servings available today (optional)</Label>
+                  <Input
+                    id="servings_available"
+                    type="number"
+                    min="0"
+                    placeholder="Leave blank for unlimited"
+                    value={formData.servings_available}
+                    onChange={(e) => setFormData({ ...formData, servings_available: e.target.value })}
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    Set how many portions you can cook today. Orders will be blocked once this reaches 0.
+                  </p>
                 </div>
                 <div className="flex items-center space-x-2">
                   <Switch

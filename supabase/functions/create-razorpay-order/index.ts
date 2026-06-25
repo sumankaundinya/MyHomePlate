@@ -49,7 +49,7 @@ serve(async (req) => {
     // Look up the real meal price from the database — never trust client-supplied amount
     const { data: meal, error: mealError } = await supabase
       .from("meals")
-      .select("price, title, available")
+      .select("price, title, available, max_quantity, servings_available")
       .eq("id", meal_id)
       .single();
 
@@ -65,6 +65,36 @@ serve(async (req) => {
         status: 400,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
+    }
+
+    // Enforce per-order quantity cap set by the chef
+    const maxQty = meal.max_quantity ?? 50;
+    if (quantity > maxQty) {
+      return new Response(JSON.stringify({ error: `Maximum ${maxQty} servings per order` }), {
+        status: 400,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    // Atomically decrement servings_available to prevent race conditions.
+    // If servings_available is NULL the chef set no daily cap — skip this check.
+    if (meal.servings_available !== null) {
+      if (meal.servings_available < quantity) {
+        return new Response(JSON.stringify({ error: "Not enough servings available" }), {
+          status: 400,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+      const { data: decremented } = await supabase.rpc("decrement_servings", {
+        meal_uuid: meal_id,
+        qty: quantity,
+      });
+      if (!decremented) {
+        return new Response(JSON.stringify({ error: "Meal just sold out — please try again later" }), {
+          status: 409,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
     }
 
     // Verify the order belongs to this user
