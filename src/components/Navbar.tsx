@@ -144,12 +144,6 @@ const Navbar = () => {
           </Link>
         )}
         {isAdmin && (
-          <Link to="/admin/sms" className={linkClass} onClick={handleClick}>
-            {mobile && <span>📱</span>}
-            <span>SMS Testing</span>
-          </Link>
-        )}
-        {isAdmin && (
           <Link to="/admin/voice" className={linkClass} onClick={handleClick}>
             {mobile && <span>☎️</span>}
             <span>Voice Onboarding</span>
@@ -287,10 +281,6 @@ const Navbar = () => {
                       <DropdownMenuItem onClick={() => navigate("/admin")}>
                         <Shield className="mr-2 h-4 w-4" />
                         <span>Admin Dashboard</span>
-                      </DropdownMenuItem>
-                      <DropdownMenuItem onClick={() => navigate("/admin/sms")}>
-                        <span className="mr-2">📱</span>
-                        <span>SMS Testing</span>
                       </DropdownMenuItem>
                       <DropdownMenuItem onClick={() => navigate("/admin/voice")}>
                         <span className="mr-2">☎️</span>
