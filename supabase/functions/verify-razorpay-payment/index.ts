@@ -98,7 +98,7 @@ async function notifyChef(
               </td></tr>
             </table>
             <div style="text-align:center;margin-bottom:24px;">
-              <a href="https://www.myhomeplate.in/chef-dashboard" style="background:#ff6b35;color:#fff;padding:14px 32px;border-radius:8px;text-decoration:none;font-weight:700;font-size:15px;">Go to Dashboard</a>
+              <a href="https://www.myhomeplate.in/partner" style="background:#ff6b35;color:#fff;padding:14px 32px;border-radius:8px;text-decoration:none;font-weight:700;font-size:15px;">Go to Dashboard</a>
             </div>
             <p style="margin:0;font-size:14px;color:#888;">Questions? Contact us at support@myhomeplate.in</p>
           </td>

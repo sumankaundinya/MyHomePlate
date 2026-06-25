@@ -308,9 +308,11 @@ const MealDetail = () => {
             "apikey": import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
           },
           body: JSON.stringify({
-            amount: totalPrice,
+            internal_order_id: order.id,
+            meal_id: meal.id,
+            quantity,
+            delivery_fee: calculatedDeliveryFee,
             currency: "INR",
-            receipt: `order_${order.id.slice(0, 8)}`,
           }),
         }
       );
