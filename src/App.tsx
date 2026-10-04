@@ -18,7 +18,7 @@ import ChefProfile from "./pages/ChefProfile";
 import Partner from "./pages/Partner";
 import Admin from "./pages/Admin";
 import AdminSMSPanel from "./pages/AdminSMSPanel";
-import VoiceOnboardingAssistant from "./pages/VoiceOnboardingAssistant";
+import OnboardingConsole from "./pages/OnboardingConsole";
 import PartnerSetup from "./pages/PartnerSetup";
 import Subscriptions from "./pages/Subscriptions";
 import FieldAgentApply from "./pages/FieldAgentApply";
@@ -51,7 +51,7 @@ const App = () => (
           <Route path="/partner/setup" element={<PartnerSetup />} />
           <Route path="/admin" element={<Admin />} />
           <Route path="/admin/sms" element={<AdminSMSPanel />} />
-          <Route path="/admin/voice" element={<VoiceOnboardingAssistant />} />
+          <Route path="/admin/voice" element={<OnboardingConsole />} />
           <Route path="/orders" element={<Orders />} />
           <Route path="/subscriptions" element={<Subscriptions />} />
           <Route path="/partner/payments" element={<PaymentHistory />} />

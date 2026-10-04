@@ -63,7 +63,7 @@ interface WhatsAppMessage {
   created_at: string;
 }
 
-const VoiceOnboardingAssistant = () => {
+const OnboardingConsole = () => {
   const [contacts, setContacts] = useState<OnboardingContact[]>([]);
   const [callLogs, setCallLogs] = useState<CallLog[]>([]);
   const [whatsappMessages, setWhatsappMessages] = useState<WhatsAppMessage[]>([]);
@@ -446,7 +446,7 @@ const VoiceOnboardingAssistant = () => {
         <div className="mb-8">
           <h1 className="text-2xl font-bold mb-2 flex items-center gap-2">
             <Phone className="h-6 w-6 text-primary" />
-            Voice Onboarding Assistant
+            Onboarding Console
           </h1>
           <p className="text-muted-foreground">
             Call chefs and customers to personally onboard them into MyHomePlate
@@ -981,4 +981,4 @@ const VoiceOnboardingAssistant = () => {
   );
 };
 
-export default VoiceOnboardingAssistant;
+export default OnboardingConsole;

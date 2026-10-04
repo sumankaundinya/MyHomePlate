@@ -146,7 +146,7 @@ const Navbar = () => {
         {isAdmin && (
           <Link to="/admin/voice" className={linkClass} onClick={handleClick}>
             {mobile && <span>☎️</span>}
-            <span>Voice Onboarding</span>
+            <span>Onboarding Console</span>
           </Link>
         )}
         <Link to="/apply" className={linkClass} onClick={handleClick}>
@@ -284,7 +284,7 @@ const Navbar = () => {
                       </DropdownMenuItem>
                       <DropdownMenuItem onClick={() => navigate("/admin/voice")}>
                         <span className="mr-2">☎️</span>
-                        <span>Voice Onboarding</span>
+                        <span>Onboarding Console</span>
                       </DropdownMenuItem>
                     </>
                   )}
