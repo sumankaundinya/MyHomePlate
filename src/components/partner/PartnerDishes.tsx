@@ -9,7 +9,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { toast } from "sonner";
-import { Plus, Edit, Trash2 } from "lucide-react";
+import { Plus, Edit, Trash2, Sparkles, Loader2 } from "lucide-react";
 import { ImageUpload } from "@/components/ImageUpload";
 
 const MEAL_CATEGORIES = [
@@ -42,6 +42,7 @@ export const PartnerDishes = ({ onUpdate }: PartnerDishesProps) => {
   const [loading, setLoading] = useState(false);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingDish, setEditingDish] = useState<Dish | null>(null);
+  const [generatingDescription, setGeneratingDescription] = useState(false);
   const [formData, setFormData] = useState({
     title: "",
     description: "",
@@ -116,6 +117,26 @@ export const PartnerDishes = ({ onUpdate }: PartnerDishesProps) => {
       toast.error(error.message || "Failed to save dish");
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleGenerateDescription = async () => {
+    if (!formData.title || !formData.category) {
+      toast.error("Add a dish name and meal type first");
+      return;
+    }
+    setGeneratingDescription(true);
+    try {
+      const categoryLabel = MEAL_CATEGORIES.find((c) => c.value === formData.category)?.label ?? formData.category;
+      const { data, error } = await supabase.functions.invoke("generate-dish-description", {
+        body: { title: formData.title, category: categoryLabel, hint: formData.description || undefined },
+      });
+      if (error || !data?.description) throw error ?? new Error("No description returned");
+      setFormData((f) => ({ ...f, description: data.description }));
+    } catch {
+      toast.error("Couldn't generate a description — please write one or try again");
+    } finally {
+      setGeneratingDescription(false);
     }
   };
 
@@ -211,31 +232,6 @@ export const PartnerDishes = ({ onUpdate }: PartnerDishesProps) => {
                 />
               </div>
               <div>
-                <Label htmlFor="description">Description</Label>
-                <Textarea
-                  id="description"
-                  required
-                  value={formData.description}
-                  onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                />
-              </div>
-              <div>
-                <Label htmlFor="price">Dish Price (₹)</Label>
-                <Input
-                  id="price"
-                  type="number"
-                  step="1"
-                  min="1"
-                  required
-                  value={formData.price}
-                  onChange={(e) => setFormData({ ...formData, price: e.target.value })}
-                  placeholder="e.g. 120"
-                />
-                <p className="text-xs text-muted-foreground mt-1">
-                  Minimum order is ₹80 · Delivery fee is set in your Profile tab
-                </p>
-              </div>
-              <div>
                 <Label>Meal Type <span className="text-destructive">*</span></Label>
                 <div className="flex flex-wrap gap-2 mt-1.5">
                   {MEAL_CATEGORIES.map((cat) => (
@@ -261,6 +257,48 @@ export const PartnerDishes = ({ onUpdate }: PartnerDishesProps) => {
                 ) : (
                   <p className="text-xs text-destructive mt-1">Please select a meal type</p>
                 )}
+              </div>
+              <div>
+                <div className="flex items-center justify-between">
+                  <Label htmlFor="description">Description</Label>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    className="h-7 text-xs gap-1 border-primary/40 text-primary hover:bg-primary/5"
+                    disabled={generatingDescription}
+                    onClick={handleGenerateDescription}
+                  >
+                    {generatingDescription ? (
+                      <Loader2 className="h-3 w-3 animate-spin" />
+                    ) : (
+                      <Sparkles className="h-3 w-3" />
+                    )}
+                    Generate with AI
+                  </Button>
+                </div>
+                <Textarea
+                  id="description"
+                  required
+                  value={formData.description}
+                  onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                />
+              </div>
+              <div>
+                <Label htmlFor="price">Dish Price (₹)</Label>
+                <Input
+                  id="price"
+                  type="number"
+                  step="1"
+                  min="1"
+                  required
+                  value={formData.price}
+                  onChange={(e) => setFormData({ ...formData, price: e.target.value })}
+                  placeholder="e.g. 120"
+                />
+                <p className="text-xs text-muted-foreground mt-1">
+                  Minimum order is ₹80 · Delivery fee is set in your Profile tab
+                </p>
               </div>
               <div>
                 <Label>Meal Photo</Label>

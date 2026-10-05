@@ -33,6 +33,8 @@ import {
   ShoppingBag,
   ImagePlus,
   X,
+  Sparkles,
+  Loader2,
 } from "lucide-react";
 import { toast } from "sonner";
 import { useRef } from "react";
@@ -97,6 +99,7 @@ const ChefDashboard = () => {
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string>("");
   const [uploading, setUploading] = useState(false);
+  const [generatingDescription, setGeneratingDescription] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -225,6 +228,29 @@ const ChefDashboard = () => {
     setImagePreview("");
     setFormData((f) => ({ ...f, image_url: "" }));
     if (fileInputRef.current) fileInputRef.current.value = "";
+  };
+
+  const handleGenerateDescription = async () => {
+    if (!formData.title || !formData.category) {
+      toast.error("Add a dish name and meal type first");
+      return;
+    }
+    setGeneratingDescription(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("generate-dish-description", {
+        body: {
+          title: formData.title,
+          category: categoryMeta(formData.category).label,
+          hint: formData.description || undefined,
+        },
+      });
+      if (error || !data?.description) throw error ?? new Error("No description returned");
+      setFormData((f) => ({ ...f, description: data.description }));
+    } catch {
+      toast.error("Couldn't generate a description — please write one or try again");
+    } finally {
+      setGeneratingDescription(false);
+    }
   };
 
   const uploadImage = async (file: File, userId: string): Promise<string> => {
@@ -406,7 +432,24 @@ const ChefDashboard = () => {
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="description">Description</Label>
+                  <div className="flex items-center justify-between">
+                    <Label htmlFor="description">Description</Label>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      className="h-7 text-xs gap-1"
+                      disabled={!formData.title || !formData.category || generatingDescription}
+                      onClick={handleGenerateDescription}
+                    >
+                      {generatingDescription ? (
+                        <Loader2 className="h-3 w-3 animate-spin" />
+                      ) : (
+                        <Sparkles className="h-3 w-3" />
+                      )}
+                      Generate with AI
+                    </Button>
+                  </div>
                   <Textarea
                     id="description"
                     value={formData.description}
@@ -416,6 +459,11 @@ const ChefDashboard = () => {
                     rows={4}
                     required
                   />
+                  {(!formData.title || !formData.category) && (
+                    <p className="text-xs text-muted-foreground">
+                      Add a dish name and pick a meal type below to enable AI generation
+                    </p>
+                  )}
                 </div>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div className="space-y-2">
