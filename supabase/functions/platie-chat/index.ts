@@ -255,11 +255,22 @@ async function callGroq(systemPrompt: string, history: ChatMessage[], userMessag
   const response = await fetch("https://api.groq.com/openai/v1/chat/completions", {
     method: "POST",
     headers: { "Content-Type": "application/json", Authorization: `Bearer ${apiKey}` },
-    body: JSON.stringify({ model: "llama-3.3-70b-versatile", messages, max_tokens: 400, temperature: 0.7 }),
+    body: JSON.stringify({
+      model: "openai/gpt-oss-20b",
+      messages,
+      max_tokens: 500,
+      temperature: 0.7,
+      reasoning_effort: "low",
+    }),
   });
   if (!response.ok) throw new Error(`Groq ${response.status}`);
   const json = await response.json();
-  return json.choices?.[0]?.message?.content ?? "Sorry, I couldn't understand that.";
+  const choice = json.choices?.[0];
+  const text = choice?.message?.content?.trim();
+  if (!text || choice?.finish_reason !== "stop") {
+    throw new Error(`Groq incomplete response (finish_reason: ${choice?.finish_reason ?? "none"})`);
+  }
+  return text;
 }
 
 async function callOpenAI(systemPrompt: string, history: ChatMessage[], userMessage: string, apiKey: string): Promise<string> {
