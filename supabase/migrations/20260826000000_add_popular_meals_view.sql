@@ -11,3 +11,8 @@ join public.orders o on o.meal_id = m.id
 where o.status <> 'cancelled'
 group by m.id, m.title, m.category, m.chef_id
 order by distinct_customers desc, total_orders desc;
+
+-- Explicit Data API grant, matching the "authenticated only" read access
+-- the meals table itself uses (Supabase stops auto-granting new relations
+-- from 2026-10-30 - see supabase.com/docs/guides/api/data-api#permissions).
+grant select on public.popular_meals to authenticated;
